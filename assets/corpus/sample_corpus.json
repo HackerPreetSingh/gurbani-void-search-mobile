@@ -1,0 +1,36 @@
+{
+  "manifest": {
+    "id": "sample-corpus-v1",
+    "displayName": "Sample Gurbani Corpus",
+    "version": "1.0.0",
+    "languageTag": "pa",
+    "sourceUrl": "https://example.com/source",
+    "licenseUrl": "https://example.com/license",
+    "attribution": "Sample Data",
+    "contentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "expectedLineCount": 3
+  },
+  "lines": [
+    {
+      "stableId": "1",
+      "displayOrder": 1,
+      "gurmukhi": "ੴ ਸਤਿ ਨਾਮੁ ਕਰਤਾ ਪੁਰਖੁ ਨਿਰਭਉ ਨਿਰਵੈਰੁ ਅਕਾਲ ਮੂਰਤਿ ਅਜੂਨੀ ਸੈਭੰ ਗੁਰ ਪ੍ਰਸਾਦਿ ॥",
+      "sourceName": "Guru Granth Sahib Ji",
+      "ang": 1
+    },
+    {
+      "stableId": "2",
+      "displayOrder": 2,
+      "gurmukhi": "ਜਪੁ ॥",
+      "sourceName": "Guru Granth Sahib Ji",
+      "ang": 1
+    },
+    {
+      "stableId": "3",
+      "displayOrder": 3,
+      "gurmukhi": "ਆਦਿ ਸਚੁ ਜੁਗਾਦਿ ਸਚੁ ॥",
+      "sourceName": "Guru Granth Sahib Ji",
+      "ang": 1
+    }
+  ]
+}
