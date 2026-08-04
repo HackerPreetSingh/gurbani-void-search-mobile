@@ -15,3 +15,12 @@ abstract interface class PunjabiSearchRepository {
     int limit = 40,
   });
 }
+
+class CorpusImportException implements Exception {
+  const CorpusImportException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'Corpus import failed: \$message';
+}

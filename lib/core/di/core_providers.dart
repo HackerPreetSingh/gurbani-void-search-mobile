@@ -1,8 +1,13 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/router/app_router.dart';
 import '../database/local_database.dart';
+
+final dioProvider = Provider<Dio>((Ref ref) {
+  return Dio();
+});
 
 final localDatabaseProvider = Provider<LocalDatabase>((Ref ref) {
   final database = LocalDatabase();

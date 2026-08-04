@@ -1,5 +1,4 @@
 import 'gurbani_corpus.dart';
-import 'punjabi_search_query.dart';
 
 enum SearchResultMatch { word, initial }
 
@@ -10,12 +9,16 @@ class GurbaniSearchResult {
     required this.sourceName,
     required this.displayOrder,
     required this.match,
+    this.shabadId, // Added to support Shabad-wide navigation
     this.writerName,
     this.raagName,
     this.ang,
+    this.transliteration,
+    this.translation,
   });
 
   final String stableId;
+  final String? shabadId; // Unique ID for the entire Shabad
   final String gurmukhi;
   final String sourceName;
   final String? writerName;
@@ -23,6 +26,8 @@ class GurbaniSearchResult {
   final int? ang;
   final int displayOrder;
   final SearchResultMatch match;
+  final String? transliteration;
+  final String? translation;
 }
 
 enum PunjabiSearchStatus { emptyQuery, unsupportedQuery, noCorpus, complete }
@@ -36,7 +41,7 @@ class PunjabiSearchResponse {
   });
 
   final PunjabiSearchStatus status;
-  final PunjabiSearchQuery query;
+  final dynamic query;
   final GurbaniCorpusSummary? corpus;
   final List<GurbaniSearchResult> results;
 }

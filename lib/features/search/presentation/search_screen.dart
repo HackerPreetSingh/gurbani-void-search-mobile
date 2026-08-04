@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../domain/models/gurbani_search_result.dart';
-import '../domain/providers/search_providers.dart';
 import 'search_view_model.dart';
 
 class SearchScreen extends ConsumerWidget {
@@ -15,35 +15,13 @@ class SearchScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gurbani Search'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.file_download),
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await ref.read(corpusImportServiceProvider).importFromAsset(
-                  'assets/corpus/sample_corpus.json',
-                );
-                ref.invalidate(searchViewModelProvider);
-                messenger.showSnackBar(
-                  const SnackBar(content: Text('Corpus imported successfully!')),
-                );
-              } catch (e) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text('Import failed: $e')),
-                );
-              }
-            },
-            tooltip: 'Import Sample Corpus',
-          ),
-        ],
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: SearchBar(
-              hintText: 'Search Gurmukhi...',
+              hintText: 'Search Gurmukhi or Roman...',
               onChanged: (value) {
                 ref.read(searchViewModelProvider.notifier).onQueryChanged(value);
               },
@@ -54,12 +32,12 @@ class SearchScreen extends ConsumerWidget {
             child: searchState.when(
               data: (response) {
                 if (response == null) {
-                  return const Center(child: Text('Start searching...'));
+                  return const Center(child: Text('Type at least 3 characters to search...'));
                 }
-                return _buildResults(context, ref, response);
+                return _buildResults(context, response);
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('Error: $error')),
+              error: (error, stack) => Center(child: Text('Search Error: $error')),
             ),
           ),
         ],
@@ -67,40 +45,9 @@ class SearchScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildResults(BuildContext context, WidgetRef ref, PunjabiSearchResponse response) {
-    if (response.status == PunjabiSearchStatus.noCorpus) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('No corpus found.'),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                try {
-                  await ref.read(corpusImportServiceProvider).importFromAsset(
-                    'assets/corpus/sample_corpus.json',
-                  );
-                  ref.invalidate(searchViewModelProvider);
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('Corpus imported successfully!')),
-                  );
-                } catch (e) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text('Import failed: $e')),
-                  );
-                }
-              },
-              child: const Text('Import Sample Corpus'),
-            ),
-          ],
-        ),
-      );
-    }
-
+  Widget _buildResults(BuildContext context, PunjabiSearchResponse response) {
     if (response.results.isEmpty) {
-      return const Center(child: Text('No results found.'));
+      return const Center(child: Text('No results found in production database.'));
     }
 
     return ListView.builder(
@@ -108,18 +55,30 @@ class SearchScreen extends ConsumerWidget {
       itemBuilder: (context, index) {
         final result = response.results[index];
         return ListTile(
+          onTap: () {
+            context.push('/shabad/${result.shabadId}');
+          },
           title: Text(
             result.gurmukhi,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
           ),
-          subtitle: Text(
-            '${result.sourceName} • Ang ${result.ang ?? 'N/A'}',
-            style: const TextStyle(fontSize: 12),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${result.raagName ?? "Unknown Raag"} • ${result.writerName ?? "Unknown Author"} • Ang ${result.ang ?? "-"}',
+                style: const TextStyle(fontSize: 14, color: Colors.teal),
+              ),
+              if (result.translation != null)
+                Text(
+                  result.translation!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                ),
+            ],
           ),
-          trailing: Text(
-            result.match == SearchResultMatch.initial ? 'Initial' : 'Word',
-            style: const TextStyle(fontSize: 10, color: Colors.grey),
-          ),
+          isThreeLine: result.translation != null,
         );
       },
     );

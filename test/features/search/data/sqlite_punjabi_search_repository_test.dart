@@ -5,6 +5,7 @@ import 'package:gurbani_voice_search/core/database/local_database.dart';
 import 'package:gurbani_voice_search/features/search/data/sqlite_punjabi_search_repository.dart';
 import 'package:gurbani_voice_search/features/search/domain/models/gurbani_corpus.dart';
 import 'package:gurbani_voice_search/features/search/domain/models/gurbani_search_result.dart';
+import 'package:gurbani_voice_search/features/search/domain/repositories/punjabi_search_repository.dart';
 import 'package:gurbani_voice_search/features/search/domain/services/gurmukhi_search_text.dart';
 
 void main() {

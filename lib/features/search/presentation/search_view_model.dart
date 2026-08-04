@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/models/gurbani_search_result.dart';
@@ -24,12 +23,12 @@ class SearchViewModel extends Notifier<AsyncValue<PunjabiSearchResponse?>> {
 
     _debounceTimer?.cancel();
 
-    if (query.trim().isEmpty) {
+    if (query.trim().length < 3) {
       state = const AsyncValue.data(null);
       return;
     }
 
-    _debounceTimer = Timer(const Duration(milliseconds: 150), () {
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
       _performSearch(query);
     });
   }

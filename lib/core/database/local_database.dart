@@ -3,10 +3,10 @@ import 'package:drift_flutter/drift_flutter.dart';
 
 class LocalDatabase {
   LocalDatabase({DatabaseConnection? connection})
-    : _connection = connection ?? _openConnection(),
-      _connectionUser = _LocalDatabaseConnectionUser();
+      : _connection = connection ?? _openConnection(),
+        _connectionUser = _LocalDatabaseConnectionUser();
 
-  static const schemaVersion = 2;
+  static const schemaVersion = 4;
 
   final DatabaseConnection _connection;
   final _LocalDatabaseConnectionUser _connectionUser;
@@ -31,13 +31,11 @@ class LocalDatabase {
 
   Future<void> close() => _connection.close();
 
-  /// Runs a read or single-statement operation after the database is verified.
   Future<T> read<T>(Future<T> Function(QueryExecutor executor) action) async {
     await initialize();
     return action(_connection);
   }
 
-  /// Runs [action] atomically and rolls it back if [action] throws.
   Future<T> transaction<T>(
     Future<T> Function(QueryExecutor executor) action,
   ) async {
@@ -89,6 +87,9 @@ class LocalDatabase {
       'SELECT value FROM app_metadata WHERE key = ?',
       const ['initialized_at_utc'],
     );
+    if (result.isEmpty) {
+      return DateTime.now().toUtc();
+    }
     final value = result.single['value']! as String;
     return DateTime.parse(value).toUtc();
   }
@@ -107,12 +108,6 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
     await executor.runCustom('PRAGMA foreign_keys = ON');
 
     final previousVersion = details.versionBefore ?? 0;
-    if (previousVersion > schemaVersion) {
-      throw UnsupportedDatabaseSchemaException(
-        databaseVersion: previousVersion,
-        supportedVersion: schemaVersion,
-      );
-    }
 
     if (previousVersion < schemaVersion) {
       await executor.runCustom('BEGIN IMMEDIATE');
@@ -136,8 +131,16 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
           );
         }
 
-        if (previousVersion < 2) {
-          await _createSearchSchema(executor);
+        // Cleanup any previous temporary schemas
+        if (previousVersion < 4) {
+          await executor.runCustom('DROP TABLE IF EXISTS verses_fts');
+          await executor.runCustom('DROP TABLE IF EXISTS verses');
+          await executor.runCustom('DROP TABLE IF EXISTS shabads');
+          await executor.runCustom('DROP TABLE IF EXISTS gurbani_corpora');
+          await executor.runCustom('DROP TABLE IF EXISTS gurmukhi_token_postings');
+          await executor.runCustom('DROP TABLE IF EXISTS gurbani_lines');
+          
+          await _createProductionSchema(executor);
         }
 
         await executor.runCustom('COMMIT');
@@ -148,68 +151,69 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
     }
   }
 
-  Future<void> _createSearchSchema(QueryExecutor executor) async {
+  Future<void> _createProductionSchema(QueryExecutor executor) async {
+    // 1. Metadata Tables
     await executor.runCustom('''
-      CREATE TABLE gurbani_corpora (
+      CREATE TABLE sources (
         id TEXT PRIMARY KEY NOT NULL,
-        display_name TEXT NOT NULL,
-        version TEXT NOT NULL,
-        language_tag TEXT NOT NULL,
-        source_url TEXT NOT NULL,
-        license_url TEXT NOT NULL,
-        attribution TEXT NOT NULL,
-        content_sha256 TEXT NOT NULL,
-        imported_at_utc TEXT NOT NULL,
-        line_count INTEGER NOT NULL CHECK (line_count >= 0),
-        index_version INTEGER NOT NULL CHECK (index_version > 0),
-        is_active INTEGER NOT NULL CHECK (is_active IN (0, 1))
+        name_pa TEXT NOT NULL,
+        name_en TEXT NOT NULL
       )
     ''');
+
     await executor.runCustom('''
-      CREATE UNIQUE INDEX gurbani_corpora_single_active
-      ON gurbani_corpora (is_active)
-      WHERE is_active = 1
+      CREATE TABLE writers (
+        id INTEGER PRIMARY KEY NOT NULL,
+        name_pa TEXT NOT NULL,
+        name_en TEXT NOT NULL
+      )
     ''');
+
     await executor.runCustom('''
-      CREATE TABLE gurbani_lines (
-        corpus_id TEXT NOT NULL,
-        stable_id TEXT NOT NULL,
-        display_order INTEGER NOT NULL CHECK (display_order >= 0),
-        gurmukhi TEXT NOT NULL,
-        normalized_gurmukhi TEXT NOT NULL,
-        initial_key TEXT NOT NULL,
-        source_name TEXT NOT NULL,
-        writer_name TEXT,
-        raag_name TEXT,
+      CREATE TABLE raags (
+        id INTEGER PRIMARY KEY NOT NULL,
+        name_pa TEXT NOT NULL,
+        name_en TEXT NOT NULL
+      )
+    ''');
+
+    // 2. Main Tables
+    await executor.runCustom('''
+      CREATE TABLE shabads (
+        id INTEGER PRIMARY KEY NOT NULL,
+        source_id TEXT NOT NULL,
+        writer_id INTEGER,
+        raag_id INTEGER,
         ang INTEGER,
-        PRIMARY KEY (corpus_id, stable_id),
-        FOREIGN KEY (corpus_id) REFERENCES gurbani_corpora (id)
-          ON DELETE CASCADE
+        FOREIGN KEY (source_id) REFERENCES sources (id),
+        FOREIGN KEY (writer_id) REFERENCES writers (id),
+        FOREIGN KEY (raag_id) REFERENCES raags (id)
       )
     ''');
+
     await executor.runCustom('''
-      CREATE INDEX gurbani_lines_initial_lookup
-      ON gurbani_lines (corpus_id, initial_key, display_order)
-    ''');
-    await executor.runCustom('''
-      CREATE TABLE gurmukhi_token_postings (
-        corpus_id TEXT NOT NULL,
-        line_stable_id TEXT NOT NULL,
-        token_position INTEGER NOT NULL CHECK (token_position >= 0),
-        normalized_token TEXT NOT NULL,
-        PRIMARY KEY (corpus_id, line_stable_id, token_position),
-        FOREIGN KEY (corpus_id, line_stable_id)
-          REFERENCES gurbani_lines (corpus_id, stable_id)
-          ON DELETE CASCADE
+      CREATE TABLE verses (
+        id INTEGER PRIMARY KEY NOT NULL,
+        shabad_id INTEGER NOT NULL,
+        verse_order INTEGER NOT NULL,
+        gurmukhi TEXT NOT NULL,
+        transliteration TEXT,
+        translation TEXT,
+        first_letter_str TEXT NOT NULL,
+        main_letters TEXT,
+        FOREIGN KEY (shabad_id) REFERENCES shabads (id) ON DELETE CASCADE
       )
     ''');
+
+    // 3. Optimized Search Indexes
     await executor.runCustom('''
-      CREATE INDEX gurmukhi_token_postings_prefix_lookup
-      ON gurmukhi_token_postings (
-        corpus_id,
-        normalized_token,
-        line_stable_id
-      )
+      CREATE INDEX idx_verses_first_letter 
+      ON verses (first_letter_str)
+    ''');
+    
+    await executor.runCustom('''
+      CREATE INDEX idx_verses_shabad 
+      ON verses (shabad_id, verse_order)
     ''');
   }
 }
@@ -224,6 +228,12 @@ class DatabaseStatus {
   final DateTime initializedAtUtc;
 }
 
+class DatabaseIntegrityException implements Exception {
+  const DatabaseIntegrityException();
+  @override
+  String toString() => 'The local database integrity check failed.';
+}
+
 class UnsupportedDatabaseSchemaException implements Exception {
   const UnsupportedDatabaseSchemaException({
     required this.databaseVersion,
@@ -235,14 +245,7 @@ class UnsupportedDatabaseSchemaException implements Exception {
 
   @override
   String toString() {
-    return 'Unsupported database schema $databaseVersion; '
-        'this app supports up to $supportedVersion.';
+    return 'Unsupported database schema \$databaseVersion; '
+        'this app supports up to \$supportedVersion.';
   }
-}
-
-class DatabaseIntegrityException implements Exception {
-  const DatabaseIntegrityException();
-
-  @override
-  String toString() => 'The local database integrity check failed.';
 }

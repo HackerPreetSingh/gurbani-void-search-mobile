@@ -3,6 +3,8 @@ enum PunjabiSearchKind {
   gurmukhiWord,
   gurmukhiInitial,
   gurmukhiAmbiguous,
+  romanInitial,
+  romanWord,
   unsupported,
 }
 
@@ -22,6 +24,8 @@ class PunjabiSearchQuery {
   bool get isSearchable {
     return kind == PunjabiSearchKind.gurmukhiWord ||
         kind == PunjabiSearchKind.gurmukhiInitial ||
-        kind == PunjabiSearchKind.gurmukhiAmbiguous;
+        kind == PunjabiSearchKind.gurmukhiAmbiguous ||
+        kind == PunjabiSearchKind.romanInitial ||
+        kind == PunjabiSearchKind.romanWord;
   }
 }

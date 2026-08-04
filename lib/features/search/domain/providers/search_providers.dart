@@ -1,20 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:gurbani_voice_search/core/di/core_providers.dart';
-import '../../data/sqlite_punjabi_search_repository.dart';
+import '../../data/banidb_api_repository.dart';
 import '../repositories/punjabi_search_repository.dart';
-import '../services/corpus_import_service.dart';
 
 final punjabiSearchRepositoryProvider = Provider<PunjabiSearchRepository>((Ref ref) {
-  final database = ref.watch(localDatabaseProvider);
-  return SqlitePunjabiSearchRepository(database);
+  final dio = ref.watch(dioProvider);
+  return BaniDbApiRepository(dio);
 });
 
 final activeCorpusProvider = FutureProvider((Ref ref) {
   return ref.watch(punjabiSearchRepositoryProvider).activeCorpus();
-});
-
-final corpusImportServiceProvider = Provider((Ref ref) {
-  final repository = ref.watch(punjabiSearchRepositoryProvider);
-  return CorpusImportService(repository);
 });
