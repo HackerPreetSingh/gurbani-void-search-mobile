@@ -73,14 +73,15 @@ class LocalDatabase {
         final data = await rootBundle.load('assets/database/gurbani_offline.sqlite');
         await Directory(docsDir.path).create(recursive: true);
         await file.writeAsBytes(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes), flush: true);
+        dev.log('Database pre-seeded from assets.', name: 'Database');
       }
     } catch (e) {
-      dev.log('Asset copy failed: $e');
+      dev.log('Asset copy failed: $e', name: 'Database');
     }
   }
 
   Future<DatabaseStatus> _initialize() async {
-    if (!kIsWeb) {
+    if (!kIsWeb && _connection == null) {
       await _copyAssetDatabaseIfNeeded();
     }
 

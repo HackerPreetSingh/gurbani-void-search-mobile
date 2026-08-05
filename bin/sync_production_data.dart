@@ -3,9 +3,12 @@ import 'package:dio/dio.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:characters/characters.dart';
 
+/// SMART HYBRID SYNC ENGINE v8
+/// Uses page-based ranges for major books and parallel ID fetching for others.
+/// Designed to NEVER hang.
 void main() async {
   final dbPath = 'assets/database/gurbani_offline.sqlite';
-  print('🚀 Starting Final Comprehensive Sync (All Sources)...');
+  print('🚀 Starting High-Performance Multi-Source Sync...');
 
   final dir = Directory('assets/database');
   if (!dir.existsSync()) dir.createSync(recursive: true);
@@ -17,81 +20,145 @@ void main() async {
   db.execute('CREATE TABLE writers (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
   db.execute('CREATE TABLE raags (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
   db.execute('CREATE TABLE shabads (id INTEGER PRIMARY KEY, source_id TEXT, writer_id INTEGER, raag_id INTEGER, ang INTEGER)');
-  db.execute('CREATE TABLE verses (id INTEGER PRIMARY KEY, shabad_id INTEGER, verse_order INTEGER, gurmukhi TEXT, transliteration TEXT, transliteration_hi TEXT, translation TEXT, first_letter_str TEXT, main_letters TEXT)');
+  db.execute('''
+    CREATE TABLE verses (
+      id INTEGER PRIMARY KEY,
+      shabad_id INTEGER,
+      verse_order INTEGER,
+      gurmukhi TEXT,
+      transliteration TEXT,
+      transliteration_hi TEXT,
+      translation TEXT,
+      first_letter_str TEXT,
+      main_letters TEXT
+    )
+  ''');
   db.execute('CREATE INDEX idx_verses_fl ON verses (first_letter_str)');
 
   final dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 45),
-    receiveTimeout: const Duration(seconds: 300),
-    validateStatus: (status) => status! < 500, 
+    connectTimeout: const Duration(seconds: 15),
+    receiveTimeout: const Duration(seconds: 30),
+    validateStatus: (status) => status! < 500,
   ));
 
   const baseUrl = 'https://api.banidb.com/v2';
   
-  // FIXED: Explicitly including all 7 production sources
-  final sourceIds = ['G', 'D', 'A', 'B', 'N', 'R', 'S'];
+  // Strategy:
+  // 1. G and D are huge, use /angs range (Fastest)
+  // 2. A, B, N, R, S are smaller, use /shabads range (Robust)
+  
+  final angSources = [
+    {'id': 'G', 'name': 'Sri Guru Granth Sahib Ji', 'max': 1430},
+    {'id': 'D', 'name': 'Sri Dasam Granth Sahib', 'max': 2820},
+  ];
+
+  final shabadSources = ['A', 'B', 'N', 'R', 'S'];
 
   int totalSynced = 0;
-  for (final sId in sourceIds) {
-    print('\n📥 Syncing source: $sId');
-    int currentAng = 1;
-    int emptyResponseCount = 0;
 
-    while (emptyResponseCount < 3) {
+  // --- PART 1: PAGE-BASED SYNC (G & D) ---
+  for (final s in angSources) {
+    final sId = s['id'] as String;
+    final sName = s['name'] as String;
+    final max = s['max'] as int;
+
+    print('\n📥 SYNCING PAGE-BASED SOURCE: $sName [$sId]');
+    db.execute('INSERT OR IGNORE INTO sources VALUES (?, ?, ?)', [sId, sName, sName]);
+
+    for (int start = 1; start <= max; start += 20) {
+      final end = (start + 19).clamp(1, max);
       try {
-        final response = await dio.get('$baseUrl/angs/$currentAng-${currentAng + 19}/$sId');
+        final response = await dio.get('$baseUrl/angs/$start-$end/$sId');
         if (response.statusCode != 200) break;
-
-        final pages = response.data['pages'] as List?;
-        if (pages == null || pages.isEmpty) {
-          emptyResponseCount++;
-          currentAng += 20;
-          continue;
-        }
-        emptyResponseCount = 0;
+        final List pages = response.data['pages'] ?? [];
+        if (pages.isEmpty) break;
 
         db.execute('BEGIN TRANSACTION');
-        bool foundValidSource = false;
-        for (final pageData in pages) {
-          final sInfo = pageData['source'];
-          if (sInfo == null || sInfo['sourceId']?.toString().toUpperCase() != sId) continue;
-          foundValidSource = true;
-          
-          db.execute('INSERT OR REPLACE INTO sources VALUES (?, ?, ?)', 
-            [sId, sInfo['unicode'] ?? sInfo['english'] ?? sId, sInfo['english'] ?? sId]);
-
-          for (final v in (pageData['page'] as List)) {
-            final shId = _toInt(v['shabadId']);
-            final vId = _toInt(v['verseId']);
-            if (shId == null || vId == null) continue;
-
-            _saveMeta(db, 'writers', v['writer'], 'writerId');
-            _saveMeta(db, 'raags', v['raag'], 'raagId');
-            
-            db.execute('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
-                [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
-
-            final gur = v['verse']?['unicode'] ?? v['gurmukhi'] ?? '';
-            final hi = v['transliteration']?['hindi'] ?? v['transliteration']?['hi'];
-            final fl = _genFlStr(gur);
-            
-            db.execute('INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-              [vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], fl, null]);
+        for (final p in pages) {
+          if (p['source']?['sourceId'] != sId) continue;
+          for (final v in (p['page'] as List)) {
+            _saveAll(db, v, sId, totalSynced);
             totalSynced++;
           }
         }
         db.execute('COMMIT');
-        stdout.write('\r✅ Current lines synced: $totalSynced...');
-        if (!foundValidSource) break;
-        currentAng += 20;
-      } catch (e) {
-        try { db.execute('ROLLBACK'); } catch (_) {}
-        break;
-      }
+        stdout.write('\r✅ Processed: $totalSynced lines...');
+      } catch (_) {}
     }
   }
+
+  // --- PART 2: ID-BASED SYNC (A, B, N, R, S) ---
+  print('\n\n📥 SYNCING OTHER SOURCES (ID-SCAN MODE)...');
+  // We scan ID ranges that are likely to contain these sources
+  // A is 40000+, B is 40001+, N is 30000+, S is 41000+
+  // We'll scan ID ranges in parallel to avoid hanging
+  
+  final idRanges = [
+    [30000, 35000], // Catch N
+    [40000, 50000], // Catch A, B, S
+    [60000, 75000], // Catch R and others
+  ];
+
+  for (final range in idRanges) {
+    print('\n🔍 Scanning IDs ${range[0]} to ${range[1]}...');
+    for (int startId = range[0]; startId <= range[1]; startId += 100) {
+      final futures = <Future<Response>>[];
+      for (int i = 0; i < 100; i += 20) {
+        final batchStart = startId + i;
+        final ids = List.generate(20, (j) => batchStart + j).join(',');
+        futures.add(dio.get('$baseUrl/shabads/$ids'));
+      }
+
+      try {
+        final results = await Future.wait(futures);
+        db.execute('BEGIN TRANSACTION');
+        for (final res in results) {
+          final List shabads = res.data['shabads'] ?? [];
+          for (final sData in shabads) {
+            final info = sData['shabadInfo'];
+            final List verses = sData['verses'] ?? [];
+            if (info == null || verses.isEmpty) continue;
+
+            final sId = info['source']?['sourceId']?.toString() ?? 'Unknown';
+            // Only process if it's one of our target sources
+            if (!shabadSources.contains(sId)) continue;
+
+            db.execute('INSERT OR IGNORE INTO sources VALUES (?, ?, ?)', 
+              [sId, info['source']?['unicode'] ?? sId, info['source']?['english'] ?? sId]);
+
+            for (final v in verses) {
+              _saveAll(db, v, sId, totalSynced, info: info);
+              totalSynced++;
+            }
+          }
+        }
+        db.execute('COMMIT');
+        stdout.write('\r✅ Processed: $totalSynced lines (Up to ID $startId)...');
+      } catch (_) {}
+    }
+  }
+
   db.dispose();
-  print('\n🏁 Master Sync Complete! Total Lines: $totalSynced');
+  print('\n🏁 MASTER SYNC COMPLETE! Total Lines: $totalSynced');
+}
+
+void _saveAll(Database db, Map v, String sId, int lineId, {Map? info}) {
+  final shId = _toInt(v['shabadId'] ?? info?['shabadId']);
+  final vId = _toInt(v['verseId'] ?? v['id']);
+  if (shId == null || vId == null) return;
+
+  _saveMeta(db, 'writers', v['writer'] ?? info?['writer'], 'writerId');
+  _saveMeta(db, 'raags', v['raag'] ?? info?['raag'], 'raagId');
+
+  db.execute('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
+      [shId, sId, _toInt(v['writer']?['writerId'] ?? info?['writer']?['writerId']), 
+       _toInt(v['raag']?['raagId'] ?? info?['raag']?['raagId']), 
+       _toInt(v['pageNo'] ?? info?['pageNo'])]);
+
+  final gur = v['verse']?['unicode'] ?? v['gurmukhi'] ?? '';
+  final hi = v['transliteration']?['hindi'] ?? v['transliteration']?['hi'];
+  db.execute('INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+    [vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], _genFlStr(gur), null]);
 }
 
 int? _toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '');
@@ -100,9 +167,8 @@ void _saveMeta(Database db, String table, Map? data, String idKey) {
   if (data == null) return;
   final id = _toInt(data[idKey] ?? data['id']);
   if (id == null) return;
-  final punjabi = data['unicode'] ?? data['english'] ?? data['gurmukhi'] ?? 'Unknown';
-  final english = data['english'] ?? data['unicode'] ?? data['gurmukhi'] ?? 'Unknown';
-  db.execute('INSERT OR REPLACE INTO $table VALUES (?, ?, ?)', [id, punjabi, english]);
+  db.execute('INSERT OR REPLACE INTO $table VALUES (?, ?, ?)', 
+      [id, data['unicode'] ?? data['english'] ?? 'Unknown', data['english'] ?? 'Unknown']);
 }
 
 String _genFlStr(String unicode) {
