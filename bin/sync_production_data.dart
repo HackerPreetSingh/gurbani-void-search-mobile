@@ -3,11 +3,9 @@ import 'package:dio/dio.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:characters/characters.dart';
 
-/// THE UN-STUCKABLE SYNC ENGINE V7
-/// Features: Auto-retries, Sequential Ang fetching, and Verbose Logging.
 void main() async {
   final dbPath = 'assets/database/gurbani_offline.sqlite';
-  print('🚀 Starting Ultra-Stable Sync...');
+  print('🚀 Starting Final Comprehensive Sync (All Sources)...');
 
   final dir = Directory('assets/database');
   if (!dir.existsSync()) dir.createSync(recursive: true);
@@ -23,57 +21,45 @@ void main() async {
   db.execute('CREATE INDEX idx_verses_fl ON verses (first_letter_str)');
 
   final dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 60),
-    validateStatus: (status) => status! < 500,
+    connectTimeout: const Duration(seconds: 45),
+    receiveTimeout: const Duration(seconds: 300),
+    validateStatus: (status) => status! < 500, 
   ));
 
   const baseUrl = 'https://api.banidb.com/v2';
   
-  print('🔍 Fetching sources...');
-  final sourcesRes = await _fetchWithRetry(dio, '$baseUrl/sources');
-  final sourceList = sourcesRes.data['rows'] as List;
+  // FIXED: Explicitly including all 7 production sources
+  final sourceIds = ['G', 'D', 'A', 'B', 'N', 'R', 'S'];
 
   int totalSynced = 0;
-  for (final src in sourceList) {
-    final sId = src['SourceID'] as String;
-    final sName = (src['SourceUnicode'] ?? src['SourceEnglish']) as String;
-
-    print('\n📥 SOURCE: $sName [$sId]');
-    db.execute('INSERT OR IGNORE INTO sources VALUES (?, ?, ?)', [sId, sName, src['SourceEnglish']]);
-
+  for (final sId in sourceIds) {
+    print('\n📥 Syncing source: $sId');
     int currentAng = 1;
     int emptyResponseCount = 0;
 
-    while (emptyResponseCount < 3) { // Stop if we get 3 empty batches in a row
-      final batchSize = 10; // Smaller batches for higher reliability
-      final start = currentAng;
-      final end = currentAng + batchSize - 1;
-      
-      final url = '$baseUrl/angs/$start-$end/$sId';
-      stdout.write('\r📡 Fetching Angs $start-$end... ');
-
+    while (emptyResponseCount < 3) {
       try {
-        final response = await _fetchWithRetry(dio, url);
-        
-        if (response.statusCode != 200) {
-          print('Error ${response.statusCode}. Skipping source.');
-          break;
-        }
+        final response = await dio.get('$baseUrl/angs/$currentAng-${currentAng + 19}/$sId');
+        if (response.statusCode != 200) break;
 
         final pages = response.data['pages'] as List?;
         if (pages == null || pages.isEmpty) {
           emptyResponseCount++;
-          currentAng += batchSize;
+          currentAng += 20;
           continue;
         }
         emptyResponseCount = 0;
 
         db.execute('BEGIN TRANSACTION');
-        int batchLines = 0;
+        bool foundValidSource = false;
         for (final pageData in pages) {
-          if (pageData['source']?['sourceId'] != sId) continue;
+          final sInfo = pageData['source'];
+          if (sInfo == null || sInfo['sourceId']?.toString().toUpperCase() != sId) continue;
+          foundValidSource = true;
           
+          db.execute('INSERT OR REPLACE INTO sources VALUES (?, ?, ?)', 
+            [sId, sInfo['unicode'] ?? sInfo['english'] ?? sId, sInfo['english'] ?? sId]);
+
           for (final v in (pageData['page'] as List)) {
             final shId = _toInt(v['shabadId']);
             final vId = _toInt(v['verseId']);
@@ -83,45 +69,29 @@ void main() async {
             _saveMeta(db, 'raags', v['raag'], 'raagId');
             
             db.execute('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
-              [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
+                [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
 
             final gur = v['verse']?['unicode'] ?? v['gurmukhi'] ?? '';
             final hi = v['transliteration']?['hindi'] ?? v['transliteration']?['hi'];
+            final fl = _genFlStr(gur);
+            
             db.execute('INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-              [vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], _genFlStr(gur), null]);
+              [vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], fl, null]);
             totalSynced++;
-            batchLines++;
           }
         }
         db.execute('COMMIT');
-        stdout.write('Done ($batchLines lines)');
-        currentAng += batchSize;
-        
+        stdout.write('\r✅ Current lines synced: $totalSynced...');
+        if (!foundValidSource) break;
+        currentAng += 20;
       } catch (e) {
-        print('\n❌ Request Failed. Retrying with next batch. Error: $e');
         try { db.execute('ROLLBACK'); } catch (_) {}
-        currentAng += batchSize;
+        break;
       }
     }
-    print('\n✅ Source Finished.');
   }
-
   db.dispose();
-  print('\n🏁 GLOBAL SYNC COMPLETE! Total lines: $totalSynced');
-}
-
-Future<Response> _fetchWithRetry(Dio dio, String url, {int retries = 3}) async {
-  int attempts = 0;
-  while (attempts < retries) {
-    try {
-      return await dio.get(url);
-    } catch (e) {
-      attempts++;
-      if (attempts >= retries) rethrow;
-      sleep(Duration(seconds: 2 * attempts)); // Exponential backoff
-    }
-  }
-  throw Exception('Failed to fetch after $retries attempts');
+  print('\n🏁 Master Sync Complete! Total Lines: $totalSynced');
 }
 
 int? _toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '');
@@ -147,7 +117,8 @@ String _genFlStr(String unicode) {
     0x0A5C: 'V', 0x0A72: 'e', 0x0A73: 'a', 0x0A74: '1',
   };
   final codes = unicode.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).map((w) {
-    final ascii = map[w.characters.first.runes.first];
+    final firstChar = w.characters.first;
+    final ascii = map[firstChar.runes.first];
     if (ascii == null) return null;
     final code = ascii.codeUnitAt(0);
     return code < 100 ? '0$code' : '$code';

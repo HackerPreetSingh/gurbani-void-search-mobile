@@ -3,143 +3,109 @@ import 'package:drift/drift.dart';
 import 'package:gurbani_voice_search/core/database/local_database.dart';
 import 'gurmukhi_processor.dart';
 
-/// Highly resilient ingestor that uses the /angs endpoint for maximum speed.
+/// A heavy-duty sync engine built for production-grade Gurbani indexing.
 class ProductionIngestor {
   ProductionIngestor(this._database);
 
   final LocalDatabase _database;
   final _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 120),
+    connectTimeout: const Duration(seconds: 45),
+    receiveTimeout: const Duration(seconds: 150),
+    validateStatus: (status) => status! < 500,
   ));
 
-  static const _apiBaseUrl = 'https://api.banidb.com/v2';
-  static const _angsPerBatch = 20; // Smaller batches for better server stability
-  static const _totalAngs = 1430;
+  static const _baseUrl = 'https://api.banidb.com/v2';
 
   Future<void> buildOfflineDatabase({
     required Function(double progress) onProgress,
     required Function(String status) onStatus,
   }) async {
-    onStatus('Preparing database...');
+    onStatus('Initializing setup...');
+    
+    final sourcesRes = await _dio.get('$_baseUrl/sources');
+    final List sourceList = sourcesRes.data['rows'] ?? [];
 
-    await _database.transaction((executor) async {
-      await executor.runCustom('PRAGMA foreign_keys = OFF');
-      await executor.runCustom('DELETE FROM verses');
-      await executor.runCustom('DELETE FROM shabads');
-      await executor.runCustom('DELETE FROM sources');
-      await executor.runCustom('DELETE FROM writers');
-      await executor.runCustom('DELETE FROM raags');
-    });
+    int totalSynced = 0;
+    int totalSources = sourceList.length;
 
-    int processedLines = 0;
+    for (int i = 0; i < totalSources; i++) {
+      final src = sourceList[i];
+      final String sId = src['SourceID'];
+      final String sName = src['SourceUnicode'] ?? src['SourceEnglish'];
 
-    for (int startAng = 1; startAng <= _totalAngs; startAng += _angsPerBatch) {
-      final endAng = (startAng + _angsPerBatch - 1).clamp(1, _totalAngs);
-      onStatus('Downloading Angs $startAng to $endAng...');
+      onStatus('Syncing: $sName...');
+      
+      await _database.transaction((executor) async {
+        await executor.runCustom('INSERT OR IGNORE INTO sources VALUES (?, ?, ?)', 
+            [sId, sName, src['SourceEnglish']]);
+      });
 
-      try {
-        final response = await _dio.get('$_apiBaseUrl/angs/$startAng-$endAng/G');
-        
-        final dynamic data = response.data;
-        if (data == null || data is! Map) continue;
-        
-        final List<dynamic> pages = data['pages'] ?? [];
-        if (pages.isEmpty) continue;
+      int currentAng = 1;
+      int emptyBatches = 0;
 
-        await _database.transaction((executor) async {
-          final verseBatch = <List<Object?>>[];
-          const verseSql = 'INSERT INTO verses (id, shabad_id, verse_order, gurmukhi, first_letter_str, transliteration, translation) VALUES (?, ?, ?, ?, ?, ?, ?)';
+      while (emptyBatches < 3) {
+        final batchSize = 20;
+        try {
+          final response = await _dio.get('$_baseUrl/angs/$currentAng-${currentAng + batchSize - 1}/$sId');
+          if (response.statusCode != 200) break;
 
-          for (final p in pages) {
-            final Map<String, dynamic> pageData = p as Map<String, dynamic>;
-            final List<dynamic> verses = pageData['page'] ?? [];
-            
-            for (final v in verses) {
-              final Map<String, dynamic> verse = v as Map<String, dynamic>;
-              
-              // SAFELY parse IDs
-              final shId = _toInt(verse['shabadId'] ?? verse['shabadID']);
-              final vId = _toInt(verse['verseId'] ?? verse['id'] ?? verse['ID']);
-              final gurmukhi = verse['verse']?['unicode'] ?? verse['gurmukhi'] ?? '';
-              
-              if (gurmukhi.isEmpty || shId == null || vId == null) continue;
+          final pages = response.data['pages'] as List?;
+          if (pages == null || pages.isEmpty) {
+            emptyBatches++;
+            currentAng += batchSize;
+            continue;
+          }
+          emptyBatches = 0;
 
-              await _insertMetadataFromVerse(executor, verse);
-              
-              await executor.runCustom(
-                'INSERT OR IGNORE INTO shabads (id, source_id, writer_id, raag_id, ang) VALUES (?, ?, ?, ?, ?)',
-                [
-                  shId,
-                  verse['source']?['sourceId']?.toString() ?? 'G',
-                  _toInt(verse['writer']?['writerId'] ?? verse['writer']?['id']),
-                  _toInt(verse['raag']?['raagId'] ?? verse['raag']?['id']),
-                  _toInt(verse['pageNo'] ?? verse['source']?['pageNo'])
-                ],
-              );
+          await _database.transaction((executor) async {
+            final verseBatch = <List<Object?>>[];
+            const verseSql = 'INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-              final firstLetterStr = GurmukhiProcessor.generateFirstLetterStr(gurmukhi);
+            for (final p in pages) {
+              if (p['source']?['sourceId'] != sId) continue;
+              for (final v in (p['page'] as List)) {
+                final shId = _toInt(v['shabadId']);
+                final vId = _toInt(v['verseId']);
+                if (shId == null || vId == null) continue;
 
-              verseBatch.add([
-                vId,
-                shId,
-                _toInt(verse['lineNo'] ?? verse['LineNo']) ?? 0,
-                gurmukhi,
-                firstLetterStr,
-                verse['transliteration']?['english'],
-                verse['translation']?['en']?['bdb']
-              ]);
-              processedLines++;
+                await _saveMeta(executor, 'writers', v['writer'], 'writerId');
+                await _saveMeta(executor, 'raags', v['raag'], 'raagId');
+                
+                await executor.runCustom('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
+                    [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
+
+                final gur = v['verse']?['unicode'] ?? v['gurmukhi'] ?? '';
+                final flStr = GurmukhiProcessor.generateFirstLetterStr(gur);
+                final hi = v['transliteration']?['hindi'] ?? v['transliteration']?['hi'];
+
+                verseBatch.add([vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], flStr, null]);
+                totalSynced++;
+              }
             }
-          }
-          
-          if (verseBatch.isNotEmpty) {
-            await executor.runBatched(BatchedStatements(
-              [verseSql],
-              verseBatch.map((b) => ArgumentsForBatchedStatement(0, b)).toList(),
-            ));
-          }
-        });
+            if (verseBatch.isNotEmpty) {
+              await executor.runBatched(BatchedStatements([verseSql], 
+                verseBatch.map((b) => ArgumentsForBatchedStatement(0, b)).toList()));
+            }
+          });
 
-        onProgress(endAng / _totalAngs);
-        onStatus('Syncing... $processedLines lines saved');
-        
-      } catch (e) {
-        // Continue to next batch
+          onProgress((i + (currentAng / 1500)) / totalSources);
+          currentAng += batchSize;
+        } catch (e) {
+          break;
+        }
       }
     }
-
-    await _database.read((executor) => executor.runCustom('PRAGMA foreign_keys = ON'));
-    onStatus('Offline engine is ready!');
+    onStatus('Setup Complete! $totalSynced lines ready.');
   }
 
-  int? _toInt(dynamic value) {
-    if (value == null) return null;
-    if (value is int) return value;
-    return int.tryParse(value.toString());
-  }
+  int? _toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '');
 
-  Future<void> _insertMetadataFromVerse(QueryExecutor executor, Map<String, dynamic> v) async {
-    final source = v['source'];
-    if (source != null && source['sourceId'] != null) {
-      await executor.runCustom(
-        'INSERT OR IGNORE INTO sources (id, name_pa, name_en) VALUES (?, ?, ?)',
-        [source['sourceId'].toString(), source['unicode'] ?? source['english'] ?? 'Unknown', source['english'] ?? 'Unknown']
-      );
-    }
-    final writer = v['writer'];
-    if (writer != null && (writer['writerId'] ?? writer['id']) != null) {
-      await executor.runCustom(
-        'INSERT OR IGNORE INTO writers (id, name_pa, name_en) VALUES (?, ?, ?)',
-        [_toInt(writer['writerId'] ?? writer['id']), writer['unicode'] ?? writer['english'] ?? 'Unknown', writer['english'] ?? 'Unknown']
-      );
-    }
-    final raag = v['raag'];
-    if (raag != null && (raag['raagId'] ?? raag['id']) != null) {
-      await executor.runCustom(
-        'INSERT OR IGNORE INTO raags (id, name_pa, name_en) VALUES (?, ?, ?)',
-        [_toInt(raag['raagId'] ?? raag['id']), raag['unicode'] ?? raag['english'] ?? 'Unknown', raag['english'] ?? 'Unknown']
-      );
-    }
+  Future<void> _saveMeta(QueryExecutor executor, String table, Map? data, String idKey) async {
+    if (data == null) return;
+    final id = _toInt(data[idKey] ?? data['id']);
+    if (id == null) return;
+    final pbi = data['unicode'] ?? data['english'] ?? 'Unknown';
+    final eng = data['english'] ?? 'Unknown';
+    await executor.runCustom('INSERT OR REPLACE INTO $table VALUES (?, ?, ?)', [id, pbi, eng]);
   }
 }

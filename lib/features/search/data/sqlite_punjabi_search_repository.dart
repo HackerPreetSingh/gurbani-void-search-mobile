@@ -1,4 +1,5 @@
-import 'dart:developer' as dev;
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/database/local_database.dart';
 import '../domain/models/gurbani_corpus.dart';
 import '../domain/models/gurbani_search_result.dart';
@@ -10,32 +11,22 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
   SqlitePunjabiSearchRepository(this._database);
 
   final LocalDatabase _database;
+  final _dio = Dio();
 
   @override
   Future<GurbaniCorpusSummary?> activeCorpus() async {
     try {
-      final rows = await _database.read(
-        (executor) => executor.runSelect('SELECT COUNT(*) as line_count FROM verses', []),
-      );
-      final count = (rows.single['line_count'] as num).toInt();
-      
-      dev.log('Active corpus check: $count lines found.', name: 'SearchRepository');
-      
-      if (count == 0) {
-        dev.log('Corpus is empty. Triggering setup UI.', name: 'SearchRepository');
-        return null;
-      }
-
+      final rows = await _database.read((executor) => executor.runSelect('SELECT COUNT(*) as c FROM verses', []));
+      final count = rows.first['c'] as int;
       return GurbaniCorpusSummary(
         id: 'offline-production',
-        displayName: 'Full Offline Gurbani',
-        version: '1.1.0',
+        displayName: 'Hybrid Engine',
+        version: '1.2.0',
         lineCount: count,
         attribution: 'BaniDB',
         importedAtUtc: DateTime.now(),
       );
     } catch (e) {
-      dev.log('Error checking active corpus: $e', name: 'SearchRepository', error: e);
       return null;
     }
   }
@@ -45,115 +36,120 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
     required GurbaniCorpusManifest manifest,
     required Iterable<GurbaniLineDraft> lines,
   }) {
-    throw UnimplementedError('Handled by ProductionIngestor.');
+    throw UnimplementedError();
   }
 
   @override
-  Future<PunjabiSearchResponse> search(
-    PunjabiSearchQuery query, {
-    int limit = 40,
-  }) async {
-    dev.log('Searching for: "${query.raw}"', name: 'SearchRepository');
-
-    if (!query.isSearchable) {
-      return PunjabiSearchResponse(status: PunjabiSearchStatus.unsupportedQuery, query: query);
-    }
-
-    final corpus = await activeCorpus();
-    if (corpus == null) {
-      return PunjabiSearchResponse(status: PunjabiSearchStatus.noCorpus, query: query);
-    }
-
+  Future<PunjabiSearchResponse> search(PunjabiSearchQuery query, {int limit = 40}) async {
     final searchPattern = GurmukhiProcessor.queryToFirstLetterStr(query.raw);
-    dev.log('Search pattern: "$searchPattern"', name: 'SearchRepository');
-    
-    if (searchPattern.isEmpty) {
-      return PunjabiSearchResponse(status: PunjabiSearchStatus.complete, query: query, results: []);
-    }
+    if (searchPattern.isEmpty) return PunjabiSearchResponse(status: PunjabiSearchStatus.complete, query: query);
 
+    // 1. TRY LOCAL FIRST
     try {
       final rows = await _database.read((executor) => executor.runSelect('''
-        SELECT 
-          v.id, v.gurmukhi, v.verse_order, v.transliteration, v.transliteration_hi, v.translation,
-          s.id as shabad_id,
-          s.ang,
-          src.name_en as source_name,
-          w.name_en as writer_name,
-          r.name_en as raag_name
+        SELECT v.*, s.ang, src.name_en as source_name, w.name_en as writer_name, r.name_en as raag_name
         FROM verses v
         JOIN shabads s ON v.shabad_id = s.id
         LEFT JOIN sources src ON s.source_id = src.id
         LEFT JOIN writers w ON s.writer_id = w.id
         LEFT JOIN raags r ON s.raag_id = r.id
-        WHERE v.first_letter_str LIKE ?
-        ORDER BY v.id ASC
-        LIMIT ?
+        WHERE v.first_letter_str LIKE ? LIMIT ?
       ''', ['$searchPattern%', limit]));
 
-      dev.log('Found ${rows.length} results.', name: 'SearchRepository');
+      if (rows.isNotEmpty) {
+        return PunjabiSearchResponse(
+          status: PunjabiSearchStatus.complete,
+          query: query,
+          results: rows.map((r) => _mapRow(r)).toList(),
+        );
+      }
+    } catch (e) {
+       if (kDebugMode) print('Local search failed: $e');
+    }
 
-      final results = rows.map((row) => GurbaniSearchResult(
-        stableId: (row['id'] as int).toString(),
-        shabadId: (row['shabad_id'] as int).toString(),
-        gurmukhi: row['gurmukhi'] as String,
-        sourceName: row['source_name'] as String? ?? 'Unknown Source',
-        writerName: row['writer_name'] as String?,
-        raagName: row['raag_name'] as String?,
-        ang: row['ang'] as int?,
-        displayOrder: row['verse_order'] as int,
-        match: SearchResultMatch.initial,
-        transliteration: row['transliteration'] as String?,
-        transliterationHi: row['transliteration_hi'] as String?,
-        translation: row['translation'] as String?,
-      )).toList();
-
+    // 2. REMOTE FALLBACK (Fixed URL interpolation)
+    try {
+      final encodedQuery = Uri.encodeComponent(query.raw.trim());
+      final response = await _dio.get('https://api.banidb.com/v2/search/$encodedQuery', queryParameters: {
+        'searchtype': (query.kind == PunjabiSearchKind.romanInitial) ? 7 : 0,
+        'results': limit,
+      });
+      final List verses = response.data['verses'] ?? [];
       return PunjabiSearchResponse(
         status: PunjabiSearchStatus.complete,
         query: query,
-        results: results,
+        results: verses.map((v) => _mapApi(v)).toList(),
       );
     } catch (e) {
-      dev.log('Search failed: $e', name: 'SearchRepository', error: e);
       return PunjabiSearchResponse(status: PunjabiSearchStatus.complete, query: query, results: []);
     }
   }
 
   @override
   Future<List<GurbaniSearchResult>> getLocalShabad(String shabadId) async {
-    final sId = int.tryParse(shabadId) ?? 0;
+    // 1. TRY LOCAL FIRST
     try {
       final rows = await _database.read((executor) => executor.runSelect('''
-        SELECT 
-          v.id, v.gurmukhi, v.verse_order, v.transliteration, v.transliteration_hi, v.translation,
-          s.ang,
-          src.name_en as source_name,
-          w.name_en as writer_name,
-          r.name_en as raag_name
+        SELECT v.*, s.ang, src.name_en as source_name, w.name_en as writer_name, r.name_en as raag_name
         FROM verses v
         JOIN shabads s ON v.shabad_id = s.id
         LEFT JOIN sources src ON s.source_id = src.id
         LEFT JOIN writers w ON s.writer_id = w.id
         LEFT JOIN raags r ON s.raag_id = r.id
-        WHERE v.shabad_id = ?
-        ORDER BY v.verse_order ASC
-      ''', [sId]));
+        WHERE v.shabad_id = ? ORDER BY v.verse_order ASC
+      ''', [int.tryParse(shabadId) ?? 0]));
 
-      return rows.map((row) => GurbaniSearchResult(
-        stableId: row['id'].toString(),
-        shabadId: shabadId,
-        gurmukhi: row['gurmukhi'] as String,
-        sourceName: row['source_name'] as String? ?? 'Unknown Source',
-        writerName: row['writer_name'] as String?,
-        raagName: row['raag_name'] as String?,
-        ang: row['ang'] as int?,
-        displayOrder: row['verse_order'] as int,
-        match: SearchResultMatch.word,
-        transliteration: row['transliteration'] as String?,
-        transliterationHi: row['transliteration_hi'] as String?,
-        translation: row['translation'] as String?,
-      )).toList();
+      if (rows.isNotEmpty) return rows.map((r) => _mapRow(r)).toList();
+    } catch (_) {}
+
+    // 2. REMOTE FALLBACK (Fixed URL interpolation)
+    try {
+      final res = await _dio.get('https://api.banidb.com/v2/shabads/$shabadId');
+      final Map<String, dynamic> data = res.data as Map<String, dynamic>;
+      final Map<String, dynamic>? shabadInfo = data['shabadInfo'] as Map<String, dynamic>?;
+      final List verses = data['verses'] ?? [];
+      return verses.map((v) => _mapApi(v, shabadInfo: shabadInfo)).toList();
     } catch (e) {
       return [];
     }
+  }
+
+  GurbaniSearchResult _mapRow(Map<String, dynamic> r) {
+    return GurbaniSearchResult(
+      stableId: r['id'].toString(),
+      shabadId: r['shabad_id'].toString(),
+      gurmukhi: r['gurmukhi'],
+      sourceName: r['source_name'] ?? 'Unknown',
+      writerName: r['writer_name'],
+      raagName: r['raag_name'],
+      ang: r['ang'],
+      displayOrder: r['verse_order'],
+      match: SearchResultMatch.initial,
+      transliteration: r['transliteration'],
+      transliterationHi: r['transliteration_hi'],
+      translation: r['translation'],
+    );
+  }
+
+  GurbaniSearchResult _mapApi(Map v, {Map<String, dynamic>? shabadInfo}) {
+    final String? raag = shabadInfo?['raag']?['english'] ?? v['raag']?['english'];
+    final String? writer = shabadInfo?['writer']?['english'] ?? v['writer']?['english'];
+    final String? source = shabadInfo?['source']?['english'] ?? v['source']?['english'] ?? 'Unknown';
+    final int? ang = shabadInfo?['pageNo'] ?? v['pageNo'] ?? v['source']?['pageNo'];
+
+    return GurbaniSearchResult(
+      stableId: (v['verseId'] ?? v['id'] ?? 0).toString(),
+      shabadId: (v['shabadId'] ?? 0).toString(),
+      gurmukhi: v['verse']?['unicode'] ?? v['gurmukhi'] ?? '',
+      sourceName: source ?? 'Unknown',
+      writerName: writer,
+      raagName: raag,
+      ang: ang,
+      displayOrder: v['lineNo'] ?? 0,
+      match: SearchResultMatch.initial,
+      transliteration: v['transliteration']?['english'] ?? v['transliteration']?['en'],
+      transliterationHi: v['transliteration']?['hindi'] ?? v['transliteration']?['hi'],
+      translation: v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'],
+    );
   }
 }

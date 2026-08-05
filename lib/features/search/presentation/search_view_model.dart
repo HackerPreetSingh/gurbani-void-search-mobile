@@ -8,11 +8,25 @@ class SearchViewModel extends Notifier<AsyncValue<PunjabiSearchResponse?>> {
   @override
   AsyncValue<PunjabiSearchResponse?> build() {
     ref.onDispose(() => _debounceTimer?.cancel());
+    
+    // Initial check for database content
+    _checkCorpus();
+    
     return const AsyncValue.data(null);
   }
 
   Timer? _debounceTimer;
   String _lastQuery = '';
+
+  Future<void> _checkCorpus() async {
+    final corpus = await ref.read(punjabiSearchRepositoryProvider).activeCorpus();
+    if (corpus == null) {
+      state = AsyncValue.data(PunjabiSearchResponse(
+        status: PunjabiSearchStatus.noCorpus,
+        query: null,
+      ));
+    }
+  }
 
   void onQueryChanged(String query) {
     if (_lastQuery == query) return;
@@ -20,7 +34,12 @@ class SearchViewModel extends Notifier<AsyncValue<PunjabiSearchResponse?>> {
     _debounceTimer?.cancel();
 
     if (query.trim().length < 3) {
-      state = const AsyncValue.data(null);
+      // If we don't have enough characters, reset to null or noCorpus
+      _checkCorpus().then((_) {
+        if (state.value?.status != PunjabiSearchStatus.noCorpus) {
+          state = const AsyncValue.data(null);
+        }
+      });
       return;
     }
 
@@ -35,6 +54,15 @@ class SearchViewModel extends Notifier<AsyncValue<PunjabiSearchResponse?>> {
       state = AsyncValue.data(res);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> refreshAfterSetup() async {
+    await _checkCorpus();
+    if (_lastQuery.length >= 3) {
+      _performSearch(_lastQuery);
+    } else if (state.value?.status != PunjabiSearchStatus.noCorpus) {
+      state = const AsyncValue.data(null);
     }
   }
 }
