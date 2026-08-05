@@ -1,251 +1,100 @@
+import 'dart:io';
+import 'dart:developer' as dev;
+import 'package:flutter/services.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class LocalDatabase {
-  LocalDatabase({DatabaseConnection? connection})
-      : _connection = connection ?? _openConnection(),
-        _connectionUser = _LocalDatabaseConnectionUser();
+  LocalDatabase() : _connectionUser = _LocalDatabaseConnectionUser();
 
-  static const schemaVersion = 4;
+  static const schemaVersion = 6;
+  static const dbName = 'gurbani_offline_v6';
 
-  final DatabaseConnection _connection;
+  DatabaseConnection? _connection;
   final _LocalDatabaseConnectionUser _connectionUser;
   Future<DatabaseStatus>? _initialization;
 
   Future<DatabaseStatus> initialize() async {
-    final ongoingInitialization = _initialization;
-    if (ongoingInitialization != null) {
-      return ongoingInitialization;
-    }
-
-    final initialization = _initialize();
-    _initialization = initialization;
-
-    try {
-      return await initialization;
-    } catch (_) {
-      _initialization = null;
-      rethrow;
-    }
+    if (_initialization != null) return _initialization!;
+    return _initialization = _initialize();
   }
 
-  Future<void> close() => _connection.close();
+  Future<void> close() async => await _connection?.close();
 
   Future<T> read<T>(Future<T> Function(QueryExecutor executor) action) async {
     await initialize();
-    return action(_connection);
+    return action(_connection!);
   }
 
-  Future<T> transaction<T>(
-    Future<T> Function(QueryExecutor executor) action,
-  ) async {
+  Future<T> transaction<T>(Future<T> Function(QueryExecutor executor) action) async {
     await initialize();
-    final transaction = _connection.beginTransaction();
-    await transaction.ensureOpen(_connectionUser);
-
+    final trans = _connection!.beginTransaction();
+    await trans.ensureOpen(_connectionUser);
     try {
-      final result = await action(transaction);
-      await transaction.send();
-      return result;
-    } catch (_) {
-      await transaction.rollback();
+      final res = await action(trans);
+      await trans.send();
+      return res;
+    } catch (e) {
+      await trans.rollback();
       rethrow;
     }
   }
 
-  static DatabaseConnection _openConnection() {
-    return driftDatabase(
-      name: 'gurbani_search',
-      native: const DriftNativeOptions(shareAcrossIsolates: true),
-      web: DriftWebOptions(
-        sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-        driftWorker: Uri.parse('drift_worker.js'),
+  Future<DatabaseStatus> _initialize() async {
+    final docsDir = await getApplicationSupportDirectory();
+    final dbPath = p.join(docsDir.path, '$dbName.sqlite');
+    final file = File(dbPath);
+
+    // 1. Mandatory Asset Copy
+    if (!await file.exists() || (await file.length()) < 1 * 1024 * 1024) {
+      try {
+        final data = await rootBundle.load('assets/database/gurbani_offline.sqlite');
+        await Directory(docsDir.path).create(recursive: true);
+        await file.writeAsBytes(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes), flush: true);
+      } catch (e) {
+        dev.log('Asset copy failed: $e');
+      }
+    }
+
+    // 2. Consistent Wiring
+    _connection = driftDatabase(
+      name: dbName,
+      native: DriftNativeOptions(
+        databaseDirectory: () async => Directory(docsDir.path),
       ),
     );
-  }
 
-  Future<DatabaseStatus> _initialize() async {
-    await _connection.ensureOpen(_connectionUser);
-
-    final integrityCheck = await _connection.runSelect(
-      'PRAGMA integrity_check',
-      const [],
-    );
-    if (integrityCheck.single.values.single != 'ok') {
-      throw const DatabaseIntegrityException();
-    }
-
-    final initializedAtUtc = await _readInitializedAtUtc();
-    return DatabaseStatus(
-      schemaVersion: schemaVersion,
-      initializedAtUtc: initializedAtUtc,
-    );
-  }
-
-  Future<DateTime> _readInitializedAtUtc() async {
-    final result = await _connection.runSelect(
-      'SELECT value FROM app_metadata WHERE key = ?',
-      const ['initialized_at_utc'],
-    );
-    if (result.isEmpty) {
-      return DateTime.now().toUtc();
-    }
-    final value = result.single['value']! as String;
-    return DateTime.parse(value).toUtc();
+    await _connection!.ensureOpen(_connectionUser);
+    return DatabaseStatus(schemaVersion: schemaVersion, initializedAtUtc: DateTime.now().toUtc());
   }
 }
 
 class _LocalDatabaseConnectionUser extends QueryExecutorUser {
   @override
   int get schemaVersion => LocalDatabase.schemaVersion;
-
   @override
-  Future<void> beforeOpen(
-    QueryExecutor executor,
-    OpeningDetails details,
-  ) async {
+  Future<void> beforeOpen(QueryExecutor executor, OpeningDetails details) async {
     await executor.ensureOpen(this);
     await executor.runCustom('PRAGMA foreign_keys = ON');
-
-    final previousVersion = details.versionBefore ?? 0;
-
-    if (previousVersion < schemaVersion) {
-      await executor.runCustom('BEGIN IMMEDIATE');
-      try {
-        if (previousVersion < 1) {
-          await executor.runCustom('''
-            CREATE TABLE app_metadata (
-              key TEXT PRIMARY KEY NOT NULL,
-              value TEXT NOT NULL,
-              updated_at_utc TEXT NOT NULL
-            )
-          ''');
-
-          final initializedAtUtc = DateTime.now().toUtc().toIso8601String();
-          await executor.runCustom(
-            '''
-              INSERT INTO app_metadata (key, value, updated_at_utc)
-              VALUES ('initialized_at_utc', ?, ?)
-            ''',
-            [initializedAtUtc, initializedAtUtc],
-          );
-        }
-
-        // Cleanup any previous temporary schemas
-        if (previousVersion < 4) {
-          await executor.runCustom('DROP TABLE IF EXISTS verses_fts');
-          await executor.runCustom('DROP TABLE IF EXISTS verses');
-          await executor.runCustom('DROP TABLE IF EXISTS shabads');
-          await executor.runCustom('DROP TABLE IF EXISTS gurbani_corpora');
-          await executor.runCustom('DROP TABLE IF EXISTS gurmukhi_token_postings');
-          await executor.runCustom('DROP TABLE IF EXISTS gurbani_lines');
-          
-          await _createProductionSchema(executor);
-        }
-
-        await executor.runCustom('COMMIT');
-      } catch (_) {
-        await executor.runCustom('ROLLBACK');
-        rethrow;
-      }
+    if ((details.versionBefore ?? 0) < schemaVersion) {
+      await _createProductionSchema(executor);
     }
   }
 
   Future<void> _createProductionSchema(QueryExecutor executor) async {
-    // 1. Metadata Tables
-    await executor.runCustom('''
-      CREATE TABLE sources (
-        id TEXT PRIMARY KEY NOT NULL,
-        name_pa TEXT NOT NULL,
-        name_en TEXT NOT NULL
-      )
-    ''');
-
-    await executor.runCustom('''
-      CREATE TABLE writers (
-        id INTEGER PRIMARY KEY NOT NULL,
-        name_pa TEXT NOT NULL,
-        name_en TEXT NOT NULL
-      )
-    ''');
-
-    await executor.runCustom('''
-      CREATE TABLE raags (
-        id INTEGER PRIMARY KEY NOT NULL,
-        name_pa TEXT NOT NULL,
-        name_en TEXT NOT NULL
-      )
-    ''');
-
-    // 2. Main Tables
-    await executor.runCustom('''
-      CREATE TABLE shabads (
-        id INTEGER PRIMARY KEY NOT NULL,
-        source_id TEXT NOT NULL,
-        writer_id INTEGER,
-        raag_id INTEGER,
-        ang INTEGER,
-        FOREIGN KEY (source_id) REFERENCES sources (id),
-        FOREIGN KEY (writer_id) REFERENCES writers (id),
-        FOREIGN KEY (raag_id) REFERENCES raags (id)
-      )
-    ''');
-
-    await executor.runCustom('''
-      CREATE TABLE verses (
-        id INTEGER PRIMARY KEY NOT NULL,
-        shabad_id INTEGER NOT NULL,
-        verse_order INTEGER NOT NULL,
-        gurmukhi TEXT NOT NULL,
-        transliteration TEXT,
-        translation TEXT,
-        first_letter_str TEXT NOT NULL,
-        main_letters TEXT,
-        FOREIGN KEY (shabad_id) REFERENCES shabads (id) ON DELETE CASCADE
-      )
-    ''');
-
-    // 3. Optimized Search Indexes
-    await executor.runCustom('''
-      CREATE INDEX idx_verses_first_letter 
-      ON verses (first_letter_str)
-    ''');
-    
-    await executor.runCustom('''
-      CREATE INDEX idx_verses_shabad 
-      ON verses (shabad_id, verse_order)
-    ''');
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS sources (id TEXT PRIMARY KEY, name_pa TEXT, name_en TEXT)');
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS writers (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS raags (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS shabads (id INTEGER PRIMARY KEY, source_id TEXT, writer_id INTEGER, raag_id INTEGER, ang INTEGER)');
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS verses (id INTEGER PRIMARY KEY, shabad_id INTEGER, verse_order INTEGER, gurmukhi TEXT, transliteration TEXT, transliteration_hi TEXT, translation TEXT, first_letter_str TEXT, main_letters TEXT)');
+    await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_fl ON verses (first_letter_str)');
   }
 }
 
 class DatabaseStatus {
-  const DatabaseStatus({
-    required this.schemaVersion,
-    required this.initializedAtUtc,
-  });
-
+  const DatabaseStatus({required this.schemaVersion, required this.initializedAtUtc});
   final int schemaVersion;
   final DateTime initializedAtUtc;
-}
-
-class DatabaseIntegrityException implements Exception {
-  const DatabaseIntegrityException();
-  @override
-  String toString() => 'The local database integrity check failed.';
-}
-
-class UnsupportedDatabaseSchemaException implements Exception {
-  const UnsupportedDatabaseSchemaException({
-    required this.databaseVersion,
-    required this.supportedVersion,
-  });
-
-  final int databaseVersion;
-  final int supportedVersion;
-
-  @override
-  String toString() {
-    return 'Unsupported database schema \$databaseVersion; '
-        'this app supports up to \$supportedVersion.';
-  }
 }

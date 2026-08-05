@@ -9,16 +9,17 @@ class GurbaniSearchResult {
     required this.sourceName,
     required this.displayOrder,
     required this.match,
-    this.shabadId, // Added to support Shabad-wide navigation
+    this.shabadId,
     this.writerName,
     this.raagName,
     this.ang,
     this.transliteration,
+    this.transliterationHi,
     this.translation,
   });
 
   final String stableId;
-  final String? shabadId; // Unique ID for the entire Shabad
+  final String? shabadId;
   final String gurmukhi;
   final String sourceName;
   final String? writerName;
@@ -27,6 +28,7 @@ class GurbaniSearchResult {
   final int displayOrder;
   final SearchResultMatch match;
   final String? transliteration;
+  final String? transliterationHi;
   final String? translation;
 }
 

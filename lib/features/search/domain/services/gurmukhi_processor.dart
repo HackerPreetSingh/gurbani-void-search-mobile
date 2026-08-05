@@ -1,9 +1,6 @@
 import 'package:characters/characters.dart';
 
 /// The core intelligence of the Gurbani Search Engine.
-///
-/// Ported from the production 'anvaad-js' and 'BaniDB' logic to ensure
-/// 100% compatibility with standard Gurbani search indexes.
 abstract final class GurmukhiProcessor {
   /// Maps Unicode Gurmukhi characters to Gurbani Akhar ASCII.
   static const Map<int, String> _unicodeToAscii = {
@@ -55,51 +52,78 @@ abstract final class GurmukhiProcessor {
     0x0A74: '1', // ੴ
   };
 
+  /// Maps Roman keys (user input) to Gurbani Akhar ASCII first letters.
+  static const Map<String, String> _romanToGurbaniAkhar = {
+    'a': 'A', // Maps to ਅ or ਆ (A)
+    'b': 'b',
+    'c': 'c',
+    'd': 'd',
+    'e': 'e',
+    'f': 'f',
+    'g': 'g',
+    'h': 'h',
+    'i': 'i', // Maps to ਇ (ie)
+    'j': 'j',
+    'k': 'k',
+    'l': 'l',
+    'm': 'm',
+    'n': 'n',
+    'o': 'E', // Maps to ਓ (E)
+    'p': 'p',
+    'q': 'q',
+    'r': 'r',
+    's': 's',
+    't': 'q', // Maps to ਤ (q)
+    'u': 'a', // Maps to ਉ (au)
+    'v': 'v',
+    'w': 'v',
+    'x': 'x',
+    'y': 'X',
+    'z': 'z',
+  };
+
   /// Generates the 'FirstLetterStr' index used in production BaniDB search.
-  /// 
-  /// Example: "ੴ ਸਤਿ ਨਾਮੁ" -> ",049,115,110"
   static String generateFirstLetterStr(String unicode) {
     if (unicode.isEmpty) return '';
-
     final codes = <String>[];
     final words = unicode.trim().split(RegExp(r'\s+'));
 
     for (final word in words) {
       if (word.isEmpty) continue;
-      
       final firstGrapheme = word.characters.first;
       final rune = firstGrapheme.runes.first;
-      
       final ascii = _unicodeToAscii[rune];
       if (ascii != null) {
-        final baseChar = ascii[0];
-        final decimalCode = baseChar.codeUnitAt(0);
-        
-        final padded = decimalCode < 100 
-            ? '0$decimalCode' 
-            : decimalCode.toString();
-        codes.add(padded);
+        final decimalCode = ascii[0].codeUnitAt(0);
+        codes.add(decimalCode < 100 ? '0$decimalCode' : decimalCode.toString());
       }
     }
-
     return codes.isEmpty ? '' : ',${codes.join(',')}';
   }
 
   /// Generates the search code sequence for a user query.
-  /// 
-  /// Example: User types "ੳਸ" -> ",097,115"
   static String queryToFirstLetterStr(String query) {
     if (query.isEmpty) return '';
-    
     final codes = <String>[];
-    for (final char in query.characters) {
+    
+    for (final char in query.toLowerCase().characters) {
       final rune = char.runes.first;
+      
+      // Case 1: Roman letter input
+      if (rune >= 0x61 && rune <= 0x7A) {
+        final mapped = _romanToGurbaniAkhar[char];
+        if (mapped != null) {
+           final decimalCode = mapped.codeUnitAt(0);
+           codes.add(decimalCode < 100 ? '0$decimalCode' : decimalCode.toString());
+        }
+        continue;
+      }
+
+      // Case 2: Gurmukhi character input
       final ascii = _unicodeToAscii[rune];
       if (ascii != null) {
-        final baseChar = ascii[0];
-        final decimalCode = baseChar.codeUnitAt(0);
-        final padded = decimalCode < 100 ? '0$decimalCode' : decimalCode.toString();
-        codes.add(padded);
+        final decimalCode = ascii[0].codeUnitAt(0);
+        codes.add(decimalCode < 100 ? '0$decimalCode' : decimalCode.toString());
       }
     }
     return codes.isEmpty ? '' : ',${codes.join(',')}';

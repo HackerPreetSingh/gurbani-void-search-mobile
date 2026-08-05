@@ -14,13 +14,13 @@ abstract interface class PunjabiSearchRepository {
     PunjabiSearchQuery query, {
     int limit = 40,
   });
+
+  Future<List<GurbaniSearchResult>> getLocalShabad(String shabadId);
 }
 
 class CorpusImportException implements Exception {
   const CorpusImportException(this.message);
-
   final String message;
-
   @override
   String toString() => 'Corpus import failed: \$message';
 }
