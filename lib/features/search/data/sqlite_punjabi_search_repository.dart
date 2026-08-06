@@ -44,7 +44,6 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
     final searchPattern = GurmukhiProcessor.queryToFirstLetterStr(query.raw);
     if (searchPattern.isEmpty) return PunjabiSearchResponse(status: PunjabiSearchStatus.complete, query: query);
 
-    // 1. TRY LOCAL FIRST
     try {
       final rows = await _database.read((executor) => executor.runSelect('''
         SELECT v.*, s.ang, src.name_en as source_name, w.name_en as writer_name, r.name_en as raag_name
@@ -67,7 +66,6 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
        if (kDebugMode) print('Local search failed: $e');
     }
 
-    // 2. REMOTE FALLBACK (Fixed URL interpolation)
     try {
       final encodedQuery = Uri.encodeComponent(query.raw.trim());
       final response = await _dio.get('https://api.banidb.com/v2/search/$encodedQuery', queryParameters: {
@@ -87,7 +85,6 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
 
   @override
   Future<List<GurbaniSearchResult>> getLocalShabad(String shabadId) async {
-    // 1. TRY LOCAL FIRST
     try {
       final rows = await _database.read((executor) => executor.runSelect('''
         SELECT v.*, s.ang, src.name_en as source_name, w.name_en as writer_name, r.name_en as raag_name
@@ -102,7 +99,6 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
       if (rows.isNotEmpty) return rows.map((r) => _mapRow(r)).toList();
     } catch (_) {}
 
-    // 2. REMOTE FALLBACK (Fixed URL interpolation)
     try {
       final res = await _dio.get('https://api.banidb.com/v2/shabads/$shabadId');
       final Map<String, dynamic> data = res.data as Map<String, dynamic>;
@@ -112,6 +108,54 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
     } catch (e) {
       return [];
     }
+  }
+
+  @override
+  Future<void> addToHistory(GurbaniSearchResult result, String query) async {
+    final sId = int.tryParse(result.shabadId ?? '');
+    if (sId == null) return;
+    
+    await _database.transaction((executor) async {
+      await executor.runCustom(
+        'INSERT OR REPLACE INTO search_history (shabad_id, query, gurmukhi, source_name, raag_name, writer_name, ang, viewed_at_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          sId, 
+          query, 
+          result.gurmukhi, 
+          result.sourceName, 
+          result.raagName, 
+          result.writerName, 
+          result.ang, 
+          DateTime.now().toUtc().toIso8601String()
+        ],
+      );
+    });
+  }
+
+  @override
+  Future<List<GurbaniSearchResult>> getHistory() async {
+    final rows = await _database.read((executor) => executor.runSelect('''
+      SELECT * FROM search_history ORDER BY viewed_at_utc DESC
+    ''', []));
+    
+    return rows.map((r) => GurbaniSearchResult(
+      stableId: 'hist_${r['shabad_id']}',
+      shabadId: r['shabad_id'].toString(),
+      gurmukhi: r['gurmukhi'] as String,
+      sourceName: r['source_name'] as String,
+      writerName: r['writer_name'] as String?,
+      raagName: r['raag_name'] as String?,
+      ang: r['ang'] as int?,
+      displayOrder: 0,
+      match: SearchResultMatch.initial,
+    )).toList();
+  }
+
+  @override
+  Future<void> clearHistory() async {
+    await _database.transaction((executor) async {
+      await executor.runCustom('DELETE FROM search_history');
+    });
   }
 
   GurbaniSearchResult _mapRow(Map<String, dynamic> r) {

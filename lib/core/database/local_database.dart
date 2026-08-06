@@ -12,8 +12,8 @@ class LocalDatabase {
       : _connection = connection,
         _connectionUser = _LocalDatabaseConnectionUser();
 
-  static const schemaVersion = 7;
-  static const dbName = 'gurbani_production_v7';
+  static const schemaVersion = 10;
+  static const dbName = 'gurbani_production_v10';
 
   DatabaseConnection? _connection;
   final _LocalDatabaseConnectionUser _connectionUser;
@@ -73,10 +73,9 @@ class LocalDatabase {
         final data = await rootBundle.load('assets/database/gurbani_offline.sqlite');
         await Directory(docsDir.path).create(recursive: true);
         await file.writeAsBytes(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes), flush: true);
-        dev.log('Database pre-seeded from assets.', name: 'Database');
       }
     } catch (e) {
-      dev.log('Asset copy failed: $e', name: 'Database');
+      dev.log('Asset copy failed: $e');
     }
   }
 
@@ -112,6 +111,21 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
       try {
         await executor.runCustom('CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, updated_at_utc TEXT NOT NULL)');
         await _createProductionSchema(executor);
+        
+        await executor.runCustom('DROP TABLE IF EXISTS search_history');
+        await executor.runCustom('''
+          CREATE TABLE search_history (
+            shabad_id INTEGER PRIMARY KEY NOT NULL,
+            query TEXT,
+            gurmukhi TEXT NOT NULL,
+            source_name TEXT NOT NULL,
+            raag_name TEXT,
+            writer_name TEXT,
+            ang INTEGER,
+            viewed_at_utc TEXT NOT NULL
+          )
+        ''');
+        
         await executor.runCustom('COMMIT');
       } catch (_) {
         await executor.runCustom('ROLLBACK');

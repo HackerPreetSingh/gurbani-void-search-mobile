@@ -16,6 +16,12 @@ abstract interface class PunjabiSearchRepository {
   });
 
   Future<List<GurbaniSearchResult>> getLocalShabad(String shabadId);
+
+  Future<void> addToHistory(GurbaniSearchResult result, String query);
+  
+  Future<List<GurbaniSearchResult>> getHistory();
+
+  Future<void> clearHistory();
 }
 
 class CorpusImportException implements Exception {

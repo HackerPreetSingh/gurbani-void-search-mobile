@@ -11,16 +11,33 @@ class SearchScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final searchState = ref.watch(searchViewModelProvider);
+    final vm = ref.read(searchViewModelProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Gurbani Search')),
+      appBar: AppBar(
+        title: const Text('Gurbani Search'),
+        actions: [
+          TextButton.icon(
+            onPressed: () => vm.toggleHistoryMode(),
+            icon: Icon(vm.isHistoryMode ? Icons.search : Icons.history),
+            label: Text(vm.isHistoryMode ? 'Search' : 'History'),
+            style: TextButton.styleFrom(foregroundColor: Colors.teal),
+          ),
+          if (vm.isHistoryMode)
+            IconButton(
+              icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
+              onPressed: () => vm.clearHistory(),
+              tooltip: 'Clear History',
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: SearchBar(
               hintText: 'Search Gurmukhi or Roman...',
-              onChanged: (value) => ref.read(searchViewModelProvider.notifier).onQueryChanged(value),
+              onChanged: (value) => vm.onQueryChanged(value),
               leading: const Icon(Icons.search),
             ),
           ),
@@ -31,11 +48,11 @@ class SearchScreen extends ConsumerWidget {
                   return const Center(child: Text('Type at least 3 characters to search...'));
                 }
                 if (response.results.isEmpty) {
-                  return const Center(child: Text('No results found.'));
+                  return Center(child: Text(vm.isHistoryMode ? 'No history found.' : 'No results found.'));
                 }
                 return ListView.builder(
                   itemCount: response.results.length,
-                  itemBuilder: (context, index) => _buildResultTile(context, response.results[index]),
+                  itemBuilder: (context, index) => _buildResultTile(context, ref, response.results[index]),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -47,25 +64,27 @@ class SearchScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildResultTile(BuildContext context, GurbaniSearchResult result) {
+  Widget _buildResultTile(BuildContext context, WidgetRef ref, GurbaniSearchResult result) {
     final subtitleParts = [
-      if (result.raagName != null &&
-          !result.raagName!.toLowerCase().contains('unknown') &&
-          result.raagName!.isNotEmpty)
+      if (result.raagName != null && !result.raagName!.toLowerCase().contains('unknown') && result.raagName!.isNotEmpty)
         result.raagName,
-      if (result.writerName != null &&
-          !result.writerName!.toLowerCase().contains('unknown') &&
-          result.writerName!.isNotEmpty)
+      if (result.writerName != null && !result.writerName!.toLowerCase().contains('unknown') && result.writerName!.isNotEmpty)
         result.writerName,
       '${result.sourceName} • Ang ${result.ang ?? "-"}'
     ];
 
     return ListTile(
-      onTap: () => context.push('/shabad/${result.shabadId}'),
-      title: Text(result.gurmukhi,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
-      subtitle: Text(subtitleParts.join(' • '),
-          style: const TextStyle(fontSize: 14, color: Colors.teal)),
+      onTap: () async {
+        if (result.shabadId != null) {
+          // Await the history addition to ensure it's saved before potentially viewing history again
+          await ref.read(searchViewModelProvider.notifier).addToHistory(result);
+          if (context.mounted) {
+            context.push('/shabad/${result.shabadId}');
+          }
+        }
+      },
+      title: Text(result.gurmukhi, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+      subtitle: Text(subtitleParts.join(' • '), style: const TextStyle(fontSize: 14, color: Colors.teal)),
     );
   }
 }
