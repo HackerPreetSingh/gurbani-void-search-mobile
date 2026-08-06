@@ -21,7 +21,7 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
       return GurbaniCorpusSummary(
         id: 'offline-production',
         displayName: 'Hybrid Engine',
-        version: '1.2.0',
+        version: '1.3.0',
         lineCount: count,
         attribution: 'BaniDB',
         importedAtUtc: DateTime.now(),
@@ -52,8 +52,13 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
         LEFT JOIN sources src ON s.source_id = src.id
         LEFT JOIN writers w ON s.writer_id = w.id
         LEFT JOIN raags r ON s.raag_id = r.id
-        WHERE v.first_letter_str LIKE ? LIMIT ?
-      ''', ['$searchPattern%', limit]));
+        WHERE v.first_letter_str LIKE ? 
+        ORDER BY 
+          (CASE WHEN s.source_id = 'G' THEN 0 ELSE 1 END) ASC,
+          (CASE WHEN v.first_letter_str = ? THEN 0 ELSE 1 END) ASC,
+          v.id ASC
+        LIMIT ?
+      ''', ['$searchPattern%', searchPattern, limit]));
 
       if (rows.isNotEmpty) {
         return PunjabiSearchResponse(
@@ -114,30 +119,17 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
   Future<void> addToHistory(GurbaniSearchResult result, String query) async {
     final sId = int.tryParse(result.shabadId ?? '');
     if (sId == null) return;
-    
     await _database.transaction((executor) async {
       await executor.runCustom(
         'INSERT OR REPLACE INTO search_history (shabad_id, query, gurmukhi, source_name, raag_name, writer_name, ang, viewed_at_utc) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          sId, 
-          query, 
-          result.gurmukhi, 
-          result.sourceName, 
-          result.raagName, 
-          result.writerName, 
-          result.ang, 
-          DateTime.now().toUtc().toIso8601String()
-        ],
+        [sId, query, result.gurmukhi, result.sourceName, result.raagName, result.writerName, result.ang, DateTime.now().toUtc().toIso8601String()],
       );
     });
   }
 
   @override
   Future<List<GurbaniSearchResult>> getHistory() async {
-    final rows = await _database.read((executor) => executor.runSelect('''
-      SELECT * FROM search_history ORDER BY viewed_at_utc DESC
-    ''', []));
-    
+    final rows = await _database.read((executor) => executor.runSelect('SELECT * FROM search_history ORDER BY viewed_at_utc DESC', []));
     return rows.map((r) => GurbaniSearchResult(
       stableId: 'hist_${r['shabad_id']}',
       shabadId: r['shabad_id'].toString(),
@@ -153,25 +145,23 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
 
   @override
   Future<void> clearHistory() async {
-    await _database.transaction((executor) async {
-      await executor.runCustom('DELETE FROM search_history');
-    });
+    await _database.transaction((executor) => executor.runCustom('DELETE FROM search_history'));
   }
 
   GurbaniSearchResult _mapRow(Map<String, dynamic> r) {
     return GurbaniSearchResult(
       stableId: r['id'].toString(),
       shabadId: r['shabad_id'].toString(),
-      gurmukhi: r['gurmukhi'],
-      sourceName: r['source_name'] ?? 'Unknown',
-      writerName: r['writer_name'],
-      raagName: r['raag_name'],
-      ang: r['ang'],
-      displayOrder: r['verse_order'],
+      gurmukhi: r['gurmukhi'] as String,
+      sourceName: (r['source_name'] as String?) ?? 'Unknown',
+      writerName: r['writer_name'] as String?,
+      raagName: r['raag_name'] as String?,
+      ang: r['ang'] as int?,
+      displayOrder: r['verse_order'] as int,
       match: SearchResultMatch.initial,
-      transliteration: r['transliteration'],
-      transliterationHi: r['transliteration_hi'],
-      translation: r['translation'],
+      transliteration: r['transliteration'] as String?,
+      transliterationHi: r['transliteration_hi'] as String?,
+      translation: r['translation'] as String?,
     );
   }
 
@@ -182,7 +172,7 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
     final int? ang = shabadInfo?['pageNo'] ?? v['pageNo'] ?? v['source']?['pageNo'];
 
     return GurbaniSearchResult(
-      stableId: (v['verseId'] ?? v['id'] ?? 0).toString(),
+      stableId: (v['verseId'] ?? 0).toString(),
       shabadId: (v['shabadId'] ?? 0).toString(),
       gurmukhi: v['verse']?['unicode'] ?? v['gurmukhi'] ?? '',
       sourceName: source ?? 'Unknown',

@@ -8,12 +8,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class LocalDatabase {
-  LocalDatabase({DatabaseConnection? connection})
-      : _connection = connection,
-        _connectionUser = _LocalDatabaseConnectionUser();
+  LocalDatabase({this._connection})
+      : _connectionUser = _LocalDatabaseConnectionUser();
 
-  static const schemaVersion = 10;
-  static const dbName = 'gurbani_production_v10';
+  static const schemaVersion = 11;
+  static const dbName = 'gurbani_production_v11';
 
   DatabaseConnection? _connection;
   final _LocalDatabaseConnectionUser _connectionUser;
@@ -112,19 +111,14 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
         await executor.runCustom('CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, updated_at_utc TEXT NOT NULL)');
         await _createProductionSchema(executor);
         
-        await executor.runCustom('DROP TABLE IF EXISTS search_history');
-        await executor.runCustom('''
-          CREATE TABLE search_history (
-            shabad_id INTEGER PRIMARY KEY NOT NULL,
-            query TEXT,
-            gurmukhi TEXT NOT NULL,
-            source_name TEXT NOT NULL,
-            raag_name TEXT,
-            writer_name TEXT,
-            ang INTEGER,
-            viewed_at_utc TEXT NOT NULL
-          )
-        ''');
+        // Ensure History exists
+        await executor.runCustom('CREATE TABLE IF NOT EXISTS search_history (shabad_id INTEGER PRIMARY KEY NOT NULL, query TEXT, gurmukhi TEXT NOT NULL, source_name TEXT NOT NULL, raag_name TEXT, writer_name TEXT, ang INTEGER, viewed_at_utc TEXT NOT NULL)');
+        
+        // PERFORMANCE INDEXES
+        await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_source ON shabads (source_id)');
+        await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_writer ON shabads (writer_id)');
+        await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_raag ON raags (id)');
+        await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_shabad ON verses (shabad_id)');
         
         await executor.runCustom('COMMIT');
       } catch (_) {
