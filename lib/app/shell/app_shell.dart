@@ -31,24 +31,29 @@ class AppShell extends StatelessWidget {
     );
     final resolvedIndex = selectedIndex == -1 ? 0 : selectedIndex;
     final useNavigationRail = MediaQuery.sizeOf(context).width >= 840;
+    
+    // Hide global elements when viewing a Shabad
+    final isShabadView = currentPath.startsWith('/shabad');
 
     if (!useNavigationRail) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Gurbani Search')),
+        appBar: isShabadView ? null : AppBar(title: const Text('Gurbani Search')),
         body: SafeArea(top: false, child: child),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: resolvedIndex,
-          onDestinationSelected: (int index) => _navigate(context, index),
-          destinations: _destinations
-              .map(
-                (_AppDestination destination) => NavigationDestination(
-                  icon: Icon(destination.icon),
-                  selectedIcon: Icon(destination.selectedIcon),
-                  label: destination.label,
-                ),
-              )
-              .toList(growable: false),
-        ),
+        bottomNavigationBar: isShabadView 
+            ? null 
+            : NavigationBar(
+                selectedIndex: resolvedIndex,
+                onDestinationSelected: (int index) => _navigate(context, index),
+                destinations: _destinations
+                    .map(
+                      (_AppDestination destination) => NavigationDestination(
+                        icon: Icon(destination.icon),
+                        selectedIcon: Icon(destination.selectedIcon),
+                        label: destination.label,
+                      ),
+                    )
+                    .toList(growable: false),
+              ),
       );
     }
 
@@ -56,26 +61,28 @@ class AppShell extends StatelessWidget {
       body: SafeArea(
         child: Row(
           children: [
-            NavigationRail(
-              extended: MediaQuery.sizeOf(context).width >= 1100,
-              selectedIndex: resolvedIndex,
-              onDestinationSelected: (int index) => _navigate(context, index),
-              leading: const Padding(
-                padding: EdgeInsets.fromLTRB(8, 12, 8, 20),
-                child: _BrandMark(),
+            if (!isShabadView) ...[
+              NavigationRail(
+                extended: MediaQuery.sizeOf(context).width >= 1100,
+                selectedIndex: resolvedIndex,
+                onDestinationSelected: (int index) => _navigate(context, index),
+                leading: const Padding(
+                  padding: EdgeInsets.fromLTRB(8, 12, 8, 20),
+                  child: _BrandMark(),
+                ),
+                labelType: NavigationRailLabelType.all,
+                destinations: _destinations
+                    .map(
+                      (_AppDestination destination) => NavigationRailDestination(
+                        icon: Icon(destination.icon),
+                        selectedIcon: Icon(destination.selectedIcon),
+                        label: Text(destination.label),
+                      ),
+                    )
+                    .toList(growable: false),
               ),
-              labelType: NavigationRailLabelType.all,
-              destinations: _destinations
-                  .map(
-                    (_AppDestination destination) => NavigationRailDestination(
-                      icon: Icon(destination.icon),
-                      selectedIcon: Icon(destination.selectedIcon),
-                      label: Text(destination.label),
-                    ),
-                  )
-                  .toList(growable: false),
-            ),
-            const VerticalDivider(width: 1),
+              const VerticalDivider(width: 1),
+            ],
             Expanded(child: child),
           ],
         ),
