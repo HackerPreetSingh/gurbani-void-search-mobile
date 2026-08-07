@@ -8,11 +8,12 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class LocalDatabase {
-  LocalDatabase({this._connection})
-      : _connectionUser = _LocalDatabaseConnectionUser();
+  LocalDatabase({DatabaseConnection? connection})
+      : _connection = connection,
+        _connectionUser = _LocalDatabaseConnectionUser();
 
-  static const schemaVersion = 11;
-  static const dbName = 'gurbani_production_v11';
+  static const schemaVersion = 14; // Forced Refresh
+  static const dbName = 'gurbani_production_v14';
 
   DatabaseConnection? _connection;
   final _LocalDatabaseConnectionUser _connectionUser;
@@ -68,10 +69,14 @@ class LocalDatabase {
       final dbPath = p.join(docsDir.path, '$dbName.sqlite');
       final file = File(dbPath);
 
-      if (!await file.exists() || (await file.length()) < 1 * 1024 * 1024) {
+      // AGGRESSIVE: Copy if file is missing OR if we are on a new version
+      // The version is encoded in the filename now (v14)
+      if (!await file.exists()) {
+        dev.log('Fresh boot. Copying production database from assets...', name: 'Database');
         final data = await rootBundle.load('assets/database/gurbani_offline.sqlite');
         await Directory(docsDir.path).create(recursive: true);
         await file.writeAsBytes(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes), flush: true);
+        dev.log('Asset extraction complete.', name: 'Database');
       }
     } catch (e) {
       dev.log('Asset copy failed: $e');
@@ -79,7 +84,7 @@ class LocalDatabase {
   }
 
   Future<DatabaseStatus> _initialize() async {
-    if (!kIsWeb && _connection == null) {
+    if (!kIsWeb) {
       await _copyAssetDatabaseIfNeeded();
     }
 
@@ -110,16 +115,11 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
       try {
         await executor.runCustom('CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, updated_at_utc TEXT NOT NULL)');
         await _createProductionSchema(executor);
-        
-        // Ensure History exists
         await executor.runCustom('CREATE TABLE IF NOT EXISTS search_history (shabad_id INTEGER PRIMARY KEY NOT NULL, query TEXT, gurmukhi TEXT NOT NULL, source_name TEXT NOT NULL, raag_name TEXT, writer_name TEXT, ang INTEGER, viewed_at_utc TEXT NOT NULL)');
-        
-        // PERFORMANCE INDEXES
         await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_source ON shabads (source_id)');
         await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_writer ON shabads (writer_id)');
         await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_raag ON raags (id)');
         await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_shabad ON verses (shabad_id)');
-        
         await executor.runCustom('COMMIT');
       } catch (_) {
         await executor.runCustom('ROLLBACK');
@@ -132,7 +132,7 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
     await executor.runCustom('CREATE TABLE IF NOT EXISTS writers (id INTEGER PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL)');
     await executor.runCustom('CREATE TABLE IF NOT EXISTS raags (id INTEGER PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL)');
     await executor.runCustom('CREATE TABLE IF NOT EXISTS shabads (id INTEGER PRIMARY KEY NOT NULL, source_id TEXT NOT NULL, writer_id INTEGER, raag_id INTEGER, ang INTEGER, FOREIGN KEY (source_id) REFERENCES sources (id), FOREIGN KEY (writer_id) REFERENCES writers (id), FOREIGN KEY (raag_id) REFERENCES raags (id))');
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS verses (id INTEGER PRIMARY KEY NOT NULL, shabad_id INTEGER NOT NULL, verse_order INTEGER NOT NULL, gurmukhi TEXT NOT NULL, transliteration TEXT, transliteration_hi TEXT, translation TEXT, first_letter_str TEXT NOT NULL, main_letters TEXT, FOREIGN KEY (shabad_id) REFERENCES shabads (id) ON DELETE CASCADE)');
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS verses (id INTEGER PRIMARY KEY NOT NULL, shabad_id INTEGER NOT NULL, verse_order INTEGER NOT NULL, gurmukhi TEXT NOT NULL, transliteration TEXT, transliteration_hi TEXT, translation TEXT, first_letter_str TEXT NOT NULL, main_letters TEXT, visraams TEXT, FOREIGN KEY (shabad_id) REFERENCES shabads (id) ON DELETE CASCADE)');
     await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_first_letter ON verses (first_letter_str)');
   }
 }

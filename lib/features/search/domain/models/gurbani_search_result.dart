@@ -16,6 +16,7 @@ class GurbaniSearchResult {
     this.transliteration,
     this.transliterationHi,
     this.translation,
+    this.visraams,
   });
 
   final String stableId;
@@ -30,6 +31,7 @@ class GurbaniSearchResult {
   final String? transliteration;
   final String? transliterationHi;
   final String? translation;
+  final String? visraams; // JSON string of pause positions
 }
 
 enum PunjabiSearchStatus { emptyQuery, unsupportedQuery, noCorpus, complete }

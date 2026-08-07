@@ -1,13 +1,12 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:characters/characters.dart';
 
-/// THE MASTER SYNC ENGINE v9 - DYNAMIC & EXHAUSTIVE
-/// Discovers all sources and syncs every line until completion.
 void main() async {
   final dbPath = 'assets/database/gurbani_offline.sqlite';
-  print('🚀 Initializing Exhaustive Production Sync...');
+  print('🚀 Starting High-Performance Multi-Source Sync with Visraams (v12)...');
 
   final dir = Directory('assets/database');
   if (!dir.existsSync()) dir.createSync(recursive: true);
@@ -19,7 +18,7 @@ void main() async {
   db.execute('CREATE TABLE writers (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
   db.execute('CREATE TABLE raags (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
   db.execute('CREATE TABLE shabads (id INTEGER PRIMARY KEY, source_id TEXT, writer_id INTEGER, raag_id INTEGER, ang INTEGER)');
-  db.execute('CREATE TABLE verses (id INTEGER PRIMARY KEY, shabad_id INTEGER, verse_order INTEGER, gurmukhi TEXT, transliteration TEXT, transliteration_hi TEXT, translation TEXT, first_letter_str TEXT, main_letters TEXT)');
+  db.execute('CREATE TABLE verses (id INTEGER PRIMARY KEY, shabad_id INTEGER, verse_order INTEGER, gurmukhi TEXT, transliteration TEXT, transliteration_hi TEXT, translation TEXT, first_letter_str TEXT, main_letters TEXT, visraams TEXT)');
   
   db.execute('CREATE INDEX idx_verses_fl ON verses (first_letter_str)');
   db.execute('CREATE INDEX idx_verses_sid ON verses (shabad_id)');
@@ -32,10 +31,7 @@ void main() async {
   ));
 
   const baseUrl = 'https://api.banidb.com/v2';
-  
-  print('🔍 Discovering all production sources...');
-  final sourcesRes = await dio.get('$baseUrl/sources');
-  final List sourceList = sourcesRes.data['rows'] as List;
+  final sourceList = (await dio.get('$baseUrl/sources')).data['rows'] as List;
 
   int totalSynced = 0;
   for (final src in sourceList) {
@@ -47,20 +43,18 @@ void main() async {
 
     int currentAng = 1;
     while (true) {
-      final batchEnd = currentAng + 19;
       try {
-        final response = await dio.get('$baseUrl/angs/$currentAng-$batchEnd/$sId');
+        final response = await dio.get('$baseUrl/angs/$currentAng-${currentAng + 19}/$sId');
         if (response.statusCode != 200) break;
 
         final pages = response.data['pages'] as List?;
         if (pages == null || pages.isEmpty) break;
 
         db.execute('BEGIN TRANSACTION');
-        bool foundValidPage = false;
+        bool valid = false;
         for (final pageData in pages) {
-          final sInfo = pageData['source'];
-          if (sInfo == null || sInfo['sourceId']?.toString().toUpperCase() != sId) continue;
-          foundValidPage = true;
+          if (pageData['source']?['sourceId']?.toString().toUpperCase() != sId) continue;
+          valid = true;
           
           for (final v in (pageData['page'] as List)) {
             final shId = _toInt(v['shabadId']);
@@ -75,15 +69,16 @@ void main() async {
 
             final gur = v['verse']?['unicode'] ?? v['gurmukhi'] ?? '';
             final hi = v['transliteration']?['hindi'] ?? v['transliteration']?['hi'];
-            
-            db.execute('INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-              [vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], _genFlStr(gur), null]);
+            final vis = v['visraam'] != null ? jsonEncode(v['visraam']['sttm2'] ?? v['visraam']['sttm'] ?? []) : null;
+
+            db.execute('INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+              [vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], _genFlStr(gur), null, vis]);
             totalSynced++;
           }
         }
         db.execute('COMMIT');
         stdout.write('\r✅ Processed: $totalSynced lines...');
-        if (!foundValidPage) break;
+        if (!valid) break;
         currentAng += 20;
       } catch (e) {
         try { db.execute('ROLLBACK'); } catch (_) {}
@@ -91,10 +86,8 @@ void main() async {
       }
     }
   }
-
   db.dispose();
-  print('\n🏁 EXHAUSTIVE SYNC COMPLETE! Total Lines: $totalSynced');
-  print('💾 Local DB is now a 1:1 mirror of BaniDB Production.');
+  print('\n🏁 Master Sync Complete! Total Lines indexed: $totalSynced');
 }
 
 int? _toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '');
