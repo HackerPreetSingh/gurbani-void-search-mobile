@@ -12,8 +12,8 @@ class LocalDatabase {
       : _connection = connection,
         _connectionUser = _LocalDatabaseConnectionUser();
 
-  static const schemaVersion = 14; 
-  static const dbFileName = 'gurbani_final_v16.sqlite';
+  static const schemaVersion = 17; 
+  static const dbFileName = 'gurbani_final_v17.sqlite';
 
   DatabaseConnection? _connection;
   final _LocalDatabaseConnectionUser _connectionUser;
@@ -51,7 +51,6 @@ class LocalDatabase {
   ) async {
     await initialize();
     final trans = _connection!.beginTransaction();
-    await trans.ensureOpen(_connectionUser);
     try {
       final result = await action(trans);
       await trans.send();
@@ -69,7 +68,7 @@ class LocalDatabase {
       final dbPath = p.join(docsDir.path, dbFileName);
       final file = File(dbPath);
 
-      // Force refresh for v16
+      // Force refresh for v17
       if (!await file.exists() || (await file.length()) < 1 * 1024 * 1024) {
         dev.log('Copying production asset to: $dbPath', name: 'Database');
         final data = await rootBundle.load('assets/database/gurbani_offline.sqlite');
@@ -86,12 +85,10 @@ class LocalDatabase {
       await _copyAssetDatabaseIfNeeded();
     }
 
-    final docsDir = await getApplicationDocumentsDirectory();
-    
     _connection ??= driftDatabase(
-      name: 'gurbani_final_v16',
+      name: 'gurbani_final_v17',
       native: DriftNativeOptions(
-        databaseDirectory: () async => docsDir,
+        databaseDirectory: () async => await getApplicationDocumentsDirectory(),
       ),
       web: DriftWebOptions(
         sqlite3Wasm: Uri.parse('sqlite3.wasm'),
@@ -113,19 +110,13 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
     await executor.runCustom('PRAGMA foreign_keys = ON');
     
     if ((details.versionBefore ?? 0) < schemaVersion) {
-      await executor.runCustom('BEGIN IMMEDIATE');
-      try {
-        await executor.runCustom('CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, updated_at_utc TEXT NOT NULL)');
-        await _createProductionSchema(executor);
-        await executor.runCustom('CREATE TABLE IF NOT EXISTS search_history (shabad_id INTEGER PRIMARY KEY NOT NULL, query TEXT, gurmukhi TEXT NOT NULL, source_name TEXT NOT NULL, raag_name TEXT, writer_name TEXT, ang INTEGER, viewed_at_utc TEXT NOT NULL)');
-        await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_source ON shabads (source_id)');
-        await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_writer ON shabads (writer_id)');
-        await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_raag ON raags (id)');
-        await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_shabad ON verses (shabad_id)');
-        await executor.runCustom('COMMIT');
-      } catch (_) {
-        await executor.runCustom('ROLLBACK');
-      }
+      await executor.runCustom('CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, updated_at_utc TEXT NOT NULL)');
+      await _createProductionSchema(executor);
+      await executor.runCustom('CREATE TABLE IF NOT EXISTS search_history (shabad_id INTEGER PRIMARY KEY NOT NULL, query TEXT, gurmukhi TEXT NOT NULL, source_name TEXT NOT NULL, raag_name TEXT, writer_name TEXT, ang INTEGER, viewed_at_utc TEXT NOT NULL)');
+      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_source ON shabads (source_id)');
+      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_writer ON shabads (writer_id)');
+      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_raag ON raags (id)');
+      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_shabad ON verses (shabad_id)');
     }
   }
 

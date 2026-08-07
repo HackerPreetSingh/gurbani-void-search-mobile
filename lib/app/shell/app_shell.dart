@@ -57,20 +57,22 @@ class AppShell extends StatelessWidget {
       );
     }
 
+    final isExtended = MediaQuery.sizeOf(context).width >= 1100;
+
     return Scaffold(
       body: SafeArea(
         child: Row(
           children: [
             if (!isShabadView) ...[
               NavigationRail(
-                extended: MediaQuery.sizeOf(context).width >= 1100,
+                extended: isExtended,
                 selectedIndex: resolvedIndex,
                 onDestinationSelected: (int index) => _navigate(context, index),
                 leading: const Padding(
                   padding: EdgeInsets.fromLTRB(8, 12, 8, 20),
                   child: _BrandMark(),
                 ),
-                labelType: NavigationRailLabelType.all,
+                labelType: isExtended ? null : NavigationRailLabelType.all,
                 destinations: _destinations
                     .map(
                       (_AppDestination destination) => NavigationRailDestination(

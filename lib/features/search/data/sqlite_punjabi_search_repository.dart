@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../../core/database/local_database.dart';
@@ -199,6 +200,7 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
       transliteration: v['transliteration']?['english'] ?? v['transliteration']?['en'],
       transliterationHi: v['transliteration']?['hindi'] ?? v['transliteration']?['hi'],
       translation: v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'],
+      visraams: v['visraam'] != null ? jsonEncode(v['visraam']['sttm2'] ?? v['visraam']['sttm'] ?? []) : null,
     );
   }
 }

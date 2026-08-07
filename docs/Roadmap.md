@@ -1,89 +1,25 @@
-# Milestone 1
+# Roadmap: Gurbani Voice Search
 
-Status: Complete — 2026-08-02
+## Milestone 1: Core Foundation [COMPLETED]
+- Setup Flutter, Riverpod, and GoRouter.
+- Implement basic BaniDB API integration.
 
-Flutter foundation
+## Milestone 2: Production Search Engine [COMPLETED]
+- High-fidelity SQLite schema (v17).
+- Master Sync script to fetch all 7 sources from BaniDB.
+- Offline-first search with instant initials lookup.
+- Remote Fallback for Web version.
 
-Theme
+## Milestone 3: Search Polish & History [IN PROGRESS]
+- Smart Roman phonetic mapping (kh, gh, etc.).
+- Persistent Search History with self-contained metadata.
+- Immersive Shabad reading view.
+- Advanced display settings (Font +/- and Visibility toggles).
+- **TODO:** Stabilize Vishram (Pause) UI highlighting.
 
-Navigation
+## Milestone 4: Voice Search Integration
+- Integration of `speech_to_text`.
+- Mapping voice input to `GurmukhiProcessor`.
 
-Architecture
-
-SQLite
-
-STOP
-
-----------------------------
-
-# Milestone 2
-
-Status: Complete (Engine Verified with Sample) — 2026-08-04
-
-Search Engine
-
-Punjabi Search
-
-Initial Search
-
-*Note: Full production corpus distribution is pending.*
-
-STOP
-
-----------------------------
-
-# Milestone 3
-
-Roman Search
-
-STOP
-
-----------------------------
-
-# Milestone 4
-
-Voice Recording
-
-STOP
-
-----------------------------
-
-# Milestone 5
-
-Speech Recognition
-
-STOP
-
-----------------------------
-
-# Milestone 6
-
-Voice Search
-
-STOP
-
-----------------------------
-
-# Milestone 7
-
-Ranking
-
-Performance
-
-STOP
-
-----------------------------
-
-# Milestone 8
-
-PWA/Desktop polishing
-
-STOP
-
-----------------------------
-
-# Milestone 9
-
-OCR foundation
-
-STOP
+## Milestone 5: Full Word Search
+- Full text search (FTS) within verses.
