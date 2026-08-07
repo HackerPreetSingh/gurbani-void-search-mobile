@@ -12,8 +12,8 @@ class LocalDatabase {
       : _connection = connection,
         _connectionUser = _LocalDatabaseConnectionUser();
 
-  static const schemaVersion = 14; // Forced Refresh
-  static const dbName = 'gurbani_production_v14';
+  static const schemaVersion = 14; 
+  static const dbFileName = 'gurbani_final_v16.sqlite';
 
   DatabaseConnection? _connection;
   final _LocalDatabaseConnectionUser _connectionUser;
@@ -29,8 +29,8 @@ class LocalDatabase {
     await _connection?.close();
     _connection = null;
     if (!kIsWeb) {
-      final docsDir = await getApplicationSupportDirectory();
-      final file = File(p.join(docsDir.path, '$dbName.sqlite'));
+      final docsDir = await getApplicationDocumentsDirectory();
+      final file = File(p.join(docsDir.path, dbFileName));
       if (await file.exists()) await file.delete();
     }
   }
@@ -65,18 +65,16 @@ class LocalDatabase {
   Future<void> _copyAssetDatabaseIfNeeded() async {
     if (kIsWeb) return;
     try {
-      final docsDir = await getApplicationSupportDirectory();
-      final dbPath = p.join(docsDir.path, '$dbName.sqlite');
+      final docsDir = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(docsDir.path, dbFileName);
       final file = File(dbPath);
 
-      // AGGRESSIVE: Copy if file is missing OR if we are on a new version
-      // The version is encoded in the filename now (v14)
-      if (!await file.exists()) {
-        dev.log('Fresh boot. Copying production database from assets...', name: 'Database');
+      // Force refresh for v16
+      if (!await file.exists() || (await file.length()) < 1 * 1024 * 1024) {
+        dev.log('Copying production asset to: $dbPath', name: 'Database');
         final data = await rootBundle.load('assets/database/gurbani_offline.sqlite');
         await Directory(docsDir.path).create(recursive: true);
         await file.writeAsBytes(data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes), flush: true);
-        dev.log('Asset extraction complete.', name: 'Database');
       }
     } catch (e) {
       dev.log('Asset copy failed: $e');
@@ -88,9 +86,13 @@ class LocalDatabase {
       await _copyAssetDatabaseIfNeeded();
     }
 
+    final docsDir = await getApplicationDocumentsDirectory();
+    
     _connection ??= driftDatabase(
-      name: dbName,
-      native: const DriftNativeOptions(shareAcrossIsolates: true),
+      name: 'gurbani_final_v16',
+      native: DriftNativeOptions(
+        databaseDirectory: () async => docsDir,
+      ),
       web: DriftWebOptions(
         sqlite3Wasm: Uri.parse('sqlite3.wasm'),
         driftWorker: Uri.parse('drift_worker.js'),

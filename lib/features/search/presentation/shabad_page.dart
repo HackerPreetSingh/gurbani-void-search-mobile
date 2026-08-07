@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/providers/shabad_providers.dart';
@@ -271,14 +272,21 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
       color: Colors.black,
     );
 
+    // Logging the data incoming from DB
+    dev.log('Rendering Line: "$gurmukhi"', name: 'GurbaniUI');
+    dev.log('Vishram Data: $visraamsJson', name: 'GurbaniUI');
+
     if (!_showVishrams || visraamsJson == null || visraamsJson.isEmpty || visraamsJson == '[]') {
       return Text(gurmukhi, textAlign: TextAlign.center, style: baseStyle);
     }
 
     try {
       final List<dynamic> vList = jsonDecode(visraamsJson);
+      // Using precise word splitting logic (ignoring multiple spaces)
       final words = gurmukhi.trim().split(RegExp(r'\s+'));
       final List<InlineSpan> spans = [];
+
+      dev.log('Split Words Count: ${words.length}', name: 'GurbaniUI');
 
       for (int i = 0; i < words.length; i++) {
         String? type;
@@ -287,32 +295,38 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
           final pIndex = p is int ? p : int.tryParse(p.toString());
           if (pIndex == i) {
             type = v['t'];
+            dev.log('Highlight Triggered for Word [$i]: "${words[i]}" type: $type', name: 'GurbaniUI');
             break;
           }
         }
         
         Color? bgColor;
+        Color? textColor;
         if (type == 'v') {
-          bgColor = Colors.green.withAlpha(90);
+          bgColor = Colors.green.shade100;
+          textColor = Colors.green.shade900;
         } else if (type == 'y') {
-          bgColor = Colors.blue.withAlpha(90);
+          bgColor = Colors.blue.shade100;
+          textColor = Colors.blue.shade900;
         }
 
         spans.add(TextSpan(
           text: words[i],
           style: TextStyle(
             backgroundColor: bgColor,
-            fontWeight: bgColor != null ? FontWeight.bold : FontWeight.w500,
+            color: textColor ?? Colors.black,
+            fontWeight: textColor != null ? FontWeight.w900 : FontWeight.w500,
           ),
         ));
 
         if (i < words.length - 1) {
-          spans.add(const TextSpan(text: ' '));
+          spans.add(const TextSpan(text: ' ', style: TextStyle(backgroundColor: null, color: Colors.black)));
         }
       }
 
+      // Add double danda if it was lost during splitting
       if (gurmukhi.endsWith('॥') && !words.last.contains('॥')) {
-        spans.add(const TextSpan(text: ' ॥'));
+        spans.add(const TextSpan(text: ' ॥', style: TextStyle(color: Colors.black)));
       }
 
       return Text.rich(
@@ -320,6 +334,7 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
         textAlign: TextAlign.center,
       );
     } catch (e) {
+      dev.log('Highlighting Logic Failed: $e', name: 'GurbaniUI', error: e);
       return Text(gurmukhi, textAlign: TextAlign.center, style: baseStyle);
     }
   }
