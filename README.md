@@ -1,30 +1,40 @@
-# Gurbani Search
+# Gurbani Voice Search
 
-An offline-first, cross-platform Gurbani discovery application. The long-term
-goal is respectful, fast Punjabi and Roman Punjabi search, with excellent
-offline voice search. The search engine is designed to be a separately tested
-product core; the Flutter UI consumes it rather than owning its business logic.
+A fast, offline-first Gurbani search application built with Flutter. This project aims to provide a near-instant search experience for Gurbani sources (SGGS, Dasam Granth, etc.) across mobile and web.
 
-## Current milestone
+## Quick Start for Developers
 
-Milestone 1 is complete: a responsive Material 3 application shell, routing,
-Riverpod dependency injection, and a versioned local SQLite lifecycle work on
-the supported Flutter targets. No Gurbani corpus or search result is bundled
-yet. This is intentional: corpus provenance and licence obligations must be
-resolved before a distribution is introduced.
+### 1. Requirements
+* Flutter SDK (Latest Stable)
+* Dart SDK
 
-## Development
+### 2. Setting Up the Database
+This app uses a pre-baked SQLite database for high performance on mobile. You need to generate this file before running the app for the first time or if you change the sync logic.
 
-```sh
-flutter pub get
-flutter analyze
-flutter test
-flutter run
+```bash
+# Sync data from BaniDB API to local asset
+dart bin/sync_production_data.dart
 ```
 
-For the browser, Drift uses the checked-in `web/sqlite3.wasm` and
-`web/drift_worker.js` runtime assets. Rebuild these from the matching Drift
-release when the Drift dependency changes.
+### 3. Running the App
+```bash
+# Mobile (Android/iOS)
+flutter run
 
-Architecture, dependency rationale, content stewardship, and future search and
-voice decisions are recorded in [docs/DECISIONS.md](docs/DECISIONS.md).
+# Web
+flutter run -d chrome
+```
+
+## Project Structure
+The project follows clean architecture and SOLID principles:
+
+* `lib/core`: Infrastructure like database connection and global providers.
+* `lib/features/search`: Everything related to searching and viewing Shabads.
+* `lib/features/settings`: User preferences and persistence.
+* `lib/app`: App-wide configuration (routing, themes).
+
+## Documentation
+Check the `docs/` folder for deeper insights:
+* `ARCHITECTURE_FLOW.md`: How data flows from a user's search to the screen.
+* `HANDOFF.md`: Current state of the project and technical details.
+* `Roadmap.md`: What's coming next.

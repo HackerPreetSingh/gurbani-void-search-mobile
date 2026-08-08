@@ -83,7 +83,7 @@ class _DatabaseReadyView extends StatelessWidget {
               _StatusRow(
                 icon: Icons.verified_outlined,
                 label: 'Local SQLite storage verified',
-                detail: 'Schema version ${status.schemaVersion}',
+                detail: 'Ready for use',
               ),
               const SizedBox(height: 18),
               const _StatusRow(

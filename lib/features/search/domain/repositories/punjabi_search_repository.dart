@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../models/gurbani_corpus.dart';
 import '../models/gurbani_search_result.dart';
 import '../models/punjabi_search_query.dart';
@@ -13,9 +14,13 @@ abstract interface class PunjabiSearchRepository {
   Future<PunjabiSearchResponse> search(
     PunjabiSearchQuery query, {
     int limit = 40,
+    CancelToken? cancelToken,
   });
 
-  Future<List<GurbaniSearchResult>> getLocalShabad(String shabadId);
+  Future<List<GurbaniSearchResult>> getLocalShabad(
+    String shabadId, {
+    CancelToken? cancelToken,
+  });
 
   Future<void> addToHistory(GurbaniSearchResult result, String query);
   

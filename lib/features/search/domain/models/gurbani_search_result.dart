@@ -16,6 +16,7 @@ class GurbaniSearchResult {
     this.transliteration,
     this.transliterationHi,
     this.translation,
+    this.translationPa,
     this.visraams,
   });
 
@@ -31,6 +32,7 @@ class GurbaniSearchResult {
   final String? transliteration;
   final String? transliterationHi;
   final String? translation;
+  final String? translationPa;
   final String? visraams; // JSON string of pause positions
 }
 

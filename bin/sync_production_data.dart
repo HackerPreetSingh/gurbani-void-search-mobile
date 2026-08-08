@@ -6,7 +6,7 @@ import 'package:characters/characters.dart';
 
 void main() async {
   final dbPath = 'assets/database/gurbani_offline.sqlite';
-  print('🚀 Starting High-Performance Multi-Source Sync with Visraams (v12)...');
+  print('🚀 Starting High-Performance Multi-Source Sync...');
 
   final dir = Directory('assets/database');
   if (!dir.existsSync()) dir.createSync(recursive: true);
@@ -18,11 +18,12 @@ void main() async {
   db.execute('CREATE TABLE writers (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
   db.execute('CREATE TABLE raags (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
   db.execute('CREATE TABLE shabads (id INTEGER PRIMARY KEY, source_id TEXT, writer_id INTEGER, raag_id INTEGER, ang INTEGER)');
-  db.execute('CREATE TABLE verses (id INTEGER PRIMARY KEY, shabad_id INTEGER, verse_order INTEGER, gurmukhi TEXT, transliteration TEXT, transliteration_hi TEXT, translation TEXT, first_letter_str TEXT, main_letters TEXT, visraams TEXT)');
+  db.execute('CREATE TABLE verses (id INTEGER PRIMARY KEY, shabad_id INTEGER, verse_order INTEGER, gurmukhi TEXT, transliteration TEXT, transliteration_hi TEXT, translation TEXT, translation_pa TEXT, first_letter_str TEXT, main_letters TEXT, visraams TEXT, source_id TEXT, raag_id INTEGER, writer_id INTEGER, ang INTEGER)');
   
   db.execute('CREATE INDEX idx_verses_fl ON verses (first_letter_str)');
   db.execute('CREATE INDEX idx_verses_sid ON verses (shabad_id)');
   db.execute('CREATE INDEX idx_shabads_src ON shabads (source_id)');
+  db.execute('CREATE INDEX idx_verses_covering ON verses (first_letter_str, source_id, id)');
 
   final dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 45),
@@ -51,12 +52,14 @@ void main() async {
         if (pages == null || pages.isEmpty) break;
 
         db.execute('BEGIN TRANSACTION');
-        bool valid = false;
         for (final pageData in pages) {
-          if (pageData['source']?['sourceId']?.toString().toUpperCase() != sId) continue;
-          valid = true;
+          final pSource = pageData['source'];
+          final pageSourceId = (pSource is Map ? (pSource['sourceId'] ?? pSource['id']) : (pageData['sourceId'] ?? pageData['id']))?.toString();
           
-          for (final v in (pageData['page'] as List)) {
+          if (pageSourceId != null && pageSourceId.toUpperCase() != sId.toUpperCase()) continue;
+          
+          final List verses = pageData['page'] ?? pageData['verses'] ?? [];
+          for (final v in verses) {
             final shId = _toInt(v['shabadId']);
             final vId = _toInt(v['verseId']);
             if (shId == null || vId == null) continue;
@@ -67,21 +70,30 @@ void main() async {
             db.execute('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
                 [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
 
-            final gur = v['verse']?['unicode'] ?? v['gurmukhi'] ?? '';
-            final hi = v['transliteration']?['hindi'] ?? v['transliteration']?['hi'];
+            final gur = _val(v['verse']?['unicode'] ?? v['gurmukhi'] ?? '');
+            final hi = _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi']);
+            final en = _val(v['transliteration']?['english'] ?? v['transliteration']?['en']);
+            final transEn = _val(v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'] ?? v['translation']?['en']);
+            final transPa = _val(v['translation']?['pu']?['ss'] ?? v['translation']?['pu']?['ft'] ?? v['translation']?['pu']);
+            
             final vis = v['visraam'] != null ? jsonEncode(v['visraam']['sttm2'] ?? v['visraam']['sttm'] ?? []) : null;
+            final rId = _toInt(v['raag']?['raagId'] ?? v['raagId']);
+            final wId = _toInt(v['writer']?['writerId'] ?? v['writerId']);
+            final ang = _toInt(v['pageNo'] ?? v['ang']);
 
-            db.execute('INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-              [vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], _genFlStr(gur), null, vis]);
+            db.execute('INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+              [vId, shId, _toInt(v['lineNo']) ?? 0, gur, en, hi, transEn, transPa, _genFlStr(gur), null, vis, sId, rId, wId, ang]);
             totalSynced++;
           }
         }
         db.execute('COMMIT');
-        stdout.write('\r✅ Processed: $totalSynced lines...');
-        if (!valid) break;
+        if (totalSynced > 0) {
+          stdout.write('\r✅ Processed: $totalSynced lines...');
+        }
         currentAng += 20;
       } catch (e) {
         try { db.execute('ROLLBACK'); } catch (_) {}
+        print('\n❌ Error syncing $sId at Ang $currentAng: $e');
         break;
       }
     }
@@ -92,12 +104,19 @@ void main() async {
 
 int? _toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '');
 
+String _val(dynamic v) {
+  if (v == null) return '';
+  if (v is String) return v;
+  if (v is Map) return (v['unicode'] ?? v['english'] ?? v['text'] ?? v.values.firstOrNull ?? '').toString();
+  return v.toString();
+}
+
 void _saveMeta(Database db, String table, Map? data, String idKey) {
   if (data == null) return;
   final id = _toInt(data[idKey] ?? data['id']);
   if (id == null) return;
-  final punjabi = data['unicode'] ?? data['english'] ?? data['gurmukhi'] ?? 'Unknown';
-  final english = data['english'] ?? data['unicode'] ?? data['gurmukhi'] ?? 'Unknown';
+  final punjabi = _val(data['unicode'] ?? data['english'] ?? data['gurmukhi']);
+  final english = _val(data['english'] ?? data['unicode'] ?? data['gurmukhi']);
   db.execute('INSERT OR REPLACE INTO $table VALUES (?, ?, ?)', [id, punjabi, english]);
 }
 

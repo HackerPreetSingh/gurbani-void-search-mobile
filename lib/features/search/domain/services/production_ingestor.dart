@@ -59,11 +59,16 @@ class ProductionIngestor {
 
           await _database.transaction((executor) async {
             final verseBatch = <List<Object?>>[];
-            const verseSql = 'INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            const verseSql = 'INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-            for (final p in pages) {
-              if (p['source']?['sourceId'] != sId) continue;
-              for (final v in (p['page'] as List)) {
+            for (final pageData in pages) {
+              final pSource = pageData['source'];
+              final pageSourceId = (pSource is Map ? (pSource['sourceId'] ?? pSource['id']) : (pageData['sourceId'] ?? pageData['id']))?.toString();
+              
+              if (pageSourceId != null && pageSourceId.toUpperCase() != sId.toUpperCase()) continue;
+              
+              final List verses = pageData['page'] ?? pageData['verses'] ?? [];
+              for (final v in verses) {
                 final shId = _toInt(v['shabadId']);
                 final vId = _toInt(v['verseId']);
                 if (shId == null || vId == null) continue;
@@ -74,11 +79,33 @@ class ProductionIngestor {
                 await executor.runCustom('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
                     [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
 
-                final gur = v['verse']?['unicode'] ?? v['gurmukhi'] ?? '';
-                final flStr = GurmukhiProcessor.generateFirstLetterStr(gur);
-                final hi = v['transliteration']?['hindi'] ?? v['transliteration']?['hi'];
+                final gur = _val(v['verse']?['unicode'] ?? v['gurmukhi'] ?? '');
+                final hi = _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi']);
+                final en = _val(v['transliteration']?['english'] ?? v['transliteration']?['en']);
+                final transEn = _val(v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'] ?? v['translation']?['en']);
+                final transPa = _val(v['translation']?['pu']?['ss'] ?? v['translation']?['pu']?['ft'] ?? v['translation']?['pu']);
+                
+                final wId = _toInt(v['writer']?['writerId'] ?? v['writerId']);
+                final rId = _toInt(v['raag']?['raagId'] ?? v['raagId']);
+                final ang = _toInt(v['pageNo'] ?? v['ang']);
 
-                verseBatch.add([vId, shId, _toInt(v['lineNo']) ?? 0, gur, v['transliteration']?['english'], hi, v['translation']?['en']?['bdb'], flStr, null]);
+                verseBatch.add([
+                  vId, 
+                  shId, 
+                  _toInt(v['lineNo']) ?? 0, 
+                  gur, 
+                  en, 
+                  hi, 
+                  transEn, 
+                  transPa,
+                  GurmukhiProcessor.generateFirstLetterStr(gur), 
+                  null, // main_letters
+                  null, // visraams
+                  sId, 
+                  rId, 
+                  wId, 
+                  ang
+                ]);
                 totalSynced++;
               }
             }
@@ -100,12 +127,19 @@ class ProductionIngestor {
 
   int? _toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '');
 
+  String _val(dynamic v) {
+    if (v == null) return '';
+    if (v is String) return v;
+    if (v is Map) return (v['unicode'] ?? v['english'] ?? v['text'] ?? v.values.firstOrNull ?? '').toString();
+    return v.toString();
+  }
+
   Future<void> _saveMeta(QueryExecutor executor, String table, Map? data, String idKey) async {
     if (data == null) return;
     final id = _toInt(data[idKey] ?? data['id']);
     if (id == null) return;
-    final pbi = data['unicode'] ?? data['english'] ?? 'Unknown';
-    final eng = data['english'] ?? 'Unknown';
+    final pbi = _val(data['unicode'] ?? data['english'] ?? data['gurmukhi']);
+    final eng = _val(data['english'] ?? data['unicode'] ?? data['gurmukhi']);
     await executor.runCustom('INSERT OR REPLACE INTO $table VALUES (?, ?, ?)', [id, pbi, eng]);
   }
 }

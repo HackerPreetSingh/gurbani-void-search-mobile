@@ -1,8 +1,10 @@
-import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../domain/providers/search_providers.dart';
 import '../domain/providers/shabad_providers.dart';
+import '../../settings/domain/models/display_settings.dart';
+import '../../settings/presentation/display_settings_notifier.dart';
 
 class ShabadPage extends ConsumerStatefulWidget {
   final String shabadId;
@@ -14,19 +16,11 @@ class ShabadPage extends ConsumerStatefulWidget {
 }
 
 class _ShabadPageState extends ConsumerState<ShabadPage> {
-  bool _showTranslation = true;
-  bool _showTransliteration = false;
-  bool _showHindi = false;
-  bool _showVishrams = true;
-
-  double _fontSizeGurmukhi = 28;
-  double _fontSizeHindi = 20;
-  double _fontSizeEnglish = 16;
-  double _fontSizeMeaning = 16;
-
   @override
   Widget build(BuildContext context) {
     final shabadAsync = ref.watch(shabadDetailsProvider(widget.shabadId));
+    final settingsAsync = ref.watch(displaySettingsProvider);
+    final settings = settingsAsync.value ?? DisplaySettings.defaults();
 
     return Theme(
       data: ThemeData.light(useMaterial3: true).copyWith(
@@ -60,7 +54,7 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                   actions: [
                     IconButton(
                       icon: const Icon(Icons.settings_outlined),
-                      onPressed: () => _showSettingsDialog(context),
+                      onPressed: () => _showSettingsDialog(context, settings),
                     ),
                   ],
                 ),
@@ -98,24 +92,30 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              _buildGurmukhiText(verse.gurmukhi, verse.visraams),
-                              if (_showHindi && verse.transliterationHi != null && verse.transliterationHi!.isNotEmpty) ...[
+                              _buildGurmukhiText(verse.gurmukhi, verse.visraams, settings),
+                              if (settings.showHindi && verse.transliterationHi != null && verse.transliterationHi!.isNotEmpty) ...[
                                 const SizedBox(height: 12),
                                 Text(verse.transliterationHi!,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: _fontSizeHindi, color: Colors.red.shade900)),
+                                    style: TextStyle(fontSize: settings.fontSizeHindi, color: Colors.red.shade900)),
                               ],
-                              if (_showTransliteration && verse.transliteration != null && verse.transliteration!.isNotEmpty) ...[
+                              if (settings.showTransliteration && verse.transliteration != null && verse.transliteration!.isNotEmpty) ...[
                                 const SizedBox(height: 12),
                                 Text(verse.transliteration!,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: _fontSizeEnglish, color: Colors.blueGrey)),
+                                    style: TextStyle(fontSize: settings.fontSizeEnglish, color: Colors.blueGrey)),
                               ],
-                              if (_showTranslation && verse.translation != null && verse.translation!.isNotEmpty) ...[
+                              if (settings.showEnglishMeaning && verse.translation != null && verse.translation!.isNotEmpty) ...[
                                 const SizedBox(height: 12),
                                 Text(verse.translation!,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: _fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
+                                    style: TextStyle(fontSize: settings.fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
+                              ],
+                              if (settings.showPunjabiMeaning && verse.translationPa != null && verse.translationPa!.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                Text(verse.translationPa!,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(fontSize: settings.fontSizePunjabiMeaning, color: Colors.teal.shade900)),
                               ],
                             ],
                           ),
@@ -135,12 +135,15 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
     );
   }
 
-  void _showSettingsDialog(BuildContext context) {
+  void _showSettingsDialog(BuildContext context, DisplaySettings settings) {
     showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
+        return Consumer(
+          builder: (context, ref, child) {
+            final currentSettings = ref.watch(displaySettingsProvider).value ?? settings;
+            final notifier = ref.read(displaySettingsProvider.notifier);
+
             return AlertDialog(
               title: const Text('Display Settings'),
               content: SingleChildScrollView(
@@ -150,63 +153,46 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                     _buildUnifiedControl(
                       label: 'Gurmukhi',
                       isVisible: true,
-                      size: _fontSizeGurmukhi,
+                      size: currentSettings.fontSizeGurmukhi,
                       isSizeOnly: true,
                       onToggle: (_) {},
-                      onSizeChanged: (val) {
-                        setState(() => _fontSizeGurmukhi = val);
-                        setDialogState(() {});
-                      },
+                      onSizeChanged: (val) => notifier.updateFontSizeGurmukhi(val),
                     ),
                     const Divider(),
                     _buildUnifiedControl(
                       label: 'Hindi',
-                      isVisible: _showHindi,
-                      size: _fontSizeHindi,
-                      onToggle: (v) {
-                        setState(() => _showHindi = v);
-                        setDialogState(() {});
-                      },
-                      onSizeChanged: (val) {
-                        setState(() => _fontSizeHindi = val);
-                        setDialogState(() {});
-                      },
+                      isVisible: currentSettings.showHindi,
+                      size: currentSettings.fontSizeHindi,
+                      onToggle: (_) => notifier.toggleHindi(),
+                      onSizeChanged: (val) => notifier.updateFontSizeHindi(val),
                     ),
                     _buildUnifiedControl(
                       label: 'English',
-                      isVisible: _showTransliteration,
-                      size: _fontSizeEnglish,
-                      onToggle: (v) {
-                        setState(() => _showTransliteration = v);
-                        setDialogState(() {});
-                      },
-                      onSizeChanged: (val) {
-                        setState(() => _fontSizeEnglish = val);
-                        setDialogState(() {});
-                      },
+                      isVisible: currentSettings.showTransliteration,
+                      size: currentSettings.fontSizeEnglish,
+                      onToggle: (_) => notifier.toggleTransliteration(),
+                      onSizeChanged: (val) => notifier.updateFontSizeEnglish(val),
                     ),
                     _buildUnifiedControl(
-                      label: 'Meaning',
-                      isVisible: _showTranslation,
-                      size: _fontSizeMeaning,
-                      onToggle: (v) {
-                        setState(() => _showTranslation = v);
-                        setDialogState(() {});
-                      },
-                      onSizeChanged: (val) {
-                        setState(() => _fontSizeMeaning = val);
-                        setDialogState(() {});
-                      },
+                      label: 'English Meaning',
+                      isVisible: currentSettings.showEnglishMeaning,
+                      size: currentSettings.fontSizeMeaning,
+                      onToggle: (_) => notifier.toggleEnglishMeaning(),
+                      onSizeChanged: (val) => notifier.updateFontSizeMeaning(val),
+                    ),
+                    _buildUnifiedControl(
+                      label: 'Punjabi Meaning',
+                      isVisible: currentSettings.showPunjabiMeaning,
+                      size: currentSettings.fontSizePunjabiMeaning,
+                      onToggle: (_) => notifier.togglePunjabiMeaning(),
+                      onSizeChanged: (val) => notifier.updateFontSizePunjabiMeaning(val),
                     ),
                     _buildUnifiedControl(
                       label: 'Pauses',
-                      isVisible: _showVishrams,
+                      isVisible: currentSettings.showVishrams,
                       size: 0,
                       isVisibilityOnly: true,
-                      onToggle: (v) {
-                        setState(() => _showVishrams = v);
-                        setDialogState(() {});
-                      },
+                      onToggle: (_) => notifier.toggleVishrams(),
                       onSizeChanged: (_) {},
                     ),
                   ],
@@ -264,78 +250,20 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
     );
   }
 
-  Widget _buildGurmukhiText(String gurmukhi, String? visraamsJson) {
+  Widget _buildGurmukhiText(String gurmukhi, String? visraamsJson, DisplaySettings settings) {
     final baseStyle = TextStyle(
-      fontSize: _fontSizeGurmukhi,
+      fontSize: settings.fontSizeGurmukhi,
       fontWeight: FontWeight.w500,
       height: 1.6,
       color: Colors.black,
     );
 
-    // Logging the data incoming from DB
-    dev.log('Rendering Line: "$gurmukhi"', name: 'GurbaniUI');
-    dev.log('Vishram Data: $visraamsJson', name: 'GurbaniUI');
+    final vishramService = ref.read(vishramServiceProvider);
+    final span = vishramService.buildGurmukhiText(gurmukhi, visraamsJson, baseStyle, settings.showVishrams);
 
-    if (!_showVishrams || visraamsJson == null || visraamsJson.isEmpty || visraamsJson == '[]') {
-      return Text(gurmukhi, textAlign: TextAlign.center, style: baseStyle);
-    }
-
-    try {
-      final List<dynamic> vList = jsonDecode(visraamsJson);
-      // Using precise word splitting logic (ignoring multiple spaces)
-      final words = gurmukhi.trim().split(RegExp(r'\s+'));
-      final List<InlineSpan> spans = [];
-
-      dev.log('Split Words Count: ${words.length}', name: 'GurbaniUI');
-
-      for (int i = 0; i < words.length; i++) {
-        String? type;
-        for (final v in vList) {
-          final p = v['p'];
-          final pIndex = p is int ? p : int.tryParse(p.toString());
-          if (pIndex == i) {
-            type = v['t'];
-            dev.log('Highlight Triggered for Word [$i]: "${words[i]}" type: $type', name: 'GurbaniUI');
-            break;
-          }
-        }
-        
-        Color? bgColor;
-        Color? textColor;
-        if (type == 'v') {
-          bgColor = Colors.green.shade100;
-          textColor = Colors.green.shade900;
-        } else if (type == 'y') {
-          bgColor = Colors.blue.shade100;
-          textColor = Colors.blue.shade900;
-        }
-
-        spans.add(TextSpan(
-          text: words[i],
-          style: TextStyle(
-            backgroundColor: bgColor,
-            color: textColor ?? Colors.black,
-            fontWeight: textColor != null ? FontWeight.w900 : FontWeight.w500,
-          ),
-        ));
-
-        if (i < words.length - 1) {
-          spans.add(const TextSpan(text: ' ', style: TextStyle(backgroundColor: null, color: Colors.black)));
-        }
-      }
-
-      // Add double danda if it was lost during splitting
-      if (gurmukhi.endsWith('॥') && !words.last.contains('॥')) {
-        spans.add(const TextSpan(text: ' ॥', style: TextStyle(color: Colors.black)));
-      }
-
-      return Text.rich(
-        TextSpan(style: baseStyle, children: spans),
-        textAlign: TextAlign.center,
-      );
-    } catch (e) {
-      dev.log('Highlighting Logic Failed: $e', name: 'GurbaniUI', error: e);
-      return Text(gurmukhi, textAlign: TextAlign.center, style: baseStyle);
-    }
+    return Text.rich(
+      span as TextSpan,
+      textAlign: TextAlign.center,
+    );
   }
 }
