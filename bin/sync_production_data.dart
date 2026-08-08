@@ -70,19 +70,19 @@ void main() async {
             db.execute('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
                 [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
 
-            final gur = _val(v['verse']?['unicode'] ?? v['gurmukhi'] ?? '');
-            final hi = _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi']);
-            final en = _val(v['transliteration']?['english'] ?? v['transliteration']?['en']);
-            final transEn = _val(v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'] ?? v['translation']?['en']);
-            final transPa = _val(v['translation']?['pu']?['ss'] ?? v['translation']?['pu']?['ft'] ?? v['translation']?['pu']);
+            final gur = _val(v['verse']?['unicode'] ?? v['gurmukhi'] ?? v['verse'] ?? '');
+            final hi = _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi'] ?? v['transliteration']?['hi_text']);
+            final en = _val(v['transliteration']?['english'] ?? v['transliteration']?['en'] ?? v['transliteration']?['en_text']);
+            final transEn = _val(v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'] ?? v['translation']?['en']?['text'] ?? v['translation']?['en']);
+            final transPa = _val(v['translation']?['pu']?['ss'] ?? v['translation']?['pu']?['ft'] ?? v['translation']?['pu']?['text'] ?? v['translation']?['pu']);
             
-            final vis = v['visraam'] != null ? jsonEncode(v['visraam']['sttm2'] ?? v['visraam']['sttm'] ?? []) : null;
-            final rId = _toInt(v['raag']?['raagId'] ?? v['raagId']);
-            final wId = _toInt(v['writer']?['writerId'] ?? v['writerId']);
-            final ang = _toInt(v['pageNo'] ?? v['ang']);
+            final vis = v['visraam'] != null ? jsonEncode(v['visraam']['sttm2'] ?? v['visraam']['sttm'] ?? v['visraam'] ?? []) : null;
+            final rId = _toInt(v['raag']?['raagId'] ?? v['raagId'] ?? v['raag_id']);
+            final wId = _toInt(v['writer']?['writerId'] ?? v['writerId'] ?? v['writer_id']);
+            final ang = _toInt(v['pageNo'] ?? v['ang'] ?? v['page_no']);
 
             db.execute('INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-              [vId, shId, _toInt(v['lineNo']) ?? 0, gur, en, hi, transEn, transPa, _genFlStr(gur), null, vis, sId, rId, wId, ang]);
+              [vId, shId, _toInt(v['lineNo']) ?? _toInt(v['verseNo']) ?? 0, gur, en, hi, transEn, transPa, _genFlStr(gur), null, vis, sId, rId, wId, ang]);
             totalSynced++;
           }
         }
@@ -93,8 +93,9 @@ void main() async {
         currentAng += 20;
       } catch (e) {
         try { db.execute('ROLLBACK'); } catch (_) {}
-        print('\n❌ Error syncing $sId at Ang $currentAng: $e');
-        break;
+        print('\n⚠️ Warning: Skipping batch at Ang $currentAng for $sId due to error: $e');
+        currentAng += 20;
+        continue;
       }
     }
   }
@@ -107,16 +108,20 @@ int? _toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '');
 String _val(dynamic v) {
   if (v == null) return '';
   if (v is String) return v;
-  if (v is Map) return (v['unicode'] ?? v['english'] ?? v['text'] ?? v.values.firstOrNull ?? '').toString();
+  if (v is Map) {
+    final value = v['unicode'] ?? v['english'] ?? v['text'] ?? v['text_hi'] ?? v['text_en'];
+    if (value != null) return value.toString();
+    if (v.values.isNotEmpty) return v.values.first.toString();
+  }
   return v.toString();
 }
 
 void _saveMeta(Database db, String table, Map? data, String idKey) {
   if (data == null) return;
-  final id = _toInt(data[idKey] ?? data['id']);
+  final id = _toInt(data[idKey] ?? data['id'] ?? data['${table.substring(0, table.length - 1)}_id']);
   if (id == null) return;
-  final punjabi = _val(data['unicode'] ?? data['english'] ?? data['gurmukhi']);
-  final english = _val(data['english'] ?? data['unicode'] ?? data['gurmukhi']);
+  final punjabi = _val(data['unicode'] ?? data['english'] ?? data['gurmukhi'] ?? data['name']);
+  final english = _val(data['english'] ?? data['unicode'] ?? data['gurmukhi'] ?? data['name']);
   db.execute('INSERT OR REPLACE INTO $table VALUES (?, ?, ?)', [id, punjabi, english]);
 }
 

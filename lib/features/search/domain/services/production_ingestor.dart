@@ -79,20 +79,20 @@ class ProductionIngestor {
                 await executor.runCustom('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
                     [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
 
-                final gur = _val(v['verse']?['unicode'] ?? v['gurmukhi'] ?? '');
-                final hi = _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi']);
-                final en = _val(v['transliteration']?['english'] ?? v['transliteration']?['en']);
-                final transEn = _val(v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'] ?? v['translation']?['en']);
-                final transPa = _val(v['translation']?['pu']?['ss'] ?? v['translation']?['pu']?['ft'] ?? v['translation']?['pu']);
+                final gur = _val(v['verse']?['unicode'] ?? v['gurmukhi'] ?? v['verse'] ?? '');
+                final hi = _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi'] ?? v['transliteration']?['hi_text']);
+                final en = _val(v['transliteration']?['english'] ?? v['transliteration']?['en'] ?? v['transliteration']?['en_text']);
+                final transEn = _val(v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'] ?? v['translation']?['en']?['text'] ?? v['translation']?['en']);
+                final transPa = _val(v['translation']?['pu']?['ss'] ?? v['translation']?['pu']?['ft'] ?? v['translation']?['pu']?['text'] ?? v['translation']?['pu']);
                 
-                final wId = _toInt(v['writer']?['writerId'] ?? v['writerId']);
-                final rId = _toInt(v['raag']?['raagId'] ?? v['raagId']);
-                final ang = _toInt(v['pageNo'] ?? v['ang']);
+                final wId = _toInt(v['writer']?['writerId'] ?? v['writerId'] ?? v['writer_id']);
+                final rId = _toInt(v['raag']?['raagId'] ?? v['raagId'] ?? v['raag_id']);
+                final ang = _toInt(v['pageNo'] ?? v['ang'] ?? v['page_no']);
 
                 verseBatch.add([
                   vId, 
                   shId, 
-                  _toInt(v['lineNo']) ?? 0, 
+                  _toInt(v['lineNo']) ?? _toInt(v['verseNo']) ?? 0, 
                   gur, 
                   en, 
                   hi, 
@@ -118,7 +118,8 @@ class ProductionIngestor {
           onProgress((i + (currentAng / 1500)) / totalSources);
           currentAng += batchSize;
         } catch (e) {
-          break;
+          currentAng += 20;
+          continue;
         }
       }
     }
@@ -130,16 +131,20 @@ class ProductionIngestor {
   String _val(dynamic v) {
     if (v == null) return '';
     if (v is String) return v;
-    if (v is Map) return (v['unicode'] ?? v['english'] ?? v['text'] ?? v.values.firstOrNull ?? '').toString();
+    if (v is Map) {
+      final value = v['unicode'] ?? v['english'] ?? v['text'] ?? v['text_hi'] ?? v['text_en'];
+      if (value != null) return value.toString();
+      if (v.values.isNotEmpty) return v.values.first.toString();
+    }
     return v.toString();
   }
 
   Future<void> _saveMeta(QueryExecutor executor, String table, Map? data, String idKey) async {
     if (data == null) return;
-    final id = _toInt(data[idKey] ?? data['id']);
+    final id = _toInt(data[idKey] ?? data['id'] ?? data['${table.substring(0, table.length - 1)}_id']);
     if (id == null) return;
-    final pbi = _val(data['unicode'] ?? data['english'] ?? data['gurmukhi']);
-    final eng = _val(data['english'] ?? data['unicode'] ?? data['gurmukhi']);
+    final pbi = _val(data['unicode'] ?? data['english'] ?? data['gurmukhi'] ?? data['name']);
+    final eng = _val(data['english'] ?? data['unicode'] ?? data['gurmukhi'] ?? data['name']);
     await executor.runCustom('INSERT OR REPLACE INTO $table VALUES (?, ?, ?)', [id, pbi, eng]);
   }
 }
