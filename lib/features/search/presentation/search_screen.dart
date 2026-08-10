@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
+import '../../../core/database/local_database.dart';
+import '../../../core/di/core_providers.dart';
 import '../domain/models/gurbani_search_result.dart';
 import 'search_view_model.dart';
 
@@ -13,9 +16,11 @@ class SearchScreen extends ConsumerWidget {
     final searchState = ref.watch(searchViewModelProvider);
     final vm = ref.read(searchViewModelProvider.notifier);
 
+    final sourceText = searchState.value?.source != null ? ' (${searchState.value!.source})' : '';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gurbani Search'),
+        title: Text('Gurbani Search$sourceText'),
         actions: [
           TextButton.icon(
             onPressed: () => vm.toggleHistoryMode(),

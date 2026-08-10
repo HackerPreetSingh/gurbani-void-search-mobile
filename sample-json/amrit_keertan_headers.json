@@ -1,0 +1,1473 @@
+{
+  "headers": [
+    {
+      "HeaderID": 1,
+      "Gurmukhi": "duie kr joiV krau Ardwis ]",
+      "GurmukhiUni": "ਦੁਇ ਕਰ ਜੋੜਿ ਕਰਉ ਅਰਦਾਸਿ ॥",
+      "Translations": null,
+      "Transliterations": {
+        "en": "dhui kar joR karau aradhaas ||",
+        "hi": "दुइ कर जोड़ि करउ अरदासि ॥",
+        "ipa": "d̪ʊeɪ kər d͡ʒɔɽ kəro ərəd̪ɑs.",
+        "ur": "دُا کر جوڑ کرا ارداس ۔۔"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 2,
+      "Gurmukhi": "FwFI krY pukwr ]",
+      "GurmukhiUni": "ਢਾਢੀ ਕਰੈ ਪੁਕਾਰ ॥",
+      "Translations": null,
+      "Transliterations": {
+        "en": "ddaaddee karai pukaar ||",
+        "hi": "ढाढी करै पुकार ॥",
+        "ipa": "ʈɑʈi kəræ pʊkɑr.",
+        "ur": "ڈھاڈھیِ کرَے پُکار ۔۔"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 3,
+      "Gurmukhi": "gurisKW kI hir DUiV dyih",
+      "GurmukhiUni": "ਗੁਰਸਿਖਾਂ ਕੀ ਹਰਿ ਧੂੜਿ ਦੇਹਿ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "gursikhaa(n) kee har dhooR dheh",
+        "hi": "गुरसिखाँ की हरि धूड़ि देहि",
+        "ipa": "Gʊrəsɪkʰɑⁿ ki hər t̪uɽ d̪eh",
+        "ur": "گُرسکھاں کیِ هر دھُوڑ دےه"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 4,
+      "Gurmukhi": "ijau jwnhu iqau rwKu",
+      "GurmukhiUni": "ਜਿਉ ਜਾਨਹੁ ਤਿਉ ਰਾਖੁ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "jiau jaanahu tiau raakhu",
+        "hi": "जिउ जानहु तिउ राखु",
+        "ipa": "d͡ʒɪo d͡ʒɑnəh t̪ɪo rɑkʰʊ",
+        "ur": "جِا جانهُ تا راکھ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 5,
+      "Gurmukhi": "ieh nIc krm hir myry ]",
+      "GurmukhiUni": "ਇਹ ਨੀਚ ਕਰਮ ਹਰਿ ਮੇਰੇ ॥",
+      "Translations": null,
+      "Transliterations": {
+        "en": "eeh neech karam har mere ||",
+        "hi": "इह नीच करम हरि मेरे ॥",
+        "ipa": "eɪh nit͡ʃ kərəm hər mere.",
+        "ur": "ِاه نیِچ کرم هر مےرے ۔۔"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 6,
+      "Gurmukhi": "hm AYsy qU AYsw ]",
+      "GurmukhiUni": "ਹਮ ਐਸੇ ਤੂ ਐਸਾ ॥",
+      "Translations": null,
+      "Transliterations": {
+        "en": "ham aaise too aaisaa ||",
+        "hi": "हम ऐसे तू ऐसा ॥",
+        "ipa": "həm æse t̪u æsɑ.",
+        "ur": "هم اَےسے تُو اَےسا ۔۔"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 7,
+      "Gurmukhi": "Akwl purK",
+      "GurmukhiUni": "ਅਕਾਲ ਪੁਰਖ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "akaal purakh",
+        "hi": "अकाल पुरख",
+        "ipa": "əkɑl pʊrəkʰ",
+        "ur": "اکال پُرکھ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 8,
+      "Gurmukhi": "rUpu n ryK n rMgu ikC",
+      "GurmukhiUni": "ਰੂਪੁ ਨ ਰੇਖ ਨ ਰੰਗੁ ਕਿਛ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "roop na rekh na ra(n)g kichh",
+        "hi": "रूपु न रेख न रंगु किछ",
+        "ipa": "rup nə rekʰ nə rəŋG kɪɕ",
+        "ur": "رُوپ ن رےکھ ن رںگ کچھ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 9,
+      "Gurmukhi": "Aiq suMdr mnmohn ipAwry",
+      "GurmukhiUni": "ਅਤਿ ਸੁੰਦਰ ਮਨਮੋਹਨ ਪਿਆਰੇ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "at su(n)dhar manmohan piaare",
+        "hi": "अति सुँदर मनमोहन पिआरे",
+        "ipa": "ət̪ sʊŋd̪ər mənəmɔhən pɪəɑre",
+        "ur": "ات سُںدر منموهن پآرے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 10,
+      "Gurmukhi": "hir qum vf vfy vfy vf aUcy",
+      "GurmukhiUni": "ਹਰਿ ਤੁਮ ਵਡ ਵਡੇ ਵਡੇ ਵਡ ਊਚੇ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har tum vadd vadde vadde vadd uooche",
+        "hi": "हरि तुम वड वडे वडे वड ऊचे",
+        "ipa": "hər t̪ʊm ʋəɖ ʋəɖe ʋəɖe ʋəɖ out͡ʃe",
+        "ur": "هر تُم وڈ وڈے وڈے وڈ اُوچے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 11,
+      "Gurmukhi": "aupmw jwq n khI myry pRB kI",
+      "GurmukhiUni": "ਉਪਮਾ ਜਾਤ ਨ ਕਹੀ ਮੇਰੇ ਪ੍ਰਭ ਕੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "aupamaa jaat na kahee mere prabh kee",
+        "hi": "उपमा जात न कही मेरे प्रभ की",
+        "ipa": "oʊpəmɑ d͡ʒɑt̪ nə kəhi mere pɹəɓ ki",
+        "ur": "اُپما جات ن کهیِ مےرے پربھ کیِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 12,
+      "Gurmukhi": "qyry kvn kvn gux kih kih gwvw",
+      "GurmukhiUni": "ਤੇਰੇ ਕਵਨ ਕਵਨ ਗੁਣ ਕਹਿ ਕਹਿ ਗਾਵਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "tere kavan kavan gun keh keh gaavaa",
+        "hi": "तेरे कवन कवन गुण कहि कहि गावा",
+        "ipa": "t̪ere kəʋən kəʋən Gʊɳ kəh kəh Gɑʋɑ",
+        "ur": "تےرے کون کون گُݨ کهِ کهِ گاوا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 13,
+      "Gurmukhi": "lKI n jweI nwnk lIlw",
+      "GurmukhiUni": "ਲਖੀ ਨ ਜਾਈ ਨਾਨਕ ਲੀਲਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "lakhee na jaiee naanak leelaa",
+        "hi": "लखी न जाई नानक लीला",
+        "ipa": "ləkʰi nə d͡ʒɑei nɑnək lilɑ",
+        "ur": "لکھیِ ن جاای نانک لیِلا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 14,
+      "Gurmukhi": "DIrau dyiK qum@wrY rMgw",
+      "GurmukhiUni": "ਧੀਰਉ ਦੇਖਿ ਤੁਮੑਾਰੈ ਰੰਗਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "dheerau dhekh tum(h)aarai ra(n)gaa",
+        "hi": "धीरउ देखि तुम्मारै रंगा",
+        "ipa": "t̪iro d̪ekʰ t̪ʊm@ɑræ rəŋGɑ",
+        "ur": "دھیِرا دےکھ تُمھارَے رںگا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 15,
+      "Gurmukhi": "eyk Anyk ibAwpk pUrk",
+      "GurmukhiUni": "ਏਕ ਅਨੇਕ ਬਿਆਪਕ ਪੂਰਕ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "ek anek biaapak poorak",
+        "hi": "एक अनेक बिआपक पूरक",
+        "ipa": "eek ənek bɪəɑpək purək",
+        "ur": "اےک انےک بآپک پُورک"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 16,
+      "Gurmukhi": "pRiqpwlY inq swir smwlY",
+      "GurmukhiUni": "ਪ੍ਰਤਿਪਾਲੈ ਨਿਤ ਸਾਰਿ ਸਮਾਲੈ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "pratipaalai nit saar samaalai",
+        "hi": "प्रतिपालै नित सारि समालै",
+        "ipa": "pɹət̪ɪpɑlæ nɪt̪ sɑr səmɑlæ",
+        "ur": "پرتپالَے نت سار سمالَے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 17,
+      "Gurmukhi": "qyrI Et pUrn gopwlw",
+      "GurmukhiUni": "ਤੇਰੀ ਓਟ ਪੂਰਨ ਗੋਪਾਲਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "teree oT pooran gopaalaa",
+        "hi": "तेरी ओट पूरन गोपाला",
+        "ipa": "t̪eri oəʈ purən Gɔpɑlɑ",
+        "ur": "تےریِ اوٹ پُورن گوپالا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 18,
+      "Gurmukhi": "cojI myry goivMdw cojI myry ipAwirAw",
+      "GurmukhiUni": "ਚੋਜੀ ਮੇਰੇ ਗੋਵਿੰਦਾ ਚੋਜੀ ਮੇਰੇ ਪਿਆਰਿਆ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "chojee mere govi(n)dhaa chojee mere piaariaa",
+        "hi": "चोजी मेरे गोविंदा चोजी मेरे पिआरिआ",
+        "ipa": "t͡ʃɔd͡ʒi mere Gɔʋɪŋd̪ɑ t͡ʃɔd͡ʒi mere pɪəɑrɪəɑ",
+        "ur": "چوجیِ مےرے گووںدا چوجیِ مےرے پآرآ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 19,
+      "Gurmukhi": "qUM myrw ipqw qUMhY myrw mwqw",
+      "GurmukhiUni": "ਤੂੰ ਮੇਰਾ ਪਿਤਾ ਤੂੰਹੈ ਮੇਰਾ ਮਾਤਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "too(n) meraa pitaa too(n)hai meraa maataa",
+        "hi": "तूँ मेरा पिता तूँहै मेरा माता",
+        "ipa": "t̪uŋ merɑ pɪt̪ɑ t̪uŋhæ merɑ mɑt̪ɑ",
+        "ur": "تُوں مےرا پتا تُوںهَے مےرا ماتا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 20,
+      "Gurmukhi": "Apuny hir pRB kI hau golI ]",
+      "GurmukhiUni": "ਅਪੁਨੇ ਹਰਿ ਪ੍ਰਭ ਕੀ ਹਉ ਗੋਲੀ ॥",
+      "Translations": null,
+      "Transliterations": {
+        "en": "apune har prabh kee hau golee ||",
+        "hi": "अपुने हरि प्रभ की हउ गोली ॥",
+        "ipa": "əpʊne hər pɹəɓ ki ho Gɔli.",
+        "ur": "اپنے هر پربھ کیِ ها گولیِ ۔۔"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 21,
+      "Gurmukhi": "Apuny syvk kI Awpy rwKY",
+      "GurmukhiUni": "ਅਪੁਨੇ ਸੇਵਕ ਕੀ ਆਪੇ ਰਾਖੈ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "apune sevak kee aape raakhai",
+        "hi": "अपुने सेवक की आपे राखै",
+        "ipa": "əpʊne seʋək ki əɑpe rɑkʰæ",
+        "ur": "اپنے سےوک کیِ آپے راکھَے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 22,
+      "Gurmukhi": "siqgurU ",
+      "GurmukhiUni": "ਸਤਿਗੁਰੂ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "satiguroo ",
+        "hi": "सतिगुरू ",
+        "ipa": "sət̪ɪGʊru ",
+        "ur": "ستگرُو "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 23,
+      "Gurmukhi": "siqgur guxI inDwn hY",
+      "GurmukhiUni": "ਸਤਿਗੁਰ ਗੁਣੀ ਨਿਧਾਨ ਹੈ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "satigur gunee nidhaan hai",
+        "hi": "सतिगुर गुणी निधान है",
+        "ipa": "sət̪ɪGʊr Gʊɳi nɪt̪ɑn hæ",
+        "ur": "ستگر گُݨیِ ندھان هَے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 24,
+      "Gurmukhi": "gur ibnu Goru AMDwru",
+      "GurmukhiUni": "ਗੁਰ ਬਿਨੁ ਘੋਰੁ ਅੰਧਾਰੁ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "gur bin ghor a(n)dhaaru",
+        "hi": "गुर बिनु घोरु अंधारु",
+        "ipa": "Gʊr bɪn Gʰɔr əŋt̪ɑrʊ",
+        "ur": "گُر بن گھور اںدھار"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 25,
+      "Gurmukhi": "mwns AOqwr Dwr drs idKwey hYN",
+      "GurmukhiUni": "ਮਾਨਸ ਔਤਾਰ ਧਾਰ ਦਰਸ ਦਿਖਾਏ ਹੈਂ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "maanas aauataar dhaar dharas dhikhaae hai(n)",
+        "hi": "मानस औतार धार दरस दिखाए हैं",
+        "ipa": "mɑnəs əɒət̪ɑr t̪ɑr d̪ərəs d̪ɪkʰɑee hæⁿ",
+        "ur": "مانس اَوتار دھار درس دکھااے هَےں"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 26,
+      "Gurmukhi": "kil qwrx guru nwnk AwieAw ",
+      "GurmukhiUni": "ਕਲਿ ਤਾਰਣ ਗੁਰੁ ਨਾਨਕ ਆਇਆ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "kal taaran gur naanak aaiaa ",
+        "hi": "कलि तारण गुरु नानक आइआ ",
+        "ipa": "kəl t̪ɑrəɳ Gʊr nɑnək əɑɪɑ ",
+        "ur": "کل تارݨ گُر نانک آایا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 27,
+      "Gurmukhi": "lhxy DirEnu Cqu isir",
+      "GurmukhiUni": "ਲਹਣੇ ਧਰਿਓਨੁ ਛਤੁ ਸਿਰਿ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "lahane dharion chhat sir",
+        "hi": "लहणे धरिओनु छतु सिरि",
+        "ipa": "ləhəɳe t̪ərɪoən ɕət̪ sɪr",
+        "ur": "لهݨے دھراون چھت سرِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 28,
+      "Gurmukhi": "Bly Amrdws gux qyry",
+      "GurmukhiUni": "ਭਲੇ ਅਮਰਦਾਸ ਗੁਣ ਤੇਰੇ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "bhale amaradhaas gun tere",
+        "hi": "भले अमरदास गुण तेरे",
+        "ipa": "ɓəle əmərəd̪ɑs Gʊɳ t̪ere",
+        "ur": "بھلے امرداس گُݨ تےرے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 29,
+      "Gurmukhi": "DMnu DMnu rwmdws guru ",
+      "GurmukhiUni": "ਧੰਨੁ ਧੰਨੁ ਰਾਮਦਾਸ ਗੁਰੁ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "dha(n)n dha(n)n raamadhaas gur ",
+        "hi": "धंनु धंनु रामदास गुरु ",
+        "ipa": "t̪əŋn t̪əŋn rɑməd̪ɑs Gʊr ",
+        "ur": "دھنّ دھنّ رامداس گُر "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 30,
+      "Gurmukhi": "guru Arjunu prqK´ hir",
+      "GurmukhiUni": "ਗੁਰੁ ਅਰਜੁਨੁ ਪਰਤਖੵ ਹਰਿ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "gur arajun paratakhaye har",
+        "hi": "गुरु अरजुनु परतख्य हरि",
+        "ipa": "Gʊr ərəd͡ʒʊn pərət̪əkʰəj hər",
+        "ur": "گُر ارجن پرتکھے هر"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 31,
+      "Gurmukhi": "hir goivMdu gurU guru BwieAw",
+      "GurmukhiUni": "ਹਰਿ ਗੋਵਿੰਦੁ ਗੁਰੂ ਗੁਰੁ ਭਾਇਆ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har govi(n)dh guroo gur bhaiaa",
+        "hi": "हरि गोविंदु गुरू गुरु भाइआ",
+        "ipa": "hər Gɔʋɪŋd̪ Gʊru Gʊr ɓɑɪɑ",
+        "ur": "هر گووںد گُرُو گُر بھاایا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 32,
+      "Gurmukhi": "ismrO sRI hirrwie ",
+      "GurmukhiUni": "ਸਿਮਰੌ ਸ੍ਰੀ ਹਰਿਰਾਇ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "simarau sree harirai ",
+        "hi": "सिमरौ स्री हरिराइ ",
+        "ipa": "sɪmərɒ sɹi hərɪrɑeɪ ",
+        "ur": "سِمرَو سریِ هرراا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 33,
+      "Gurmukhi": "sRI hirikRSn iDAweIAY",
+      "GurmukhiUni": "ਸ੍ਰੀ ਹਰਿਕ੍ਰਿਸ਼ਨ ਧਿਆਈਐ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sree harikirashan dhiaaieeaai",
+        "hi": "स्री हरिकृशन धिआईऐ",
+        "ipa": "sɹi hərɪkɪɹəʃən t̪ɪəɑeiæ",
+        "ur": "سریِ هرکرشن دھآایاَے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 34,
+      "Gurmukhi": "qyg bhwdr ismirAY ",
+      "GurmukhiUni": "ਤੇਗ ਬਹਾਦਰ ਸਿਮਰਿਐ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "teg bahaadhar simariaai ",
+        "hi": "तेग बहादर सिमरिऐ ",
+        "ipa": "t̪eG bəhɑd̪ər sɪmərɪæ ",
+        "ur": "تےگ بهادر سمراَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 35,
+      "Gurmukhi": "Swih ShnSwh gurU goibMd isMG ",
+      "GurmukhiUni": "ਸ਼ਾਹਿ ਸ਼ਹਨਸ਼ਾਹ ਗੁਰੂ ਗੋਬਿੰਦ ਸਿੰਘ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "shaeh shahanashaeh guroo gobi(n)dh si(n)gh ",
+        "hi": "शाहि शहनशाह गुरू गोबिंद सिंघ ",
+        "ipa": "ʃɑh ʃəhənəʃɑh Gʊru Gɔbɪŋd̪ sɪŋGʰə̀ ",
+        "ur": "شاه شهنشاه گُرُو گوبںد سںگھ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 36,
+      "Gurmukhi": "Kwlsw",
+      "GurmukhiUni": "ਖਾਲਸਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "khaalasaa",
+        "hi": "खालसा",
+        "ipa": "kʰɑləsɑ",
+        "ur": "کھالسا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 37,
+      "Gurmukhi": "bIr rs",
+      "GurmukhiUni": "ਬੀਰ ਰਸ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "beer ras",
+        "hi": "बीर रस",
+        "ipa": "bir rəs",
+        "ur": "بیِر رس"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 38,
+      "Gurmukhi": "sMqn kI mihmw kvn vKwnau ",
+      "GurmukhiUni": "ਸੰਤਨ ਕੀ ਮਹਿਮਾ ਕਵਨ ਵਖਾਨਉ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sa(n)tan kee mahimaa kavan vakhaanau ",
+        "hi": "संतन की महिमा कवन वखानउ ",
+        "ipa": "səŋt̪ən ki məhɪmɑ kəʋən ʋəkʰɑno ",
+        "ur": "سںتن کیِ مهِما کون وکھانا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 39,
+      "Gurmukhi": "hir jugu jugu Bgq aupwieAw",
+      "GurmukhiUni": "ਹਰਿ ਜੁਗੁ ਜੁਗੁ ਭਗਤ ਉਪਾਇਆ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har jug jug bhagat upaiaa",
+        "hi": "हरि जुगु जुगु भगत उपाइआ",
+        "ipa": "hər d͡ʒʊG d͡ʒʊG ɓəGət̪ oʊpɑɪɑ",
+        "ur": "هر جُگ جُگ بھگت اُپاایا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 40,
+      "Gurmukhi": "nwm ismrn",
+      "GurmukhiUni": "ਨਾਮ ਸਿਮਰਨ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "naam simaran",
+        "hi": "नाम सिमरन",
+        "ipa": "nɑm sɪmərən",
+        "ur": "نام سمرن"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 41,
+      "Gurmukhi": "vwihgurU gurmMqR hY",
+      "GurmukhiUni": "ਵਾਹਿਗੁਰੂ ਗੁਰਮੰਤ੍ਰ ਹੈ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "vaahiguroo gurma(n)tr hai",
+        "hi": "वाहिगुरू गुरमंत्र है",
+        "ipa": "ʋɑhɪGʊru Gʊrəməŋt̪ɹ hæ",
+        "ur": "واهگرُو گُرمںتر هَے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 42,
+      "Gurmukhi": "igAwnu iDAwnu ismrx jugiq",
+      "GurmukhiUni": "ਗਿਆਨੁ ਧਿਆਨੁ ਸਿਮਰਣ ਜੁਗਤਿ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "giaan dhiaan simaran jugat",
+        "hi": "गिआनु धिआनु सिमरण जुगति",
+        "ipa": "Gɪəɑn t̪ɪəɑn sɪmərəɳ d͡ʒʊGət̪",
+        "ur": "گِآن دھآن سمرݨ جُگت"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 43,
+      "Gurmukhi": "hir nwmu dIAw guir praupkwrI ",
+      "GurmukhiUni": "ਹਰਿ ਨਾਮੁ ਦੀਆ ਗੁਰਿ ਪਰਉਪਕਾਰੀ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har naam dheeaa gur paraupakaaree ",
+        "hi": "हरि नामु दीआ गुरि परउपकारी ",
+        "ipa": "hər nɑm d̪iəɑ Gʊr pəroʊpəkɑri ",
+        "ur": "هر نام دیِآ گُر پراپکاریِ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 44,
+      "Gurmukhi": "ry mn vqR bIjx nwau ",
+      "GurmukhiUni": "ਰੇ ਮਨ ਵਤ੍ਰ ਬੀਜਣ ਨਾਉ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "re man vatr beejan naau ",
+        "hi": "रे मन वत्र बीजण नाउ ",
+        "ipa": "re mən ʋət̪ɹ bid͡ʒəɳ nɑo ",
+        "ur": "رے من وتر بیِجݨ ناا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 45,
+      "Gurmukhi": "qumrI ik®pw qy jpIAY nwau ",
+      "GurmukhiUni": "ਤੁਮਰੀ ਕ੍ਰਿਪਾ ਤੇ ਜਪੀਐ ਨਾਉ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "tumaree kirapaa te japeeaai naau ",
+        "hi": "तुमरी कृपा ते जपीऐ नाउ ",
+        "ipa": "t̪ʊməri kɪʳəpɑ t̪e d͡ʒəpiæ nɑo ",
+        "ur": "تُمریِ ک®پا تے جپیِاَے ناا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 46,
+      "Gurmukhi": "AMimRq nwmu sdw inrmlIAw ",
+      "GurmukhiUni": "ਅੰਮ੍ਰਿਤ ਨਾਮੁ ਸਦਾ ਨਿਰਮਲੀਆ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "a(n)mirat naam sadhaa niramaleeaa ",
+        "hi": "अंमृत नामु सदा निरमलीआ ",
+        "ipa": "əŋmɪɹət̪ nɑm səd̪ɑ nɪrəməliəɑ ",
+        "ur": "اںمرت نام سدا نرملیِآ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 47,
+      "Gurmukhi": "jip mn siq nwmu sdw siq nwmu ",
+      "GurmukhiUni": "ਜਪਿ ਮਨ ਸਤਿ ਨਾਮੁ ਸਦਾ ਸਤਿ ਨਾਮੁ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "jap man sat naam sadhaa sat naam ",
+        "hi": "जपि मन सति नामु सदा सति नामु ",
+        "ipa": "d͡ʒəp mən sət̪ nɑm səd̪ɑ sət̪ nɑm ",
+        "ur": "جپ من ستِ نام سدا ستِ نام "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 48,
+      "Gurmukhi": "aUTq bYTq sovq nwm",
+      "GurmukhiUni": "ਊਠਤ ਬੈਠਤ ਸੋਵਤ ਨਾਮ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "uooThat baiThat sovat naam",
+        "hi": "ऊठत बैठत सोवत नाम",
+        "ipa": "ouʈʰət̪ bæʈʰət̪ sɔʋət̪ nɑm",
+        "ur": "اُوٹھت بَےٹھت سووت نام"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 49,
+      "Gurmukhi": "gurisK hir bolhu myry BweI ",
+      "GurmukhiUni": "ਗੁਰਸਿਖ ਹਰਿ ਬੋਲਹੁ ਮੇਰੇ ਭਾਈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "gursikh har bolahu mere bhaiee ",
+        "hi": "गुरसिख हरि बोलहु मेरे भाई ",
+        "ipa": "Gʊrəsɪkʰ hər bɔləh mere ɓɑei ",
+        "ur": "گُرسکھ هر بولهُ مےرے بھاای "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 50,
+      "Gurmukhi": "imlu imlu sKI hir kQw suneIAw ",
+      "GurmukhiUni": "ਮਿਲੁ ਮਿਲੁ ਸਖੀ ਹਰਿ ਕਥਾ ਸੁਨਈਆ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "mil mil sakhee har kathaa sunieeaa ",
+        "hi": "मिलु मिलु सखी हरि कथा सुनईआ ",
+        "ipa": "mɪl mɪl səkʰi hər kət̪ʰɑ sʊneiɑ ",
+        "ur": "مِل مل سکھیِ هر کتھا سُنایآ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 51,
+      "Gurmukhi": "jwicku mMgY inq nwmu ",
+      "GurmukhiUni": "ਜਾਚਿਕੁ ਮੰਗੈ ਨਿਤ ਨਾਮੁ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "jaachik ma(n)gai nit naam ",
+        "hi": "जाचिकु मंगै नित नामु ",
+        "ipa": "d͡ʒɑt͡ʃɪk məŋGæ nɪt̪ nɑm ",
+        "ur": "جاچک مںگَے نت نام "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 52,
+      "Gurmukhi": "hir kI pUjw dulµB hY sMqhu ",
+      "GurmukhiUni": "ਹਰਿ ਕੀ ਪੂਜਾ ਦੁਲੰਭ ਹੈ ਸੰਤਹੁ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har kee poojaa dhula(n)bh hai sa(n)tahu ",
+        "hi": "हरि की पूजा दुलंभ है संतहु ",
+        "ipa": "hər ki pud͡ʒɑ d̪ʊləⁿɓ hæ səŋt̪əh ",
+        "ur": "هر کیِ پُوجا دُلµبھ هَے سںتهُ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 53,
+      "Gurmukhi": "hir hir nwmu iDAweIAY myrI ijMduVIey ",
+      "GurmukhiUni": "ਹਰਿ ਹਰਿ ਨਾਮੁ ਧਿਆਈਐ ਮੇਰੀ ਜਿੰਦੁੜੀਏ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har har naam dhiaaieeaai meree ji(n)dhuRe'e ",
+        "hi": "हरि हरि नामु धिआईऐ मेरी जिंदुड़ीए ",
+        "ipa": "hər hər nɑm t̪ɪəɑeiæ meri d͡ʒɪŋd̪ʊɽiee ",
+        "ur": "هر هرِ نام دھآایاَے مےریِ جںدڑیِاے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 54,
+      "Gurmukhi": "hir rsu pIvhu BweI ",
+      "GurmukhiUni": "ਹਰਿ ਰਸੁ ਪੀਵਹੁ ਭਾਈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har ras peevahu bhaiee ",
+        "hi": "हरि रसु पीवहु भाई ",
+        "ipa": "hər rəs piʋəh ɓɑei ",
+        "ur": "هر رس پیِوهُ بھاای "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 55,
+      "Gurmukhi": "hir nwmw hir rM|u hY ",
+      "GurmukhiUni": "ਹਰਿ ਨਾਮਾ ਹਰਿ ਰੰਙੁ ਹੈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har naamaa har ra(n)n(g) hai ",
+        "hi": "हरि नामा हरि रंङु है ",
+        "ipa": "hər nɑmɑ hər rəŋN hæ ",
+        "ur": "هر ناما هرِ رںنگ هَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 56,
+      "Gurmukhi": "hir Dnu scI rwis hY ",
+      "GurmukhiUni": "ਹਰਿ ਧਨੁ ਸਚੀ ਰਾਸਿ ਹੈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har dhan sachee raas hai ",
+        "hi": "हरि धनु सची रासि है ",
+        "ipa": "hər t̪ən sət͡ʃi rɑs hæ ",
+        "ur": "هر دھن سچیِ راس هَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 57,
+      "Gurmukhi": "srb rog kw AauKdu nwmu ",
+      "GurmukhiUni": "ਸਰਬ ਰੋਗ ਕਾ ਅਉਖਦੁ ਨਾਮੁ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sarab rog kaa aaukhadh naam ",
+        "hi": "सरब रोग का अउखदु नामु ",
+        "ipa": "sərəb rɔG kɑ əoʊkʰəd̪ nɑm ",
+        "ur": "سرب روگ کا ااکھد نام "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 58,
+      "Gurmukhi": "hir nwmY quil n pujeI",
+      "GurmukhiUni": "ਹਰਿ ਨਾਮੈ ਤੁਲਿ ਨ ਪੁਜਈ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har naamai tul na pujiee",
+        "hi": "हरि नामै तुलि न पुजई",
+        "ipa": "hər nɑmæ t̪ʊl nə pʊd͡ʒei",
+        "ur": "هر نامَے تُل ن پُجای"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 59,
+      "Gurmukhi": "kbIr hir kw ismrnu jo krY ",
+      "GurmukhiUni": "ਕਬੀਰ ਹਰਿ ਕਾ ਸਿਮਰਨੁ ਜੋ ਕਰੈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "kabeer har kaa simaran jo karai ",
+        "hi": "कबीर हरि का सिमरनु जो करै ",
+        "ipa": "kəbir hər kɑ sɪmərən d͡ʒɔ kəræ ",
+        "ur": "کبیِر هر کا سمرن جو کرَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 60,
+      "Gurmukhi": "hir ky nwm ibnw duKu pwvY ",
+      "GurmukhiUni": "ਹਰਿ ਕੇ ਨਾਮ ਬਿਨਾ ਦੁਖੁ ਪਾਵੈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "har ke naam binaa dhukh paavai ",
+        "hi": "हरि के नाम बिना दुखु पावै ",
+        "ipa": "hər ke nɑm bɪnɑ d̪ʊkʰ pɑʋæ ",
+        "ur": "هر کے نام بنا دُکھ پاوَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 61,
+      "Gurmukhi": "suKu nwhI ry hir Bgiq ibnw ",
+      "GurmukhiUni": "ਸੁਖੁ ਨਾਹੀ ਰੇ ਹਰਿ ਭਗਤਿ ਬਿਨਾ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sukh naahee re har bhagat binaa ",
+        "hi": "सुखु नाही रे हरि भगति बिना ",
+        "ipa": "sʊkʰ nɑhi re hər ɓəGət̪ bɪnɑ ",
+        "ur": "سُکھ ناهیِ رے هر بھگت بنا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 62,
+      "Gurmukhi": "iesu mn kau koeI Kojhu BweI ",
+      "GurmukhiUni": "ਇਸੁ ਮਨ ਕਉ ਕੋਈ ਖੋਜਹੁ ਭਾਈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "eis man kau koiee khojahu bhaiee ",
+        "hi": "इसु मन कउ कोई खोजहु भाई ",
+        "ipa": "eɪs mən ko kɔei kʰɔd͡ʒəh ɓɑei ",
+        "ur": "ِاس من کا کوای کھوجهُ بھاای "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 63,
+      "Gurmukhi": "suix bwvry qU kwey dyiK Bulwnw ",
+      "GurmukhiUni": "ਸੁਣਿ ਬਾਵਰੇ ਤੂ ਕਾਏ ਦੇਖਿ ਭੁਲਾਨਾ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sun baavare too kaae dhekh bhulaanaa ",
+        "hi": "सुणि बावरे तू काए देखि भुलाना ",
+        "ipa": "sʊɳ bɑʋəre t̪u kɑee d̪ekʰ ɓʊlɑnɑ ",
+        "ur": "سُݨ باورے تُو کااے دےکھ بھُلانا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 64,
+      "Gurmukhi": "myrY min bYrwgu BieAw jIau",
+      "GurmukhiUni": "ਮੇਰੈ ਮਨਿ ਬੈਰਾਗੁ ਭਇਆ ਜੀਉ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "merai man bairaag bhiaa jeeau",
+        "hi": "मेरै मनि बैरागु भइआ जीउ",
+        "ipa": "meræ mən bærɑG ɓɪɑ d͡ʒioʊ",
+        "ur": "مےرَے من بَےراگ بھایا جیِا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 65,
+      "Gurmukhi": "ipRA kI pRIiq ipAwrI ",
+      "GurmukhiUni": "ਪ੍ਰਿਅ ਕੀ ਪ੍ਰੀਤਿ ਪਿਆਰੀ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "pria kee preet piaaree ",
+        "hi": "पृअ की प्रीति पिआरी ",
+        "ipa": "pɪɹə ki pɹit̪ pɪəɑri ",
+        "ur": "پِرا کیِ پریِت پآریِ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 66,
+      "Gurmukhi": "drsn ipAwsI idnsu rwiq ",
+      "GurmukhiUni": "ਦਰਸਨ ਪਿਆਸੀ ਦਿਨਸੁ ਰਾਤਿ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "dharasan piaasee dhinas raat ",
+        "hi": "दरसन पिआसी दिनसु राति ",
+        "ipa": "d̪ərəsən pɪəɑsi d̪ɪnəs rɑt̪ ",
+        "ur": "درسن پآسیِ دنس رات "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 67,
+      "Gurmukhi": "suqVI so shu ifTu",
+      "GurmukhiUni": "ਸੁਤੜੀ ਸੋ ਸਹੁ ਡਿਠੁ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sutaRee so sahu ddiThu",
+        "hi": "सुतड़ी सो सहु डिठु",
+        "ipa": "sʊt̪əɽi sɔ səh ɖɪʈʰʊ",
+        "ur": "سُتڑیِ سو سهُ ڈٹھ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 68,
+      "Gurmukhi": "drsnu dyKq doK nsy",
+      "GurmukhiUni": "ਦਰਸਨੁ ਦੇਖਤ ਦੋਖ ਨਸੇ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "dharasan dhekhat dhokh nase",
+        "hi": "दरसनु देखत दोख नसे",
+        "ipa": "d̪ərəsən d̪ekʰət̪ d̪ɔkʰ nəse",
+        "ur": "درسن دےکھت دوکھ نسے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 69,
+      "Gurmukhi": "Awsw kI vwr",
+      "GurmukhiUni": "ਆਸਾ ਕੀ ਵਾਰ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "aasaa kee vaar",
+        "hi": "आसा की वार",
+        "ipa": "əɑsɑ ki ʋɑr",
+        "ur": "آسا کیِ وار"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 70,
+      "Gurmukhi": "Awau hmwrY rwm ipAwry jIau ",
+      "GurmukhiUni": "ਆਉ ਹਮਾਰੈ ਰਾਮ ਪਿਆਰੇ ਜੀਉ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "aau hamaarai raam piaare jeeau ",
+        "hi": "आउ हमारै राम पिआरे जीउ ",
+        "ipa": "əɑo həmɑræ rɑm pɪəɑre d͡ʒio ",
+        "ur": "آا همارَے رام پآرے جیِا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 71,
+      "Gurmukhi": "hY koaU AYso hmrw mIqu ",
+      "GurmukhiUni": "ਹੈ ਕੋਊ ਐਸੋ ਹਮਰਾ ਮੀਤੁ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "hai kouoo aaiso hamaraa meet ",
+        "hi": "है कोऊ ऐसो हमरा मीतु ",
+        "ipa": "hæ kɔou æsɔ həmərɑ mit̪ ",
+        "ur": "هَے کواُو اَےسو همرا میِت "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 72,
+      "Gurmukhi": "sBy kMqY rqIAw mY dohwgix ikqu ",
+      "GurmukhiUni": "ਸਭੇ ਕੰਤੈ ਰਤੀਆ ਮੈ ਦੋਹਾਗਣਿ ਕਿਤੁ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sabhe ka(n)tai rateeaa mai dhohaagan kit ",
+        "hi": "सभे कंतै रतीआ मै दोहागणि कितु ",
+        "ipa": "səɓe kəŋt̪æ rət̪iəɑ mæ d̪ɔhɑGəɳ kɪt̪ ",
+        "ur": "سبھے کںتَے رتیِآ مَے دوهاگݨ کت "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 73,
+      "Gurmukhi": "muMDy ipr ibnu ikAw sIgwru",
+      "GurmukhiUni": "ਮੁੰਧੇ ਪਿਰ ਬਿਨੁ ਕਿਆ ਸੀਗਾਰੁ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "mu(n)dhe pir bin kiaa seegaaru",
+        "hi": "मुँधे पिर बिनु किआ सीगारु",
+        "ipa": "mʊŋt̪e pɪr bɪn kɪəɑ siGɑrʊ",
+        "ur": "مُںدھے پر بن کآ سیِگار"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 74,
+      "Gurmukhi": "Andu BieAw vfBwgIho ",
+      "GurmukhiUni": "ਅਨਦੁ ਭਇਆ ਵਡਭਾਗੀਹੋ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "anadh bhiaa vaddabhaageeho ",
+        "hi": "अनदु भइआ वडभागीहो ",
+        "ipa": "ənəd̪ ɓɪɑ ʋəɖəɓɑGihɔ ",
+        "ur": "اند بھایا وڈبھاگیِهو "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 75,
+      "Gurmukhi": "crn kml sMig lwgI forI ",
+      "GurmukhiUni": "ਚਰਨ ਕਮਲ ਸੰਗਿ ਲਾਗੀ ਡੋਰੀ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "charan kamal sa(n)g laagee ddoree ",
+        "hi": "चरन कमल संगि लागी डोरी ",
+        "ipa": "t͡ʃərən kəməl səŋG lɑGi ɖɔri ",
+        "ur": "چرن کمل سںگ لاگیِ ڈوریِ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 76,
+      "Gurmukhi": "shj kI AkQ kQw hY inrwrI",
+      "GurmukhiUni": "ਸਹਜ ਕੀ ਅਕਥ ਕਥਾ ਹੈ ਨਿਰਾਰੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sahaj kee akath kathaa hai niraaree",
+        "hi": "सहज की अकथ कथा है निरारी",
+        "ipa": "səhəd͡ʒ ki əkət̪ʰ kət̪ʰɑ hæ nɪrɑri",
+        "ur": "سهج کیِ اکتھ کتھا هَے نراریِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 77,
+      "Gurmukhi": "sy gurisK Dnu DMnu hY ",
+      "GurmukhiUni": "ਸੇ ਗੁਰਸਿਖ ਧਨੁ ਧੰਨੁ ਹੈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "se gursikh dhan dha(n)n hai ",
+        "hi": "से गुरसिख धनु धंनु है ",
+        "ipa": "se Gʊrəsɪkʰ t̪ən t̪əŋn hæ ",
+        "ur": "سے گُرسکھ دھن دھنّ هَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 78,
+      "Gurmukhi": "gurisKI bwrIk hY",
+      "GurmukhiUni": "ਗੁਰਸਿਖੀ ਬਾਰੀਕ ਹੈ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "gursikhee baareek hai",
+        "hi": "गुरसिखी बारीक है",
+        "ipa": "Gʊrəsɪkʰi bɑrik hæ",
+        "ur": "گُرسکھیِ باریِک هَے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 79,
+      "Gurmukhi": "AMimRq vylw scu nwau",
+      "GurmukhiUni": "ਅੰਮ੍ਰਿਤ ਵੇਲਾ ਸਚੁ ਨਾਉ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "a(n)mirat velaa sach naau",
+        "hi": "अंमृत वेला सचु नाउ",
+        "ipa": "əŋmɪɹət̪ ʋelɑ sət͡ʃ nɑoʊ",
+        "ur": "اںمرت وےلا سچ ناا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 80,
+      "Gurmukhi": "gurmiq irdY grIbI AwvY",
+      "GurmukhiUni": "ਗੁਰਮਤਿ ਰਿਦੈ ਗਰੀਬੀ ਆਵੈ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "gurmat ridhai gareebee aavai",
+        "hi": "गुरमति रिदै गरीबी आवै",
+        "ipa": "Gʊrəmət̪ rɪd̪æ Gəribi əɑʋæ",
+        "ur": "گُرمت ردَے گریِبیِ آوَے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 81,
+      "Gurmukhi": "Aink BWiq kir syvw krIAY ",
+      "GurmukhiUni": "ਅਨਿਕ ਭਾਂਤਿ ਕਰਿ ਸੇਵਾ ਕਰੀਐ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "anik bhaa(n)t kar sevaa kareeaai ",
+        "hi": "अनिक भाँति करि सेवा करीऐ ",
+        "ipa": "ənɪk ɓɑⁿət̪ kər seʋɑ kəriæ ",
+        "ur": "انک بھاںت کرِ سےوا کریِاَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 82,
+      "Gurmukhi": "dieAw jwxY jIA kI",
+      "GurmukhiUni": "ਦਇਆ ਜਾਣੈ ਜੀਅ ਕੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "dhiaa jaanai jeea kee",
+        "hi": "दइआ जाणै जीअ की",
+        "ipa": "d̪ɪɑ d͡ʒɑɳæ d͡ʒiə ki",
+        "ur": "دایا جاݨَے جیِا کیِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 83,
+      "Gurmukhi": "krxI bwJhu iBsiq n pwie",
+      "GurmukhiUni": "ਕਰਣੀ ਬਾਝਹੁ ਭਿਸਤਿ ਨ ਪਾਇ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "karanee baajhahu bhisat na pai",
+        "hi": "करणी बाझहु भिसति न पाइ",
+        "ipa": "kərəɳi bɑɖ͡ʐəh ɓɪsət̪ nə pɑeɪ",
+        "ur": "کرݨیِ باجھهُ بھست ن پاا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 84,
+      "Gurmukhi": "mwxs jnmu dulµBu hY ",
+      "GurmukhiUni": "ਮਾਣਸ ਜਨਮੁ ਦੁਲੰਭੁ ਹੈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "maanas janam dhula(n)bh hai ",
+        "hi": "माणस जनमु दुलंभु है ",
+        "ipa": "mɑɳəs d͡ʒənəm d̪ʊləⁿɓ hæ ",
+        "ur": "ماݨس جنم دُلµبھ هَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 85,
+      "Gurmukhi": "bwl juAwnI Aru ibriD Puin",
+      "GurmukhiUni": "ਬਾਲ ਜੁਆਨੀ ਅਰੁ ਬਿਰਧਿ ਫੁਨਿ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "baal juaanee ar biradh fun",
+        "hi": "बाल जुआनी अरु बिरधि फुनि",
+        "ipa": "bɑl d͡ʒʊəɑni ər bɪrət̪ə̀ fʊn",
+        "ur": "بال جُآنیِ ار بردھ پھُن"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 86,
+      "Gurmukhi": "gurmiq ivrlw bUJY koie ",
+      "GurmukhiUni": "ਗੁਰਮਤਿ ਵਿਰਲਾ ਬੂਝੈ ਕੋਇ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "gurmat viralaa boojhai koi ",
+        "hi": "गुरमति विरला बूझै कोइ ",
+        "ipa": "Gʊrəmət̪ ʋɪrəlɑ buɖ͡ʐæ kɔeɪ ",
+        "ur": "گُرمت ورلا بُوجھَے کوا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 87,
+      "Gurmukhi": "AMimRq bcn siqgur kI bwxI",
+      "GurmukhiUni": "ਅੰਮ੍ਰਿਤ ਬਚਨ ਸਤਿਗੁਰ ਕੀ ਬਾਣੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "a(n)mirat bachan satigur kee baanee",
+        "hi": "अंमृत बचन सतिगुर की बाणी",
+        "ipa": "əŋmɪɹət̪ bət͡ʃən sət̪ɪGʊr ki bɑɳi",
+        "ur": "اںمرت بچن ستگر کیِ باݨیِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 88,
+      "Gurmukhi": "kIrqnu inrmolk hIrw",
+      "GurmukhiUni": "ਕੀਰਤਨੁ ਨਿਰਮੋਲਕ ਹੀਰਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "keeratan niramolak heeraa",
+        "hi": "कीरतनु निरमोलक हीरा",
+        "ipa": "kirət̪ən nɪrəmɔlək hirɑ",
+        "ur": "کیِرتن نرمولک هیِرا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 89,
+      "Gurmukhi": "sqsMgiq aUqm siqgur kyrI",
+      "GurmukhiUni": "ਸਤਸੰਗਤਿ ਊਤਮ ਸਤਿਗੁਰ ਕੇਰੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "satasa(n)gat uootam satigur keree",
+        "hi": "सतसंगति ऊतम सतिगुर केरी",
+        "ipa": "sət̪əsəŋGət̪ out̪əm sət̪ɪGʊr keri",
+        "ur": "ستسںگت اُوتم ستگر کےریِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 90,
+      "Gurmukhi": "swkq sMgu n kIjIA",
+      "GurmukhiUni": "ਸਾਕਤ ਸੰਗੁ ਨ ਕੀਜੀਅ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "saakat sa(n)g na keejeea",
+        "hi": "साकत संगु न कीजीअ",
+        "ipa": "sɑkət̪ səŋG nə kid͡ʒiə",
+        "ur": "ساکت سںگ ن کیِجیِا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 91,
+      "Gurmukhi": "mnmuK mUlhu BuilAw ",
+      "GurmukhiUni": "ਮਨਮੁਖ ਮੂਲਹੁ ਭੁਲਿਆ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "manmukh moolahu bhuliaa ",
+        "hi": "मनमुख मूलहु भुलिआ ",
+        "ipa": "mənəmʊkʰ muləh ɓʊlɪəɑ ",
+        "ur": "منمکھ مُولهُ بھُلآ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 92,
+      "Gurmukhi": "muh kwly iqnw inMdkw",
+      "GurmukhiUni": "ਮੁਹ ਕਾਲੇ ਤਿਨਾ ਨਿੰਦਕਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "muh kaale tinaa ni(n)dhakaa",
+        "hi": "मुह काले तिना निंदका",
+        "ipa": "mʊh kɑle t̪ɪnɑ nɪŋd̪əkɑ",
+        "ur": "مُه کالے تنا نںدکا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 93,
+      "Gurmukhi": "Bwry BueIN AikrqGx",
+      "GurmukhiUni": "ਭਾਰੇ ਭੁਈਂ ਅਕਿਰਤਘਣ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "bhaare bhuiee(n) akirataghan",
+        "hi": "भारे भुईं अकिरतघण",
+        "ipa": "ɓɑre ɓʊeiⁿ əkɪrət̪əGʰəɳ",
+        "ur": "بھارے بھُایں اکرتگھݨ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 94,
+      "Gurmukhi": "muhu kwlY mIxw ",
+      "GurmukhiUni": "ਮੁਹੁ ਕਾਲੈ ਮੀਣਾ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "muh kaalai meenaa ",
+        "hi": "मुहु कालै मीणा ",
+        "ipa": "mʊh kɑlæ miɳɑ ",
+        "ur": "مُهُ کالَے میِݨا "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 95,
+      "Gurmukhi": "ingury kw hY nwau burw",
+      "GurmukhiUni": "ਨਿਗੁਰੇ ਕਾ ਹੈ ਨਾਉ ਬੁਰਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "nigure kaa hai naau buraa",
+        "hi": "निगुरे का है नाउ बुरा",
+        "ipa": "nɪGʊre kɑ hæ nɑo bʊrɑ",
+        "ur": "نِگرے کا هَے ناا بُرا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 96,
+      "Gurmukhi": "mwieAw hoeI nwgnI",
+      "GurmukhiUni": "ਮਾਇਆ ਹੋਈ ਨਾਗਨੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "maiaa hoiee naaganee",
+        "hi": "माइआ होई नागनी",
+        "ipa": "mɑɪɑ hɔei nɑGəni",
+        "ur": "مااآ هوای ناگنیِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 97,
+      "Gurmukhi": "iesu dyhI AMdir pMc cor vsih",
+      "GurmukhiUni": "ਇਸੁ ਦੇਹੀ ਅੰਦਰਿ ਪੰਚ ਚੋਰ ਵਸਹਿ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "eis dhehee a(n)dhar pa(n)ch chor vasah",
+        "hi": "इसु देही अंदरि पंच चोर वसहि",
+        "ipa": "eɪs d̪ehi əŋd̪ər pəŋt͡ʃ t͡ʃɔr ʋəsəh",
+        "ur": "ِاس دےهیِ اںدر پںچ چور وسه"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 98,
+      "Gurmukhi": "AYsw jogu kmwvhu jogI",
+      "GurmukhiUni": "ਐਸਾ ਜੋਗੁ ਕਮਾਵਹੁ ਜੋਗੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "aaisaa jog kamaavahu jogee",
+        "hi": "ऐसा जोगु कमावहु जोगी",
+        "ipa": "æsɑ d͡ʒɔG kəmɑʋəh d͡ʒɔGi",
+        "ur": "اَےسا جوگ کماوهُ جوگیِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 99,
+      "Gurmukhi": "jo AwieAw so clsI",
+      "GurmukhiUni": "ਜੋ ਆਇਆ ਸੋ ਚਲਸੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "jo aaiaa so chalasee",
+        "hi": "जो आइआ सो चलसी",
+        "ipa": "d͡ʒɔ əɑɪɑ sɔ t͡ʃələsi",
+        "ur": "جو آاآ سو چلسیِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 100,
+      "Gurmukhi": "qyrw kIAw mITw lwgY ",
+      "GurmukhiUni": "ਤੇਰਾ ਕੀਆ ਮੀਠਾ ਲਾਗੈ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "teraa keeaa meeThaa laagai ",
+        "hi": "तेरा कीआ मीठा लागै ",
+        "ipa": "t̪erɑ kiəɑ miʈʰɑ lɑGæ ",
+        "ur": "تےرا کیِآ میِٹھا لاگَے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 101,
+      "Gurmukhi": "gurmuiK jnmu svwir drgh cilAw",
+      "GurmukhiUni": "ਗੁਰਮੁਖਿ ਜਨਮੁ ਸਵਾਰਿ ਦਰਗਹ ਚਲਿਆ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "gurmukh janam savaar dharageh chaliaa",
+        "hi": "गुरमुखि जनमु सवारि दरगह चलिआ",
+        "ipa": "Gʊrəmʊkʰ d͡ʒənəm səʋɑr d̪ərəGəh t͡ʃəlɪəɑ",
+        "ur": "گُرمکھ جنم سوار درگه چلآ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 102,
+      "Gurmukhi": "mwhw ruqI Awvih vwr vwr",
+      "GurmukhiUni": "ਮਾਹਾ ਰੁਤੀ ਆਵਹਿ ਵਾਰ ਵਾਰ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "maahaa rutee aaveh vaar vaar",
+        "hi": "माहा रुती आवहि वार वार",
+        "ipa": "mɑhɑ rʊt̪i əɑʋəh ʋɑr ʋɑr",
+        "ur": "ماها رُتیِ آوه وار وار"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 103,
+      "Gurmukhi": "sBy ruqI cMgIAw ",
+      "GurmukhiUni": "ਸਭੇ ਰੁਤੀ ਚੰਗੀਆ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "sabhe rutee cha(n)geeaa ",
+        "hi": "सभे रुती चंगीआ ",
+        "ipa": "səɓe rʊt̪i t͡ʃəŋGiəɑ ",
+        "ur": "سبھے رُتیِ چںگیِآ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 104,
+      "Gurmukhi": "swvxu AwieAw hy sKI ",
+      "GurmukhiUni": "ਸਾਵਣੁ ਆਇਆ ਹੇ ਸਖੀ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "saavan aaiaa he sakhee ",
+        "hi": "सावणु आइआ हे सखी ",
+        "ipa": "sɑʋəɳ əɑɪɑ he səkʰi ",
+        "ur": "ساوݨ آایا هے سکھیِ "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 105,
+      "Gurmukhi": "kIrqnu hoAw rYix sbweI",
+      "GurmukhiUni": "ਕੀਰਤਨੁ ਹੋਆ ਰੈਣਿ ਸਬਾਈ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "keeratan hoaa rain sabaiee",
+        "hi": "कीरतनु होआ रैणि सबाई",
+        "ipa": "kirət̪ən hɔəɑ ræɳ səbɑei",
+        "ur": "کیِرتن هوآ رَےݨ سباای"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 106,
+      "Gurmukhi": "AwrqI",
+      "GurmukhiUni": "ਆਰਤੀ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "aaratee",
+        "hi": "आरती",
+        "ipa": "əɑrət̪i",
+        "ur": "آرتیِ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 107,
+      "Gurmukhi": "hor byAMq Sbd",
+      "GurmukhiUni": "ਹੋਰ ਬੇਅੰਤ ਸ਼ਬਦ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "hor bea(n)t shabadh",
+        "hi": "होर बेअंत शबद",
+        "ipa": "hɔr beəŋt̪ ʃəbəd̪",
+        "ur": "هور بےاںت شبد"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 108,
+      "Gurmukhi": "AYsy kwhy BUil pry",
+      "GurmukhiUni": "ਐਸੇ ਕਾਹੇ ਭੂਲਿ ਪਰੇ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "aaise kaahe bhool pare",
+        "hi": "ऐसे काहे भूलि परे",
+        "ipa": "æse kɑhe ɓul pəre",
+        "ur": "اَےسے کاهے بھُول پرے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 109,
+      "Gurmukhi": "eyqI mwr peI krlwxy ",
+      "GurmukhiUni": "ਏਤੀ ਮਾਰ ਪਈ ਕਰਲਾਣੇ ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "etee maar piee karalaane ",
+        "hi": "एती मार पई करलाणे ",
+        "ipa": "eet̪i mɑr pei kərəlɑɳe ",
+        "ur": "اےتیِ مار پای کرلاݨے "
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 110,
+      "Gurmukhi": "jnm mrx invwir lyhu",
+      "GurmukhiUni": "ਜਨਮ ਮਰਣ ਨਿਵਾਰਿ ਲੇਹੁ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "janam maran nivaar lehu",
+        "hi": "जनम मरण निवारि लेहु",
+        "ipa": "d͡ʒənəm mərəɳ nɪʋɑr lehʊ",
+        "ur": "جنم مرݨ نوار لےهُ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 111,
+      "Gurmukhi": "inq auiT gwvhu",
+      "GurmukhiUni": "ਨਿਤ ਉਠਿ ਗਾਵਹੁ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "nit uTh gaavahu",
+        "hi": "नित उठि गावहु",
+        "ipa": "nɪt̪ oʊʈʰ Gɑʋəhʊ",
+        "ur": "نِت اُٹھ گاوهُ"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 112,
+      "Gurmukhi": "kwrj sgl svwry",
+      "GurmukhiUni": "ਕਾਰਜ ਸਗਲ ਸਵਾਰੇ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "kaaraj sagal savaare",
+        "hi": "कारज सगल सवारे",
+        "ipa": "kɑrəd͡ʒ səGəl səʋɑre",
+        "ur": "کارج سگل سوارے"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    },
+    {
+      "HeaderID": 113,
+      "Gurmukhi": "rihxI rhY soeI isK myrw",
+      "GurmukhiUni": "ਰਹਿਣੀ ਰਹੈ ਸੋਈ ਸਿਖ ਮੇਰਾ",
+      "Translations": null,
+      "Transliterations": {
+        "en": "rahinee rahai soiee sikh meraa",
+        "hi": "रहिणी रहै सोई सिख मेरा",
+        "ipa": "rəhɪɳi rəhæ sɔei sɪkʰ merɑ",
+        "ur": "رهِݨیِ رهَے سوای سکھ مےرا"
+      },
+      "Updated": "2022-12-24 00:22:33"
+    }
+  ]
+}

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_router.dart';
+import '../../../core/database/database_download_notifier.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/di/core_providers.dart';
 
@@ -19,11 +22,74 @@ class FoundationPage extends ConsumerWidget {
           constraints: const BoxConstraints(maxWidth: 760),
           child: databaseStatus.when(
             loading: () => const _DatabaseLoadingView(),
-            error: (Object error, StackTrace stackTrace) => _DatabaseErrorView(
-              onRetry: () => ref.invalidate(databaseStatusProvider),
-            ),
-            data: (DatabaseStatus status) => _DatabaseReadyView(status: status),
+            error: (Object error, StackTrace stackTrace) {
+              return _DatabaseErrorView(
+                onRetry: () => ref.invalidate(databaseStatusProvider),
+              );
+            },
+            data: (DatabaseStatus status) {
+              if (!status.isAvailable) {
+                return const _DownloadDatabaseView();
+              }
+              return _DatabaseReadyView(status: status);
+            },
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DownloadDatabaseView extends ConsumerWidget {
+  const _DownloadDatabaseView();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final downloadState = ref.watch(databaseDownloadProvider);
+    final downloadNotifier = ref.read(databaseDownloadProvider.notifier);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.cloud_download_outlined, size: 40),
+            const SizedBox(height: 24),
+            Text(
+              'Database download required',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'The local Gurbani database is missing. Please download it to enable instant offline search.',
+            ),
+            const SizedBox(height: 24),
+            if (downloadState.status == DownloadStatus.downloading) ...[
+              LinearProgressIndicator(value: downloadState.progress),
+              const SizedBox(height: 8),
+              Text(
+                downloadState.progress != null && downloadState.progress! >= 0
+                    ? 'Downloading: ${(downloadState.progress! * 100).toStringAsFixed(1)}%'
+                    : 'Downloading...',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ] else ...[
+              if (downloadState.status == DownloadStatus.error && downloadState.errorMessage != null) ...[
+                Text(
+                  'Error: ${downloadState.errorMessage}',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+                const SizedBox(height: 12),
+              ],
+              FilledButton.icon(
+                onPressed: () => downloadNotifier.downloadDatabase(),
+                icon: const Icon(Icons.download),
+                label: const Text('Download Offline Database'),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -98,6 +164,15 @@ class _DatabaseReadyView extends StatelessWidget {
                 label: 'Your future library remains on this device',
                 detail:
                     'No cloud account or paid API is required by this foundation.',
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => context.go(AppRoute.search),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('Get Started'),
+                ),
               ),
             ],
           ),

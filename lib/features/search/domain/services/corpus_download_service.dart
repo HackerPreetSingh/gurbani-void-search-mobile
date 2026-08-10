@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import 'corpus_import_service.dart';
 
 class CorpusDownloadService {
@@ -11,8 +12,7 @@ class CorpusDownloadService {
   final CorpusImportService _importService;
   final _dio = Dio();
 
-  static const _productionDbUrl =
-      'https://github.com/HackerPreetSingh/GurbaniVoiceSearch/releases/download/v1.0.0/master.sqlite';
+  static const _productionDbUrl = AppConstants.databaseDownloadUrl;
 
   Future<void> downloadAndImport({
     required Function(double progress) onProgress,

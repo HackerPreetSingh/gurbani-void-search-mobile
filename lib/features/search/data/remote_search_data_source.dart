@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../domain/models/punjabi_search_query.dart';
 
 class RemoteSearchDataSource {
@@ -13,7 +14,7 @@ class RemoteSearchDataSource {
     try {
       final encodedQuery = Uri.encodeComponent(query.raw.trim());
       final response = await _dio.get(
-        'https://api.banidb.com/v2/search/$encodedQuery', 
+        '${AppConstants.banidbBaseUrl}/search/$encodedQuery', 
         queryParameters: {
           'searchtype': (query.kind == PunjabiSearchKind.romanInitial) ? 7 : 0,
           'results': limit,
@@ -32,7 +33,7 @@ class RemoteSearchDataSource {
   }) async {
     try {
       final res = await _dio.get(
-        'https://api.banidb.com/v2/shabads/$shabadId',
+        '${AppConstants.banidbBaseUrl}/shabads/$shabadId',
         cancelToken: cancelToken,
       );
       return res.data as Map<String, dynamic>;

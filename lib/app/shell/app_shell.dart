@@ -32,12 +32,14 @@ class AppShell extends StatelessWidget {
     final resolvedIndex = selectedIndex == -1 ? 0 : selectedIndex;
     final useNavigationRail = MediaQuery.sizeOf(context).width >= 840;
     
-    // Hide global elements when viewing a Shabad
+    // Hide global elements when viewing a Shabad or on the Search screen (which has its own AppBar)
     final isShabadView = currentPath.startsWith('/shabad');
+    final isSearchView = currentPath == AppRoute.search;
+    final hideAppBar = isShabadView || isSearchView;
 
     if (!useNavigationRail) {
       return Scaffold(
-        appBar: isShabadView ? null : AppBar(title: const Text('Gurbani Search')),
+        appBar: hideAppBar ? null : AppBar(title: const Text('Gurbani Search')),
         body: SafeArea(top: false, child: child),
         bottomNavigationBar: isShabadView 
             ? null 

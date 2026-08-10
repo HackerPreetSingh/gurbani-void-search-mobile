@@ -44,10 +44,12 @@ class PunjabiSearchResponse {
     required this.query,
     this.corpus,
     this.results = const [],
+    this.source,
   });
 
   final PunjabiSearchStatus status;
   final dynamic query;
   final GurbaniCorpusSummary? corpus;
   final List<GurbaniSearchResult> results;
+  final String? source;
 }

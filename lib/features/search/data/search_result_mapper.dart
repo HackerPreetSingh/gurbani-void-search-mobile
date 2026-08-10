@@ -31,6 +31,12 @@ class SearchResultMapper {
     final String? source = _val(shabadInfo?['source']?['english'] ?? v['source']?['english'] ?? shabadInfo?['source'] ?? v['source'] ?? 'Unknown');
     final int? ang = _toInt(shabadInfo?['pageNo'] ?? v['pageNo'] ?? v['source']?['pageNo'] ?? v['ang']);
 
+    // Translation logic to match BaniDB API precisely:
+    // BaniDB uses 'bdb' for English and 'ss' or 'ft' for Punjabi.
+    final trans = v['translation'] ?? v['Translations'] ?? {};
+    final englishTranslation = _val(trans['en']?['bdb'] ?? trans['en']?['combined'] ?? trans['en']?['text'] ?? trans['en']);
+    final punjabiTranslation = _val(trans['pu']?['ss'] ?? trans['pu']?['ft'] ?? trans['pu']?['text'] ?? trans['pu']);
+
     return GurbaniSearchResult(
       stableId: (v['verseId'] ?? v['id'] ?? 0).toString(),
       shabadId: (v['shabadId'] ?? 0).toString(),
@@ -43,9 +49,9 @@ class SearchResultMapper {
       match: SearchResultMatch.initial,
       transliteration: _val(v['transliteration']?['english'] ?? v['transliteration']?['en']),
       transliterationHi: _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi']),
-      translation: _val(v['translation']?['en']?['bdb'] ?? v['translation']?['en']?['combined'] ?? v['translation']?['en']),
-      translationPa: _val(v['translation']?['pu']?['ss'] ?? v['translation']?['pu']?['ft'] ?? v['translation']?['pu']),
-      visraams: v['visraam'] != null ? jsonEncode(v['visraam']['sttm2'] ?? v['visraam']['sttm'] ?? v['visraam'] ?? []) : null,
+      translation: englishTranslation,
+      translationPa: punjabiTranslation,
+      visraams: v['visraam'] != null ? jsonEncode(v['visraam']['igurbani'] ?? v['visraam']['sttm2'] ?? v['visraam']['sttm'] ?? v['visraam'] ?? []) : null,
     );
   }
 

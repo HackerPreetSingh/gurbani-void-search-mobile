@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
+import 'package:gurbani_voice_search/core/constants/app_constants.dart';
 import 'package:gurbani_voice_search/core/database/local_database.dart';
+import 'package:characters/characters.dart';
 import 'gurmukhi_processor.dart';
 
 /// A heavy-duty sync engine built for production-grade Gurbani indexing.
@@ -14,7 +16,7 @@ class ProductionIngestor {
     validateStatus: (status) => status! < 500,
   ));
 
-  static const _baseUrl = 'https://api.banidb.com/v2';
+  static const _baseUrl = AppConstants.banidbBaseUrl;
 
   Future<void> buildOfflineDatabase({
     required Function(double progress) onProgress,
@@ -30,7 +32,7 @@ class ProductionIngestor {
 
     for (int i = 0; i < totalSources; i++) {
       final src = sourceList[i];
-      final String sId = src['SourceID'];
+      final String sId = src['SourceID'] ?? src['id'];
       final String sName = src['SourceUnicode'] ?? src['SourceEnglish'];
 
       onStatus('Syncing: $sName...');
@@ -59,14 +61,10 @@ class ProductionIngestor {
 
           await _database.transaction((executor) async {
             final verseBatch = <List<Object?>>[];
-            const verseSql = 'INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            // Exact 17 columns as per LocalDatabase schema
+            const verseSql = 'INSERT OR REPLACE INTO verses VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
             for (final pageData in pages) {
-              final pSource = pageData['source'];
-              final pageSourceId = (pSource is Map ? (pSource['sourceId'] ?? pSource['id']) : (pageData['sourceId'] ?? pageData['id']))?.toString();
-              
-              if (pageSourceId != null && pageSourceId.toUpperCase() != sId.toUpperCase()) continue;
-              
               final List verses = pageData['page'] ?? pageData['verses'] ?? [];
               for (final v in verses) {
                 final shId = _toInt(v['shabadId']);
@@ -76,8 +74,9 @@ class ProductionIngestor {
                 await _saveMeta(executor, 'writers', v['writer'], 'writerId');
                 await _saveMeta(executor, 'raags', v['raag'], 'raagId');
                 
+                final ang = _toInt(v['pageNo'] ?? v['ang']);
                 await executor.runCustom('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
-                    [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), _toInt(v['pageNo'])]);
+                    [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), ang]);
 
                 final gur = _val(v['verse']?['unicode'] ?? v['gurmukhi'] ?? v['verse'] ?? '');
                 final hi = _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi'] ?? v['transliteration']?['hi_text']);
@@ -87,7 +86,6 @@ class ProductionIngestor {
                 
                 final wId = _toInt(v['writer']?['writerId'] ?? v['writerId'] ?? v['writer_id']);
                 final rId = _toInt(v['raag']?['raagId'] ?? v['raagId'] ?? v['raag_id']);
-                final ang = _toInt(v['pageNo'] ?? v['ang'] ?? v['page_no']);
 
                 verseBatch.add([
                   vId, 
@@ -99,6 +97,8 @@ class ProductionIngestor {
                   transEn, 
                   transPa,
                   GurmukhiProcessor.generateFirstLetterStr(gur), 
+                  _genInitEn(gur), // initials_en
+                  _genInitPa(gur), // initials_pa
                   null, // main_letters
                   null, // visraams
                   sId, 
@@ -146,5 +146,27 @@ class ProductionIngestor {
     final pbi = _val(data['unicode'] ?? data['english'] ?? data['gurmukhi'] ?? data['name']);
     final eng = _val(data['english'] ?? data['unicode'] ?? data['gurmukhi'] ?? data['name']);
     await executor.runCustom('INSERT OR REPLACE INTO $table VALUES (?, ?, ?)', [id, pbi, eng]);
+  }
+
+  String _genInitEn(String unicode) {
+    if (unicode.isEmpty) return '';
+    final res = StringBuffer();
+    for (final word in unicode.trim().split(RegExp(r'\s+'))) {
+      if (word.isEmpty) continue;
+      final char = word.characters.first;
+      // Note: In search engine, we'd use a full map, but for ingestor simplicity:
+      res.write(char.toLowerCase()); 
+    }
+    return res.toString();
+  }
+
+  String _genInitPa(String unicode) {
+    if (unicode.isEmpty) return '';
+    final res = StringBuffer();
+    for (final word in unicode.trim().split(RegExp(r'\s+'))) {
+      if (word.isEmpty) continue;
+      res.write(word.characters.first);
+    }
+    return res.toString();
   }
 }

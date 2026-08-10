@@ -25,21 +25,25 @@ class LocalSearchDataSource {
     }
   }
 
-  Future<List<Map<String, dynamic>>> search(String rawQuery, {int limit = 40}) async {
-    final searchPattern = GurmukhiProcessor.queryToFirstLetterStr(rawQuery);
-    if (searchPattern.isEmpty) return [];
-
+  Future<List<Map<String, dynamic>>> search({
+    required String condition,
+    required List<dynamic> parameters,
+    int limit = 40,
+    String? orderBy,
+  }) async {
     try {
+      final orderClause = orderBy ?? '''
+          (CASE WHEN source_id = 'G' THEN 0 ELSE 1 END) ASC,
+          id ASC
+      ''';
+
       return await _database.read((executor) => executor.runSelect('''
         SELECT *
         FROM verses
-        WHERE first_letter_str LIKE ? 
-        ORDER BY 
-          (CASE WHEN source_id = 'G' THEN 0 ELSE 1 END) ASC,
-          (CASE WHEN first_letter_str = ? THEN 0 ELSE 1 END) ASC,
-          id ASC
+        WHERE $condition
+        ORDER BY $orderClause
         LIMIT ?
-      ''', ['$searchPattern%', searchPattern, limit]));
+      ''', [...parameters, limit]));
     } catch (e) {
       return [];
     }
