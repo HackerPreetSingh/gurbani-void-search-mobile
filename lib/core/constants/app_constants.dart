@@ -7,10 +7,9 @@ abstract final class AppConstants {
   static const String dbFileName = 'gurbani_offline.sqlite';
   
   /// The direct download URL for the production SQLite database.
-  /// Currently hosted on Vercel Blob Storage.
+  /// The direct download URL for the production SQLite database.
   static const String databaseDownloadUrl = 
-      // 'https://9adxmnfutozpuzyq.public.blob.vercel-storage.com/gurbani_offline.sqlite';
-      'https://github.com/HackerPreetSingh/gurbani-void-search-mobile/blob/main/assets/database/gurbani_offline.sqlite';
+      'https://github.com/HackerPreetSingh/gurbani-void-search-mobile/raw/main/assets/database/gurbani_offline.sqlite';
 
   // --- API CONSTANTS ---
 
