@@ -132,7 +132,7 @@ void main() async {
     print('\n✨ Source $sId sync complete. Total lines: ${totalSynced - sourceStartCount}');
   }
   
-  db.dispose();
+  db.close();
   print('\n\n🏁 MASTER SYNC COMPLETE! Total database lines: $totalSynced');
 }
 
@@ -327,14 +327,31 @@ Future<void> _processVerse(Database db, Map v, String sId, int shId, Map? info) 
 String _genInitEn(String unicode) {
   if (unicode.isEmpty) return '';
   final res = StringBuffer();
+  
+  // Mapping for User-Friendly English Initials (Strategy 2 / Omni Fallback)
+  // Maps all aspirated and soft/hard variants to a single common keyboard character.
+  const phoneticMap = {
+    0x0A15: 'k', 0x0A16: 'k', // ਕ, ਖ -> k
+    0x0A17: 'g', 0x0A18: 'g', // ਗ, ਘ -> g
+    0x0A1A: 'c', 0x0A1B: 'c', // ਚ, ਛ -> c
+    0x0A1C: 'j', 0x0A1D: 'j', // ਜ, ਝ -> j
+    0x0A1F: 't', 0x0A20: 't', 0x0A21: 'd', 0x0A22: 'd', // ਟ, ਠ, ਡ, ਢ -> t/d
+    0x0A24: 't', 0x0A25: 't', 0x0A26: 'd', 0x0A27: 'd', // ਤ, ਥ, ਦ, ਧ -> t/d
+    0x0A2A: 'p', 0x0A2B: 'p', 0x0A2C: 'b', 0x0A2D: 'b', // ਪ, ਫ, ਬ, ਭ -> p/b
+    0x0A38: 's', 0x0A39: 'h', 0x0A30: 'r', 0x0A32: 'l', 0x0A35: 'v',
+    0x0A28: 'n', 0x0A2E: 'm', 0x0A2F: 'y', 0x0A23: 'n',
+  };
+
   for (final word in unicode.trim().split(RegExp(r'\s+'))) {
     if (word.isEmpty) continue;
     final firstChar = word.characters.first;
-    // Map to simple English initials (e.g., ਖ -> k, ਘ -> g)
-    final ascii = _map[firstChar.runes.first];
-    if (ascii != null) {
-      // Get the base letter without vowel modifiers (e.g., 'ie' -> 'i')
-      res.write(ascii[0].toLowerCase());
+    final charCode = firstChar.runes.first;
+    
+    if (phoneticMap.containsKey(charCode)) {
+      res.write(phoneticMap[charCode]);
+    } else {
+      final ascii = _map[charCode];
+      if (ascii != null) res.write(ascii[0].toLowerCase());
     }
   }
   return res.toString();

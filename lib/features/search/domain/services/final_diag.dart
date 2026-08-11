@@ -64,5 +64,5 @@ void main() {
      print('  Roman "$roman" -> Code: $p');
   });
 
-  db.dispose();
+  db.close();
 }

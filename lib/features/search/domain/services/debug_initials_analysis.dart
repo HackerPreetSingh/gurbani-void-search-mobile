@@ -51,7 +51,6 @@ void main() {
   }
 
   print('\n--- Detailed Mapping Check for "gh" ---');
-  final testGh = "ਘ"; // Ghirra
   final ghProcessed = GurmukhiProcessor.queryToFirstLetterStr('gh');
   final singleGProcessed = GurmukhiProcessor.queryToFirstLetterStr('g');
   print('  Input "gh" maps to: $ghProcessed');

@@ -7,9 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import '../constants/app_constants.dart';
 
 class LocalDatabase {
-  LocalDatabase({DatabaseConnection? connection})
-      : _connection = connection,
-        _connectionUser = _LocalDatabaseConnectionUser();
+  LocalDatabase({this._connection})
+      : _connectionUser = _LocalDatabaseConnectionUser();
 
   static String? _cachedDocsPath;
 

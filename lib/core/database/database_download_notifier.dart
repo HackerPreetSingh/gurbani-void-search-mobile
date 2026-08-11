@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../constants/app_constants.dart';
-import 'local_database.dart';
 import '../di/core_providers.dart';
 
 enum DownloadStatus { idle, downloading, success, error }

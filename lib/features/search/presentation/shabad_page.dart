@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/providers/search_providers.dart';
@@ -73,10 +72,14 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                           Text(firstVerse.writerName!,
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontSize: 16, color: Colors.blueGrey)),
-                        const SizedBox(height: 4),
-                        Text('${firstVerse.sourceName} • Ang ${firstVerse.ang ?? "-"}',
+                        if (firstVerse.sourceName.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            '${firstVerse.sourceName}${firstVerse.ang != null ? " • Ang ${firstVerse.ang}" : ""}',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -87,31 +90,36 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final verse = verses[index];
+                        final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty;
+                        final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty;
+                        final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty;
+                        final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty;
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 48.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               _buildGurmukhiText(verse.gurmukhi, verse.visraams, settings),
-                              if (settings.showHindi && verse.transliterationHi != null && verse.transliterationHi!.isNotEmpty) ...[
+                              if (settings.showHindi && hasHindi) ...[
                                 const SizedBox(height: 12),
                                 Text(verse.transliterationHi!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeHindi, color: Colors.red.shade900)),
                               ],
-                              if (settings.showTransliteration && verse.transliteration != null && verse.transliteration!.isNotEmpty) ...[
+                              if (settings.showTransliteration && hasTranslit) ...[
                                 const SizedBox(height: 12),
                                 Text(verse.transliteration!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeEnglish, color: Colors.blueGrey)),
                               ],
-                              if (settings.showEnglishMeaning && verse.translation != null && verse.translation!.isNotEmpty) ...[
+                              if (settings.showEnglishMeaning && hasEnglishMeaning) ...[
                                 const SizedBox(height: 12),
                                 Text(verse.translation!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
                               ],
-                              if (settings.showPunjabiMeaning && verse.translationPa != null && verse.translationPa!.isNotEmpty) ...[
+                              if (settings.showPunjabiMeaning && hasPunjabiMeaning) ...[
                                 const SizedBox(height: 12),
                                 Text(verse.translationPa!,
                                     textAlign: TextAlign.center,
@@ -243,7 +251,7 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
             Switch.adaptive(
               value: isVisible,
               onChanged: onToggle,
-              activeColor: Colors.teal,
+              activeTrackColor: Colors.teal,
             ),
         ],
       ),

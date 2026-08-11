@@ -83,8 +83,11 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
       }
 
       if (rows.isEmpty) {
+        // Strictly one-to-one word mapping.
+        // If user types 'mkmgh', we search for exactly 'mkmgh' initials.
+        // No characters are stripped because each alphabet represents a distinct word.
         final searchStr = raw.toLowerCase();
-        print('[GURBANI_LOG] [${DateTime.now()}] SEARCH_STEP_4: Numeric failed. Trying initials_en fallback for "$searchStr"...');
+        print('[GURBANI_LOG] [${DateTime.now()}] SEARCH_STEP_4: Numeric failed. Trying Strategy 2 (initials_en LIKE "%$searchStr%")...');
         
         rows = await _localDataSource.search(
           condition: 'initials_en LIKE ?',

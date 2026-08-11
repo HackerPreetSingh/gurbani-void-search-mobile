@@ -1,8 +1,6 @@
 import '../../../core/database/local_database.dart';
 import '../domain/models/gurbani_corpus.dart';
 import '../domain/models/gurbani_search_result.dart';
-import '../domain/models/punjabi_search_query.dart';
-import '../domain/services/gurmukhi_processor.dart';
 
 class LocalSearchDataSource {
   LocalSearchDataSource(this._database);

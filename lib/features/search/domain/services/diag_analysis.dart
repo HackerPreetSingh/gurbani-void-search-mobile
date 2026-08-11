@@ -65,5 +65,5 @@ void main() {
     print('  Source [$s]: $count lines');
   }
 
-  db.dispose();
+  db.close();
 }
