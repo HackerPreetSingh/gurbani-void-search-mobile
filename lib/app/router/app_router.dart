@@ -10,8 +10,12 @@ import '../../features/search/presentation/search_screen.dart';
 import '../../features/search/presentation/shabad_page.dart';
 import '../shell/app_shell.dart';
 
+import '../../features/search/presentation/nitnem_screen.dart';
+import '../../features/search/presentation/bani_page.dart';
+
 abstract final class AppRoute {
   static const search = '/';
+  static const nitnem = '/nitnem';
   static const about = '/about';
   static const shabad = '/shabad';
   static const foundation = '/foundation';
@@ -70,6 +74,12 @@ GoRouter createAppRouter(Ref ref) {
             },
           ),
           GoRoute(
+            path: AppRoute.nitnem,
+            builder: (BuildContext context, GoRouterState state) {
+              return const NitnemScreen();
+            },
+          ),
+          GoRoute(
             path: AppRoute.about,
             builder: (BuildContext context, GoRouterState state) {
               return const AboutPage();
@@ -79,7 +89,16 @@ GoRouter createAppRouter(Ref ref) {
             path: '/shabad/:id',
             builder: (BuildContext context, GoRouterState state) {
               final id = state.pathParameters['id']!;
-              return ShabadPage(shabadId: id);
+              final highlightId = state.uri.queryParameters['verseId'];
+              return ShabadPage(shabadId: id, highlightVerseId: highlightId);
+            },
+          ),
+          GoRoute(
+            path: '/nitnem/:id',
+            builder: (BuildContext context, GoRouterState state) {
+              final id = int.parse(state.pathParameters['id']!);
+              final highlightId = state.uri.queryParameters['verseId'];
+              return BaniPage(baniId: id, highlightVerseId: highlightId);
             },
           ),
         ],

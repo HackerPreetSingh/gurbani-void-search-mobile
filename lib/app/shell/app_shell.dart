@@ -17,6 +17,12 @@ class AppShell extends StatelessWidget {
       selectedIcon: Icons.manage_search,
     ),
     _AppDestination(
+      label: 'Nitnem',
+      location: AppRoute.nitnem,
+      icon: Icons.menu_book_outlined,
+      selectedIcon: Icons.menu_book,
+    ),
+    _AppDestination(
       label: 'About',
       location: AppRoute.about,
       icon: Icons.info_outline,
@@ -32,16 +38,16 @@ class AppShell extends StatelessWidget {
     final resolvedIndex = selectedIndex == -1 ? 0 : selectedIndex;
     final useNavigationRail = MediaQuery.sizeOf(context).width >= 840;
     
-    // Hide global elements when viewing a Shabad or on the Search screen (which has its own AppBar)
-    final isShabadView = currentPath.startsWith('/shabad');
+    // Hide global elements when viewing a Shabad/Bani or on the Search screen (which has its own AppBar)
+    final isDetailView = currentPath.startsWith('/shabad') || currentPath.startsWith('/nitnem/');
     final isSearchView = currentPath == AppRoute.search;
-    final hideAppBar = isShabadView || isSearchView;
+    final hideAppBar = isDetailView || isSearchView;
 
     if (!useNavigationRail) {
       return Scaffold(
         appBar: hideAppBar ? null : AppBar(title: const Text('Gurbani Search')),
         body: SafeArea(top: false, child: child),
-        bottomNavigationBar: isShabadView 
+        bottomNavigationBar: isDetailView 
             ? null 
             : NavigationBar(
                 selectedIndex: resolvedIndex,
@@ -65,7 +71,7 @@ class AppShell extends StatelessWidget {
       body: SafeArea(
         child: Row(
           children: [
-            if (!isShabadView) ...[
+            if (!isDetailView) ...[
               NavigationRail(
                 extended: isExtended,
                 selectedIndex: resolvedIndex,

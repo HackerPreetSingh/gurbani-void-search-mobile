@@ -22,6 +22,8 @@ class ProductionIngestor {
     required Function(double progress) onProgress,
     required Function(String status) onStatus,
   }) async {
+    // [AI_GUARD:PERMANENT_LOG] Starting production ingestor build. Do not remove.
+    print('${AppConstants.logTag} [${DateTime.now()}] [production_ingestor.dart] BUILD_START: Requesting sources');
     onStatus('Initializing setup...');
     
     final sourcesRes = await _dio.get('$_baseUrl/sources');
@@ -35,6 +37,7 @@ class ProductionIngestor {
       final String sId = src['SourceID'] ?? src['id'];
       final String sName = src['SourceUnicode'] ?? src['SourceEnglish'];
 
+      print('${AppConstants.logTag} [${DateTime.now()}] [production_ingestor.dart] SYNCING: $sName [$sId]');
       onStatus('Syncing: $sName...');
       
       await _database.transaction((executor) async {
@@ -118,11 +121,13 @@ class ProductionIngestor {
           onProgress((i + (currentAng / 1500)) / totalSources);
           currentAng += batchSize;
         } catch (e) {
+          print('${AppConstants.logTag} [${DateTime.now()}] [production_ingestor.dart] BATCH_ERROR: $e');
           currentAng += 20;
           continue;
         }
       }
     }
+    print('${AppConstants.logTag} [${DateTime.now()}] [production_ingestor.dart] BUILD_COMPLETE: Total lines=$totalSynced');
     onStatus('Setup Complete! $totalSynced lines ready.');
   }
 

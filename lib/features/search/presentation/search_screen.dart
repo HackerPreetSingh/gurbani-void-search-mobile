@@ -78,10 +78,12 @@ class SearchScreen extends ConsumerWidget {
     return ListTile(
       onTap: () async {
         if (result.shabadId != null) {
-          // Await the history addition to ensure it's saved before potentially viewing history again
+          // [AI_GUARD:PERMANENT_LOG] Navigation to shabad detail with highlight verse ID
+          print('[GURBANI_LOG] [${DateTime.now()}] [search_screen.dart] UI_ACTION: Open shabad ${result.shabadId}, highlighting verse ${result.stableId}');
+          
           await ref.read(searchViewModelProvider.notifier).addToHistory(result);
           if (context.mounted) {
-            context.push('/shabad/${result.shabadId}');
+            context.push('/shabad/${result.shabadId}?verseId=${result.stableId}');
           }
         }
       },

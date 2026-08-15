@@ -173,17 +173,48 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
     await executor.ensureOpen(this);
     await executor.runCustom('PRAGMA foreign_keys = ON');
     
-    if (details.wasCreated) {
-      await executor.runCustom('CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, updated_at_utc TEXT NOT NULL)');
-      await _createProductionSchema(executor);
-      await executor.runCustom('CREATE TABLE IF NOT EXISTS search_history (shabad_id INTEGER PRIMARY KEY NOT NULL, query TEXT, gurmukhi TEXT NOT NULL, source_name TEXT NOT NULL, raag_name TEXT, writer_name TEXT, ang INTEGER, viewed_at_utc TEXT NOT NULL)');
-      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_source ON shabads (source_id)');
-      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_writer ON shabads (writer_id)');
-      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_shabads_raag ON raags (id)');
-      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_shabad ON verses (shabad_id)');
-      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_initials_en ON verses (initials_en)');
-      await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_initials_pa ON verses (initials_pa)');
-    }
+    // Create auxiliary tables if they don't exist (app metadata, history, banis)
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, updated_at_utc TEXT NOT NULL)');
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS search_history (shabad_id INTEGER PRIMARY KEY NOT NULL, query TEXT, gurmukhi TEXT NOT NULL, source_name TEXT NOT NULL, raag_name TEXT, writer_name TEXT, ang INTEGER, viewed_at_utc TEXT NOT NULL)');
+    
+    // Ensure core production schema (sources, writers, raags, shabads, verses)
+    await _createProductionSchema(executor);
+    
+    // Safety Check: Downloaded databases might be missing newer columns like initials_pa
+    await _ensureColumnExists(executor, 'verses', 'initials_pa', 'TEXT');
+    await _ensureColumnExists(executor, 'verses', 'main_letters', 'TEXT');
+    await _ensureColumnExists(executor, 'banis', 'user_order', 'INTEGER');
+
+    // Create indexes safely
+    await _createIndexSafe(executor, 'idx_shabads_source', 'shabads', 'source_id');
+    await _createIndexSafe(executor, 'idx_shabads_writer', 'shabads', 'writer_id');
+    await _createIndexSafe(executor, 'idx_shabads_raag', 'raags', 'id');
+    await _createIndexSafe(executor, 'idx_verses_shabad', 'verses', 'shabad_id');
+    await _createIndexSafe(executor, 'idx_verses_first_letter', 'verses', 'first_letter_str');
+    await _createIndexSafe(executor, 'idx_verses_initials_en', 'verses', 'initials_en');
+    await _createIndexSafe(executor, 'idx_verses_initials_pa', 'verses', 'initials_pa');
+    await _createIndexSafe(executor, 'idx_bani_verses_bani', 'bani_verses', 'bani_id');
+  }
+
+  Future<void> _ensureColumnExists(QueryExecutor executor, String table, String column, String type) async {
+    try {
+      final columns = await executor.runSelect('PRAGMA table_info($table)', []);
+      final hasColumn = columns.any((c) => c['name'] == column);
+      if (!hasColumn) {
+        await executor.runCustom('ALTER TABLE $table ADD COLUMN $column $type');
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _createIndexSafe(QueryExecutor executor, String indexName, String table, String column) async {
+    try {
+      // Check if column exists in table
+      final columns = await executor.runSelect('PRAGMA table_info($table)', []);
+      final hasColumn = columns.any((c) => c['name'] == column);
+      if (hasColumn) {
+        await executor.runCustom('CREATE INDEX IF NOT EXISTS $indexName ON $table ($column)');
+      }
+    } catch (_) {}
   }
 
   Future<void> _createProductionSchema(QueryExecutor executor) async {
@@ -192,7 +223,17 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
     await executor.runCustom('CREATE TABLE IF NOT EXISTS raags (id INTEGER PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL)');
     await executor.runCustom('CREATE TABLE IF NOT EXISTS shabads (id INTEGER PRIMARY KEY NOT NULL, source_id TEXT NOT NULL, writer_id INTEGER, raag_id INTEGER, ang INTEGER, FOREIGN KEY (source_id) REFERENCES sources (id), FOREIGN KEY (writer_id) REFERENCES writers (id), FOREIGN KEY (raag_id) REFERENCES raags (id))');
     await executor.runCustom('CREATE TABLE IF NOT EXISTS verses (id INTEGER PRIMARY KEY NOT NULL, shabad_id INTEGER NOT NULL, verse_order INTEGER NOT NULL, gurmukhi TEXT NOT NULL, transliteration TEXT, transliteration_hi TEXT, translation TEXT, translation_pa TEXT, first_letter_str TEXT NOT NULL, initials_en TEXT, initials_pa TEXT, main_letters TEXT, visraams TEXT, source_id TEXT, raag_id INTEGER, writer_id INTEGER, ang INTEGER, FOREIGN KEY (shabad_id) REFERENCES shabads (id) ON DELETE CASCADE)');
+    
+    // --- NITNEM / BANI EXTENSIONS ---
+    // Stores the master list of Banis (Japji Sahib, Jaap Sahib, etc)
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS banis (id INTEGER PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL, user_order INTEGER, updated_at TEXT)');
+    
+    // Junction table to map verses to Banis in a specific liturgical order.
+    // Includes flags for different Maryada lengths (exists_sgpc, etc).
+    await executor.runCustom('CREATE TABLE IF NOT EXISTS bani_verses (id INTEGER PRIMARY KEY AUTOINCREMENT, bani_id INTEGER NOT NULL, verse_id INTEGER NOT NULL, sequence_order INTEGER NOT NULL, header INTEGER, mangal_position INTEGER, exists_sgpc INTEGER, exists_medium INTEGER, exists_taksal INTEGER, exists_buddha_dal INTEGER, paragraph INTEGER, FOREIGN KEY (bani_id) REFERENCES banis (id) ON DELETE CASCADE, FOREIGN KEY (verse_id) REFERENCES verses (id) ON DELETE CASCADE)');
+
     await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_first_letter ON verses (first_letter_str)');
+    await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_bani_verses_bani ON bani_verses (bani_id)');
   }
 }
 

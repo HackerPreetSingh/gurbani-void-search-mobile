@@ -48,13 +48,22 @@ class LocalSearchDataSource {
   }
 
   Future<List<Map<String, dynamic>>> getLocalShabad(String shabadId) async {
+    // [AI_GUARD:PERMANENT_LOG] Fetching shabad by ID with strict liturgical ordering.
+    // Note: We use 'id' for ordering because 'verse_order' from the API can reset 
+    // mid-shabad, causing erratic sorting. Since verses are ingested sequentially, 
+    // the primary key 'id' is the only reliable sort field.
     try {
+      final sId = int.tryParse(shabadId) ?? 0;
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_FETCH_SHABAD: id=$sId');
+      
       return await _database.read((executor) => executor.runSelect('''
         SELECT *
         FROM verses
-        WHERE shabad_id = ? ORDER BY verse_order ASC
-      ''', [int.tryParse(shabadId) ?? 0]));
-    } catch (_) {
+        WHERE shabad_id = ? 
+        ORDER BY id ASC
+      ''', [sId]));
+    } catch (e) {
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_FETCH_ERROR: $e');
       return [];
     }
   }

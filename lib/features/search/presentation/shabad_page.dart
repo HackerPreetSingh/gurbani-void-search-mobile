@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/constants/app_constants.dart';
 import '../domain/providers/search_providers.dart';
 import '../domain/providers/shabad_providers.dart';
 import '../../settings/domain/models/display_settings.dart';
@@ -7,8 +8,9 @@ import '../../settings/presentation/display_settings_notifier.dart';
 
 class ShabadPage extends ConsumerStatefulWidget {
   final String shabadId;
+  final String? highlightVerseId;
 
-  const ShabadPage({super.key, required this.shabadId});
+  const ShabadPage({super.key, required this.shabadId, this.highlightVerseId});
 
   @override
   ConsumerState<ShabadPage> createState() => _ShabadPageState();
@@ -17,6 +19,9 @@ class ShabadPage extends ConsumerStatefulWidget {
 class _ShabadPageState extends ConsumerState<ShabadPage> {
   @override
   Widget build(BuildContext context) {
+    // [AI_GUARD:PERMANENT_LOG] Tracking shabad page build. Do not remove or modify.
+    print('${AppConstants.logTag} [${DateTime.now()}] [shabad_page.dart] WIDGET_BUILD: id=${widget.shabadId}');
+    
     final shabadAsync = ref.watch(shabadDetailsProvider(widget.shabadId));
     final settingsAsync = ref.watch(displaySettingsProvider);
     final settings = settingsAsync.value ?? DisplaySettings.defaults();
@@ -30,6 +35,8 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
         body: shabadAsync.when(
           data: (verses) {
             if (verses.isEmpty) {
+              // [AI_GUARD:PERMANENT_LOG] No data found for this ID
+              print('${AppConstants.logTag} [${DateTime.now()}] [shabad_page.dart] DATA_EMPTY: No verses found for shabad ${widget.shabadId}');
               return Scaffold(
                 appBar: AppBar(title: const Text('Shabad View')),
                 body: const Center(child: Text('Shabad not found.')),
@@ -37,18 +44,25 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
             }
 
             final firstVerse = verses.first;
+            // [AI_GUARD:PERMANENT_LOG] Checking header metadata presence
             final bool hasRaag = firstVerse.raagName != null &&
-                firstVerse.raagName!.isNotEmpty &&
-                !firstVerse.raagName!.toLowerCase().contains('unknown');
+                firstVerse.raagName!.trim().isNotEmpty &&
+                !firstVerse.raagName!.toLowerCase().contains('unknown') &&
+                !firstVerse.raagName!.toLowerCase().contains('null');
             final bool hasWriter = firstVerse.writerName != null &&
-                firstVerse.writerName!.isNotEmpty &&
-                !firstVerse.writerName!.toLowerCase().contains('unknown');
+                firstVerse.writerName!.trim().isNotEmpty &&
+                !firstVerse.writerName!.toLowerCase().contains('unknown') &&
+                !firstVerse.writerName!.toLowerCase().contains('null');
+            final bool hasSource = firstVerse.sourceName.trim().isNotEmpty &&
+                !firstVerse.sourceName.toLowerCase().contains('unknown') &&
+                !firstVerse.sourceName.toLowerCase().contains('null');
 
             return CustomScrollView(
               slivers: [
                 SliverAppBar(
                   title: const Text('Shabad View'),
-                  floating: false,
+                  floating: true, // App bar shows up as soon as user scrolls down
+                  snap: true,     // App bar snaps into view
                   pinned: false,
                   actions: [
                     IconButton(
@@ -72,7 +86,7 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                           Text(firstVerse.writerName!,
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontSize: 16, color: Colors.blueGrey)),
-                        if (firstVerse.sourceName.isNotEmpty) ...[
+                        if (hasSource) ...[
                           const SizedBox(height: 4),
                           Text(
                             '${firstVerse.sourceName}${firstVerse.ang != null ? " • Ang ${firstVerse.ang}" : ""}',
@@ -85,18 +99,23 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+                  padding: EdgeInsets.zero,
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final verse = verses[index];
-                        final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty;
-                        final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty;
-                        final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty;
-                        final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty;
+                        // [AI_GUARD:PERMANENT_LOG] Robust null/empty check for each verse line
+                        final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty && !verse.transliterationHi!.toLowerCase().contains('null');
+                        final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty && !verse.transliteration!.toLowerCase().contains('null');
+                        final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty && !verse.translation!.toLowerCase().contains('null');
+                        final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty && !verse.translationPa!.toLowerCase().contains('null');
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 48.0),
+                        final bool isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
+
+                        return Container(
+                          width: double.infinity,
+                          color: isHighlighted ? Colors.teal.withAlpha(25) : null,
+                          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
@@ -137,7 +156,11 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error: $err')),
+          error: (err, stack) {
+            // [AI_GUARD:PERMANENT_LOG] Error in shabad data loading
+            print('${AppConstants.logTag} [${DateTime.now()}] [shabad_page.dart] ERROR: $err\nSTACK: $stack');
+            return Center(child: Text('Error: $err'));
+          },
         ),
       ),
     );
