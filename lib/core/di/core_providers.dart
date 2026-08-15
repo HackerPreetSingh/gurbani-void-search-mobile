@@ -11,37 +11,48 @@ final dioProvider = Provider<Dio>((Ref ref) {
   return Dio();
 });
 
-final localDatabaseProvider = Provider<LocalDatabase>((Ref ref) {
-  final database = LocalDatabase();
-  ref.onDispose(() {
-    database.close();
-  });
+final shabadDatabaseProvider = Provider<LocalDatabase>((Ref ref) {
+  final database = LocalDatabase(dbName: AppConstants.shabadDbFile);
+  ref.onDispose(() => database.close());
   return database;
 });
 
+final nitnemDatabaseProvider = Provider<LocalDatabase>((Ref ref) {
+  final database = LocalDatabase(dbName: AppConstants.nitnemDbFile);
+  ref.onDispose(() => database.close());
+  return database;
+});
+
+final localDatabaseProvider = shabadDatabaseProvider;
+
 final databaseStatusProvider = FutureProvider<DatabaseStatus>((Ref ref) async {
   final start = DateTime.now();
-  print('${AppConstants.logTag} [$start] START: databaseStatusProvider check');
-  final db = ref.watch(localDatabaseProvider);
+  print('${AppConstants.logTag} [$start] START: databaseStatusProvider check (Multi-DB)');
+  
+  final shabadDb = ref.watch(shabadDatabaseProvider);
+  final nitnemDb = ref.watch(nitnemDatabaseProvider);
   
   if (kIsWeb) {
-    print('${AppConstants.logTag} [${DateTime.now()}] WEB detected, initializing indexedDB directly');
-    return await db.initialize();
+    await shabadDb.initialize();
+    await nitnemDb.initialize();
+    return DatabaseStatus(initializedAtUtc: DateTime.now().toUtc(), isAvailable: true);
   }
 
-  // ABSOLUTE FAST PATH: Pure file-existence check only.
-  final fileStart = DateTime.now();
-  final exists = await db.databaseFileExists();
-  final fileEnd = DateTime.now();
-  print('${AppConstants.logTag} [$fileEnd] FILE_CHECK: exists=$exists, took: ${fileEnd.difference(fileStart).inMilliseconds}ms');
+  // Check if BOTH essential databases exist
+  final shabadExists = await shabadDb.databaseFileExists();
+  final nitnemExists = await nitnemDb.databaseFileExists();
 
-  if (!exists) {
-    print('${AppConstants.logTag} [${DateTime.now()}] DB MISSING: Returning status with isAvailable=false');
+  if (!shabadExists || !nitnemExists) {
+    print('${AppConstants.logTag} [${DateTime.now()}] DB MISSING: shabad=$shabadExists, nitnem=$nitnemExists');
     return DatabaseStatus(initializedAtUtc: DateTime.now().toUtc(), isAvailable: false);
   }
   
+  // Actually initialize them if files exist
+  await shabadDb.initialize();
+  await nitnemDb.initialize();
+
   final end = DateTime.now();
-  print('${AppConstants.logTag} [$end] END: databaseStatusProvider check READY. Total check duration: ${end.difference(start).inMilliseconds}ms');
+  print('${AppConstants.logTag} [$end] END: databaseStatusProvider READY.');
   return DatabaseStatus(initializedAtUtc: DateTime.now().toUtc(), isAvailable: true);
 });
 

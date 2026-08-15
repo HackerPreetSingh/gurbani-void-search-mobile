@@ -29,7 +29,10 @@ class MetadataDataSource {
     }
   }
 
-  String getSourceName(String id) => _sources?[id] ?? 'Unknown';
+  String getSourceName(String id) {
+    if (id == 'Bani') return 'Nitnem / Banis';
+    return _sources?[id] ?? 'Unknown';
+  }
   String? getWriterName(int id) => _writers?[id];
   String? getRaagName(int id) => _raags?[id];
 }

@@ -1,9 +1,10 @@
 import 'package:sqlite3/sqlite3.dart';
 import 'dart:io';
 import 'gurmukhi_processor.dart';
+import '../../../../core/constants/app_constants.dart';
 
 void main() {
-  final dbPath = 'assets/database/gurbani_offline.sqlite';
+  final dbPath = 'assets/database/${AppConstants.shabadDbFile}';
   if (!File(dbPath).existsSync()) {
     print('❌ Database not found at $dbPath');
     return;

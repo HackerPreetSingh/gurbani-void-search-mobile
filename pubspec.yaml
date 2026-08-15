@@ -81,7 +81,8 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/corpus/sample_corpus.json
-    # - assets/database/gurbani_offline.sqlite
+    # - assets/database/shabads_offline.sqlite
+    # - assets/database/nitnem_offline.sqlite
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

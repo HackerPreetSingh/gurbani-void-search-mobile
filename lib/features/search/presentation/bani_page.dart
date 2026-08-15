@@ -6,18 +6,60 @@ import '../../settings/domain/models/display_settings.dart';
 import '../../settings/presentation/display_settings_notifier.dart';
 import '../domain/providers/search_providers.dart';
 
-class BaniPage extends ConsumerWidget {
+class BaniPage extends ConsumerStatefulWidget {
   final int baniId;
   final String? highlightVerseId;
 
   const BaniPage({super.key, required this.baniId, this.highlightVerseId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // [AI_GUARD:PERMANENT_LOG] Tracking bani page build. Do not remove or modify.
-    print('${AppConstants.logTag} [${DateTime.now()}] [bani_page.dart] WIDGET_BUILD: id=$baniId, highlight=$highlightVerseId');
+  ConsumerState<BaniPage> createState() => _BaniPageState();
+}
+
+class _BaniPageState extends ConsumerState<BaniPage> {
+  final Map<String, GlobalKey> _verseKeys = {};
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.highlightVerseId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // [AI_GUARD:PERMANENT_LOG] Delaying scroll to allow opening bani on top first
+        Future.delayed(const Duration(milliseconds: 600), () {
+          _scrollToHighlightedVerse();
+        });
+      });
+    }
+  }
+
+  void _scrollToHighlightedVerse() {
+    if (!mounted || widget.highlightVerseId == null) return;
     
-    final baniDetailsAsync = ref.watch(baniDetailsProvider(baniId));
+    final key = _verseKeys[widget.highlightVerseId];
+    if (key != null && key.currentContext != null) {
+      // [AI_GUARD:PERMANENT_LOG] Executing smooth scroll to highlighted tukk
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.easeInOutCubic,
+        alignment: 0.5, // Center the tukk in the screen
+      );
+    } else {
+      // [AI_GUARD:PERMANENT_LOG] Widget not yet built (lazy loading). Retrying.
+      // Banis can be very long, so we use a higher cacheExtent and a retry.
+      print('${AppConstants.logTag} [bani_page.dart] INFO: Highlight widget not found in tree, retrying scroll...');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) _scrollToHighlightedVerse();
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // [AI_GUARD:PERMANENT_LOG] Tracking bani page build. Do not remove or modify.
+    print('${AppConstants.logTag} [${DateTime.now()}] [bani_page.dart] WIDGET_BUILD: id=${widget.baniId}, highlight=${widget.highlightVerseId}');
+    
+    final baniDetailsAsync = ref.watch(baniDetailsProvider(widget.baniId));
     final settingsAsync = ref.watch(displaySettingsProvider);
     final settings = settingsAsync.value ?? DisplaySettings.defaults();
 
@@ -27,137 +69,153 @@ class BaniPage extends ConsumerWidget {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: baniDetailsAsync.when(
-          data: (verses) {
-            if (verses.isEmpty) {
-              // [AI_GUARD:PERMANENT_LOG] No data found for this ID
-              print('${AppConstants.logTag} [${DateTime.now()}] [bani_page.dart] DATA_EMPTY: No verses found for bani $baniId');
-              return Scaffold(
-                appBar: AppBar(title: const Text('Bani View')),
-                body: const Center(child: Text('Bani content not found.')),
-              );
-            }
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: baniDetailsAsync.when(
+            data: (verses) {
+              if (verses.isEmpty) {
+                // [AI_GUARD:PERMANENT_LOG] No data found for this ID
+                print('${AppConstants.logTag} [${DateTime.now()}] [bani_page.dart] DATA_EMPTY: No verses found for bani ${widget.baniId}');
+                return Scaffold(
+                  key: const ValueKey('empty'),
+                  appBar: AppBar(title: const Text('Bani View')),
+                  body: const Center(child: Text('Bani content not found.')),
+                );
+              }
 
-            final firstVerse = verses.first.verse;
-            // [AI_GUARD:PERMANENT_LOG] Checking header metadata presence
-            final bool hasRaag = firstVerse.raagName != null &&
-                firstVerse.raagName!.trim().isNotEmpty &&
-                !firstVerse.raagName!.toLowerCase().contains('unknown') &&
-                !firstVerse.raagName!.toLowerCase().contains('null');
-            final bool hasWriter = firstVerse.writerName != null &&
-                firstVerse.writerName!.trim().isNotEmpty &&
-                !firstVerse.writerName!.toLowerCase().contains('unknown') &&
-                !firstVerse.writerName!.toLowerCase().contains('null');
-            final bool hasSource = firstVerse.sourceName.trim().isNotEmpty &&
-                !firstVerse.sourceName.toLowerCase().contains('unknown') &&
-                !firstVerse.sourceName.toLowerCase().contains('null');
+              final firstVerse = verses.first.verse;
+              // [AI_GUARD:PERMANENT_LOG] Checking header metadata presence
+              final bool hasRaag = firstVerse.raagName != null &&
+                  firstVerse.raagName!.trim().isNotEmpty &&
+                  !firstVerse.raagName!.toLowerCase().contains('unknown') &&
+                  !firstVerse.raagName!.toLowerCase().contains('null');
+              final bool hasWriter = firstVerse.writerName != null &&
+                  firstVerse.writerName!.trim().isNotEmpty &&
+                  !firstVerse.writerName!.toLowerCase().contains('unknown') &&
+                  !firstVerse.writerName!.toLowerCase().contains('null');
+              final bool hasSource = firstVerse.sourceName.trim().isNotEmpty &&
+                  !firstVerse.sourceName.toLowerCase().contains('unknown') &&
+                  !firstVerse.sourceName.toLowerCase().contains('null');
 
-            return CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  title: Text(firstVerse.gurmukhi.length > 20 ? 'Bani View' : firstVerse.gurmukhi),
-                  floating: true, // App bar shows up as soon as user scrolls down
-                  snap: true,     // App bar snaps into view
-                  pinned: false,
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.settings_outlined),
-                      onPressed: () => _showSettingsDialog(context, settings),
-                    ),
-                  ],
-                ),
-                SliverToBoxAdapter(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                    color: Colors.teal.withAlpha(15),
-                    child: Column(
-                      children: [
-                        if (hasRaag)
-                          Text(firstVerse.raagName!,
+              return CustomScrollView(
+                key: const ValueKey('data'),
+                cacheExtent: 2000, 
+                slivers: [
+                  SliverAppBar(
+                    title: Text(firstVerse.gurmukhi.length > 20 ? 'Bani View' : firstVerse.gurmukhi),
+                    floating: true, // App bar shows up as soon as user scrolls down
+                    snap: true,     // App bar snaps into view
+                    pinned: false,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.settings_outlined),
+                        onPressed: () => _showSettingsDialog(context, settings),
+                      ),
+                    ],
+                  ),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                      color: Colors.teal.withAlpha(15),
+                      child: Column(
+                        children: [
+                          if (hasRaag)
+                            Text(firstVerse.raagName!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+                          if (hasWriter)
+                            Text(firstVerse.writerName!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 16, color: Colors.blueGrey)),
+                          if (hasSource) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '${firstVerse.sourceName}${firstVerse.ang != null ? " • Ang ${firstVerse.ang}" : ""}',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
-                        if (hasWriter)
-                          Text(firstVerse.writerName!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 16, color: Colors.blueGrey)),
-                        if (hasSource) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '${firstVerse.sourceName}${firstVerse.ang != null ? " • Ang ${firstVerse.ang}" : ""}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                SliverPadding(
-                  padding: EdgeInsets.zero,
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final baniVerse = verses[index];
-                        final verse = baniVerse.verse;
-                        
-                        // [AI_GUARD:PERMANENT_LOG] Robust null/empty check for each verse line
-                        final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty && !verse.transliterationHi!.toLowerCase().contains('null');
-                        final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty && !verse.transliteration!.toLowerCase().contains('null');
-                        final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty && !verse.translation!.toLowerCase().contains('null');
-                        final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty && !verse.translationPa!.toLowerCase().contains('null');
+                  SliverPadding(
+                    padding: EdgeInsets.zero,
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final baniVerse = verses[index];
+                          final verse = baniVerse.verse;
+                          
+                          // [AI_GUARD:PERMANENT_LOG] Robust null/empty check for each verse line
+                          final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty && !verse.transliterationHi!.toLowerCase().contains('null');
+                          final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty && !verse.transliteration!.toLowerCase().contains('null');
+                          final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty && !verse.translation!.toLowerCase().contains('null');
+                          final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty && !verse.translationPa!.toLowerCase().contains('null');
 
-                        final bool isHighlighted = highlightVerseId != null && verse.stableId == highlightVerseId;
+                          final bool isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
 
-                        return Container(
-                          width: double.infinity,
-                          color: isHighlighted ? Colors.teal.withAlpha(25) : null,
-                          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              _buildGurmukhiText(ref, verse.gurmukhi, verse.visraams, settings),
-                              if (settings.showHindi && hasHindi) ...[
-                                const SizedBox(height: 12),
-                                Text(verse.transliterationHi!,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: settings.fontSizeHindi, color: Colors.red.shade900)),
+                          // [AI_GUARD:PERMANENT_LOG] Assigning global key for auto-scrolling
+                          final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
+
+                          return Container(
+                            key: key,
+                            width: double.infinity,
+                            color: isHighlighted ? Colors.teal.withAlpha(25) : null,
+                            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                _buildGurmukhiText(ref, verse.gurmukhi, verse.visraams, settings),
+                                if (settings.showHindi && hasHindi) ...[
+                                  const SizedBox(height: 12),
+                                  Text(verse.transliterationHi!,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: settings.fontSizeHindi, color: Colors.red.shade900)),
+                                ],
+                                if (settings.showTransliteration && hasTranslit) ...[
+                                  const SizedBox(height: 12),
+                                  Text(verse.transliteration!,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: settings.fontSizeEnglish, color: Colors.blueGrey)),
+                                ],
+                                if (settings.showEnglishMeaning && hasEnglishMeaning) ...[
+                                  const SizedBox(height: 12),
+                                  Text(verse.translation!,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: settings.fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
+                                ],
+                                if (settings.showPunjabiMeaning && hasPunjabiMeaning) ...[
+                                  const SizedBox(height: 12),
+                                  Text(verse.translationPa!,
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: settings.fontSizePunjabiMeaning, color: Colors.teal.shade900)),
+                                ],
                               ],
-                              if (settings.showTransliteration && hasTranslit) ...[
-                                const SizedBox(height: 12),
-                                Text(verse.transliteration!,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: settings.fontSizeEnglish, color: Colors.blueGrey)),
-                              ],
-                              if (settings.showEnglishMeaning && hasEnglishMeaning) ...[
-                                const SizedBox(height: 12),
-                                Text(verse.translation!,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: settings.fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
-                              ],
-                              if (settings.showPunjabiMeaning && hasPunjabiMeaning) ...[
-                                const SizedBox(height: 12),
-                                Text(verse.translationPa!,
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(fontSize: settings.fontSizePunjabiMeaning, color: Colors.teal.shade900)),
-                              ],
-                            ],
-                          ),
-                        );
-                      },
-                      childCount: verses.length,
+                            ),
+                          );
+                        },
+                        childCount: verses.length,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) {
-            // [AI_GUARD:PERMANENT_LOG] Error in bani data loading
-            print('${AppConstants.logTag} [${DateTime.now()}] [bani_page.dart] ERROR: $err\nSTACK: $stack');
-            return Center(child: Text('Error: $err'));
-          },
+                ],
+              );
+            },
+            loading: () => const Center(
+              key: ValueKey('loading'),
+              child: Hero(
+                tag: 'bani_loader',
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            error: (err, stack) {
+              // [AI_GUARD:PERMANENT_LOG] Error in bani data loading
+              print('${AppConstants.logTag} [${DateTime.now()}] [bani_page.dart] ERROR: $err\nSTACK: $stack');
+              return Center(key: const ValueKey('error'), child: Text('Error: $err'));
+            },
+          ),
         ),
       ),
     );

@@ -3,17 +3,26 @@
 abstract final class AppConstants {
   // --- DATABASE CONSTANTS ---
   
-  /// The filename of the local SQLite database used across all platforms.
-  static const String dbFileName = 'gurbani_offline.sqlite';
+  /// Filenames for the separate SQLite databases.
+  static const String shabadDbFile = 'shabads_offline.sqlite';
+  static const String nitnemDbFile = 'nitnem_offline.sqlite';
+
+  @Deprecated('Use shabadDbFile or nitnemDbFile')
+  static const String dbFileName = shabadDbFile;
   
   /// Select the hosting provider for the database file: 'vercel' or 'github'
   static const String downloadProvider = 'vercel';
 
-  static const String _vercelUrl = 'https://9adxmnfutozpuzyq.public.blob.vercel-storage.com/gurbani_offline.sqlite';
-  static const String _githubUrl = 'https://github.com/HackerPreetSingh/gurbani-void-search-mobile/raw/main/assets/database/gurbani_offline.sqlite';
+  static const String _vercelShabadUrl = 'https://9adxmnfutozpuzyq.public.blob.vercel-storage.com/shabads_offline.sqlite';
+  static const String _vercelNitnemUrl = 'https://9adxmnfutozpuzyq.public.blob.vercel-storage.com/nitnem_offline.sqlite';
+  static const String _githubShabadUrl = 'https://github.com/HackerPreetSingh/gurbani-void-search-mobile/raw/main/assets/database/shabads_offline.sqlite';
+  static const String _githubNitnemUrl = 'https://github.com/HackerPreetSingh/gurbani-void-search-mobile/raw/main/assets/database/nitnem_offline.sqlite';
 
-  /// The direct download URL for the production SQLite database based on the selected provider.
-  static const String databaseDownloadUrl = downloadProvider == 'vercel' ? _vercelUrl : _githubUrl;
+  /// URLs for the production SQLite databases.
+  static const String shabadDownloadUrl = downloadProvider == 'vercel' ? _vercelShabadUrl : _githubShabadUrl;
+  static const String nitnemDownloadUrl = downloadProvider == 'vercel' ? _vercelNitnemUrl : _githubNitnemUrl;
+
+  static const String databaseDownloadUrl = shabadDownloadUrl;
 
   // --- API CONSTANTS ---
 
@@ -24,4 +33,24 @@ abstract final class AppConstants {
   
   /// Standard prefix for all debug logs related to Gurbani data or engine.
   static const String logTag = '[GURBANI_LOG]';
+
+  // --- LITURGICAL CONSTANTS ---
+
+  /// The default order of Banis by ID. 
+  /// Banis not in this list will follow at the end in their original ID order.
+  static const List<int> defaultBaniOrder = [
+    2,   // Japji Sahib
+    4,   // Jaap Sahib
+    6,   // Tav Prasad Sawaiye
+    9,   // Chaupai Sahib
+    10,  // Anand Sahib
+    3,   // Shabad Hazare
+    31,  // Sukhmani Sahib
+    21,  // Rehras Sahib
+    24,  // Ardas
+    23,  // Sohila
+    22,  // Aarti
+    90,  // Aasa Ki Var
+    104, // Basant Ki Vaar
+  ];
 }

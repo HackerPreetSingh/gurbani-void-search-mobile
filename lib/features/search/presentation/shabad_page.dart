@@ -17,6 +17,42 @@ class ShabadPage extends ConsumerStatefulWidget {
 }
 
 class _ShabadPageState extends ConsumerState<ShabadPage> {
+  final Map<String, GlobalKey> _verseKeys = {};
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.highlightVerseId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // [AI_GUARD:PERMANENT_LOG] Delaying scroll to allow opening shabad on top first
+        Future.delayed(const Duration(milliseconds: 600), () {
+          _scrollToHighlightedVerse();
+        });
+      });
+    }
+  }
+
+  void _scrollToHighlightedVerse() {
+    if (!mounted || widget.highlightVerseId == null) return;
+    
+    final key = _verseKeys[widget.highlightVerseId];
+    if (key != null && key.currentContext != null) {
+      // [AI_GUARD:PERMANENT_LOG] Executing smooth scroll to highlighted tukk
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 1000),
+        curve: Curves.easeInOutCubic,
+        alignment: 0.5, // Center the tukk in the screen
+      );
+    } else {
+      // [AI_GUARD:PERMANENT_LOG] Widget not yet built (lazy loading). Retrying once.
+      print('${AppConstants.logTag} [shabad_page.dart] INFO: Highlight widget not found in tree, retrying scroll...');
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) _scrollToHighlightedVerse();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // [AI_GUARD:PERMANENT_LOG] Tracking shabad page build. Do not remove or modify.
@@ -32,135 +68,155 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.white,
-        body: shabadAsync.when(
-          data: (verses) {
-            if (verses.isEmpty) {
-              // [AI_GUARD:PERMANENT_LOG] No data found for this ID
-              print('${AppConstants.logTag} [${DateTime.now()}] [shabad_page.dart] DATA_EMPTY: No verses found for shabad ${widget.shabadId}');
-              return Scaffold(
-                appBar: AppBar(title: const Text('Shabad View')),
-                body: const Center(child: Text('Shabad not found.')),
-              );
-            }
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: shabadAsync.when(
+            data: (verses) {
+              if (verses.isEmpty) {
+                // [AI_GUARD:PERMANENT_LOG] No data found for this ID
+                print('${AppConstants.logTag} [${DateTime.now()}] [shabad_page.dart] DATA_EMPTY: No verses found for shabad ${widget.shabadId}');
+                return Scaffold(
+                  key: const ValueKey('empty'),
+                  appBar: AppBar(title: const Text('Shabad View')),
+                  body: const Center(child: Text('Shabad not found.')),
+                );
+              }
 
-            final firstVerse = verses.first;
-            // [AI_GUARD:PERMANENT_LOG] Checking header metadata presence
-            final bool hasRaag = firstVerse.raagName != null &&
-                firstVerse.raagName!.trim().isNotEmpty &&
-                !firstVerse.raagName!.toLowerCase().contains('unknown') &&
-                !firstVerse.raagName!.toLowerCase().contains('null');
-            final bool hasWriter = firstVerse.writerName != null &&
-                firstVerse.writerName!.trim().isNotEmpty &&
-                !firstVerse.writerName!.toLowerCase().contains('unknown') &&
-                !firstVerse.writerName!.toLowerCase().contains('null');
-            final bool hasSource = firstVerse.sourceName.trim().isNotEmpty &&
-                !firstVerse.sourceName.toLowerCase().contains('unknown') &&
-                !firstVerse.sourceName.toLowerCase().contains('null');
+              final firstVerse = verses.first;
+              // [AI_GUARD:PERMANENT_LOG] Checking header metadata presence
+              final bool hasRaag = firstVerse.raagName != null &&
+                  firstVerse.raagName!.trim().isNotEmpty &&
+                  !firstVerse.raagName!.toLowerCase().contains('unknown') &&
+                  !firstVerse.raagName!.toLowerCase().contains('null');
+              final bool hasWriter = firstVerse.writerName != null &&
+                  firstVerse.writerName!.trim().isNotEmpty &&
+                  !firstVerse.writerName!.toLowerCase().contains('unknown') &&
+                  !firstVerse.writerName!.toLowerCase().contains('null');
+              final bool hasSource = firstVerse.sourceName.trim().isNotEmpty &&
+                  !firstVerse.sourceName.toLowerCase().contains('unknown') &&
+                  !firstVerse.sourceName.toLowerCase().contains('null');
 
-            return CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  title: const Text('Shabad View'),
-                  floating: true, // App bar shows up as soon as user scrolls down
-                  snap: true,     // App bar snaps into view
-                  pinned: false,
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.settings_outlined),
-                      onPressed: () => _showSettingsDialog(context, settings),
-                    ),
-                  ],
-                ),
-                SliverToBoxAdapter(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-                    color: Colors.teal.withAlpha(15),
-                    child: Column(
-                      children: [
-                        if (hasRaag)
-                          Text(firstVerse.raagName!,
+              return CustomScrollView(
+                key: const ValueKey('data'),
+                cacheExtent: 2000, 
+                slivers: [
+                  SliverAppBar(
+                    title: const Text('Shabad View'),
+                    floating: true, // App bar shows up as soon as user scrolls down
+                    snap: true,     // App bar snaps into view
+                    pinned: false,
+                    actions: [
+                      IconButton(
+                        icon: const Icon(Icons.settings_outlined),
+                        onPressed: () => _showSettingsDialog(context, settings),
+                      ),
+                    ],
+                  ),
+                  SliverToBoxAdapter(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                      color: Colors.teal.withAlpha(15),
+                      child: Column(
+                        children: [
+                          if (hasRaag)
+                            Text(firstVerse.raagName!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
+                          if (hasWriter)
+                            Text(firstVerse.writerName!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 16, color: Colors.blueGrey)),
+                          if (hasSource) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '${firstVerse.sourceName}${firstVerse.ang != null ? " • Ang ${firstVerse.ang}" : ""}',
                               textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black)),
-                        if (hasWriter)
-                          Text(firstVerse.writerName!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 16, color: Colors.blueGrey)),
-                        if (hasSource) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            '${firstVerse.sourceName}${firstVerse.ang != null ? " • Ang ${firstVerse.ang}" : ""}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                SliverPadding(
-                  padding: EdgeInsets.zero,
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final verse = verses[index];
-                        // [AI_GUARD:PERMANENT_LOG] Robust null/empty check for each verse line
-                        final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty && !verse.transliterationHi!.toLowerCase().contains('null');
-                        final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty && !verse.transliteration!.toLowerCase().contains('null');
-                        final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty && !verse.translation!.toLowerCase().contains('null');
-                        final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty && !verse.translationPa!.toLowerCase().contains('null');
+                  SliverPadding(
+                    padding: EdgeInsets.zero,
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final verse = verses[index];
+                          // [AI_GUARD:PERMANENT_LOG] Robust null/empty check for each verse line
+                          final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty && !verse.transliterationHi!.toLowerCase().contains('null');
+                          final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty && !verse.transliteration!.toLowerCase().contains('null');
+                          final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty && !verse.translation!.toLowerCase().contains('null');
+                          final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty && !verse.translationPa!.toLowerCase().contains('null');
 
-                        final bool isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
+                          final bool isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
+                          
+                          // [AI_GUARD:PERMANENT_LOG] Assigning global key for auto-scrolling
+                          final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
 
-                        return Container(
-                          width: double.infinity,
-                          color: isHighlighted ? Colors.teal.withAlpha(25) : null,
-                          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              _buildGurmukhiText(verse.gurmukhi, verse.visraams, settings),
+                          return Container(
+                            key: key,
+                            width: double.infinity,
+                            color: isHighlighted ? Colors.teal.withAlpha(25) : null,
+                            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                _buildGurmukhiText(verse.gurmukhi, verse.visraams, settings),
                               if (settings.showHindi && hasHindi) ...[
+                                // [AI_GUARD:PERMANENT_LOG] Displaying Hindi transliteration
                                 const SizedBox(height: 12),
                                 Text(verse.transliterationHi!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeHindi, color: Colors.red.shade900)),
                               ],
                               if (settings.showTransliteration && hasTranslit) ...[
+                                // [AI_GUARD:PERMANENT_LOG] Displaying English transliteration
                                 const SizedBox(height: 12),
                                 Text(verse.transliteration!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeEnglish, color: Colors.blueGrey)),
                               ],
                               if (settings.showEnglishMeaning && hasEnglishMeaning) ...[
+                                // [AI_GUARD:PERMANENT_LOG] Displaying English meaning
                                 const SizedBox(height: 12),
                                 Text(verse.translation!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
                               ],
                               if (settings.showPunjabiMeaning && hasPunjabiMeaning) ...[
+                                // [AI_GUARD:PERMANENT_LOG] Displaying Punjabi meaning
                                 const SizedBox(height: 12),
                                 Text(verse.translationPa!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizePunjabiMeaning, color: Colors.teal.shade900)),
                               ],
-                            ],
-                          ),
-                        );
-                      },
-                      childCount: verses.length,
+                              ],
+                            ),
+                          );
+                        },
+                        childCount: verses.length,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) {
-            // [AI_GUARD:PERMANENT_LOG] Error in shabad data loading
-            print('${AppConstants.logTag} [${DateTime.now()}] [shabad_page.dart] ERROR: $err\nSTACK: $stack');
-            return Center(child: Text('Error: $err'));
-          },
+                ],
+              );
+            },
+            loading: () => const Center(
+              key: ValueKey('loading'),
+              child: Hero(
+                tag: 'shabad_loader',
+                child: CircularProgressIndicator(),
+              ),
+            ),
+            error: (err, stack) {
+              // [AI_GUARD:PERMANENT_LOG] Error in shabad data loading
+              print('${AppConstants.logTag} [${DateTime.now()}] [shabad_page.dart] ERROR: $err\nSTACK: $stack');
+              return Center(key: const ValueKey('error'), child: Text('Error: $err'));
+            },
+          ),
         ),
       ),
     );

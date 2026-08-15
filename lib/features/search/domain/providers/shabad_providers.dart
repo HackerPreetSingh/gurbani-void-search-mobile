@@ -15,6 +15,11 @@ final shabadDetailsProvider = FutureProvider.family<List<GurbaniSearchResult>, S
   // Pull directly from the local SQLite database
   final results = await repository.getLocalShabad(shabadId, cancelToken: cancelToken);
   
+  if (results.isEmpty) {
+    print('[GURBANI_LOG] [${DateTime.now()}] [shabad_providers.dart] PROVIDER_RESULT: ShabadId $shabadId not found in local DB.');
+    return [];
+  }
+
   // [AI_GUARD:PERMANENT_LOG] Crucial: Force stable liturgical sorting by ID. 
   // API and local DB verse_order can be erratic. id/stableId is the only reliable sequence.
   results.sort((a, b) {

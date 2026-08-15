@@ -41,4 +41,28 @@ class RemoteSearchDataSource {
       return null;
     }
   }
+
+  Future<List<dynamic>> getBanis({CancelToken? cancelToken}) async {
+    try {
+      final response = await _dio.get(
+        '${AppConstants.banidbBaseUrl}/banis',
+        cancelToken: cancelToken,
+      );
+      return response.data as List<dynamic>;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>?> getBaniDetails(int baniId, {CancelToken? cancelToken}) async {
+    try {
+      final response = await _dio.get(
+        '${AppConstants.banidbBaseUrl}/banis/$baniId',
+        cancelToken: cancelToken,
+      );
+      return response.data as Map<String, dynamic>;
+    } catch (e) {
+      return null;
+    }
+  }
 }

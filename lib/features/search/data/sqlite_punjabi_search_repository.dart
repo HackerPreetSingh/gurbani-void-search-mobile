@@ -58,7 +58,7 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
       List<Map<String, dynamic>> rows = [];
 
       if (hasOperators) {
-        print('[GURBANI_LOG] [${DateTime.now()}] SEARCH_STEP_3: Using Operator-based Search');
+        print('[GURBANI_LOG] [${DateTime.now()}] [sqlite_punjabi_search_repository.dart] SEARCH_STEP_3: Using Operator-based Search');
         final queryObj = _firstLetterStartToQuery(charCodeQuery);
         rows = await _localDataSource.search(
           condition: queryObj['condition'],
@@ -66,8 +66,8 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
           limit: limit,
         );
       } else {
-        print('[GURBANI_LOG] [${DateTime.now()}] SEARCH_STEP_3: Using Standard Numeric Search with Bindi Fallback');
-        final queryObj = _generateBindiQuery(charCodeQuery, charCodeQueryWildcard);
+        print('[GURBANI_LOG] [${DateTime.now()}] [sqlite_punjabi_search_repository.dart] SEARCH_STEP_3: Using Standard Numeric Search with Bindi Fallback');
+        final bindiQuery = _generateBindiQuery(charCodeQuery, charCodeQueryWildcard);
         
         String? orderBy;
         if (raw.length < 3) {
@@ -75,19 +75,17 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
         }
 
         rows = await _localDataSource.search(
-          condition: queryObj['condition'],
-          parameters: queryObj['parameters'],
+          condition: bindiQuery['condition'],
+          parameters: bindiQuery['parameters'],
           limit: limit,
           orderBy: orderBy,
         );
       }
 
       if (rows.isEmpty) {
-        // Strictly one-to-one word mapping.
-        // If user types 'mkmgh', we search for exactly 'mkmgh' initials.
-        // No characters are stripped because each alphabet represents a distinct word.
+        // [AI_GUARD:PERMANENT_LOG] Numeric failed. Trying Strategy 2 (initials_en).
         final searchStr = raw.toLowerCase();
-        print('[GURBANI_LOG] [${DateTime.now()}] SEARCH_STEP_4: Numeric failed. Trying Strategy 2 (initials_en LIKE "%$searchStr%")...');
+        print('[GURBANI_LOG] [${DateTime.now()}] [sqlite_punjabi_search_repository.dart] SEARCH_STEP_4: Trying Strategy 2 (initials_en LIKE "%$searchStr%")...');
         
         rows = await _localDataSource.search(
           condition: 'initials_en LIKE ?',
@@ -97,7 +95,7 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
       }
 
       if (rows.isEmpty && _isRoman(raw)) {
-         print('[GURBANI_LOG] [${DateTime.now()}] SEARCH_STEP_5: Primary strategies failed. Deep permuting...');
+         print('[GURBANI_LOG] [${DateTime.now()}] [sqlite_punjabi_search_repository.dart] SEARCH_STEP_5: Primary strategies failed. Deep permuting...');
          final variations = _generateAllPhoneticVariations(raw);
          for (final v in variations) {
            if (v == raw.toLowerCase()) continue;
@@ -108,7 +106,7 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
              limit: limit,
            );
            if (vRows.isNotEmpty) {
-             print('[GURBANI_LOG] [${DateTime.now()}] SEARCH_STEP_6: SUCCESS via variation: "$v"');
+             print('[GURBANI_LOG] [${DateTime.now()}] [sqlite_punjabi_search_repository.dart] SEARCH_STEP_6: SUCCESS via variation: "$v"');
              rows = vRows;
              break;
            }
@@ -116,13 +114,44 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
       }
 
       if (rows.isNotEmpty) {
-        final results = rows.map((r) => _mapper.mapRow(r)).toList();
+        final allResults = rows.map((r) => _mapper.mapRow(r)).toList();
+        
+        // [AI_GUARD:PERMANENT_LOG] Liturgical De-duplication & Prioritization.
+        // Goal: If a shabad exists in both original sources (SGGS, etc.) and virtual 'Bani' tab,
+        // show only the original source version to keep results clean.
+        final Set<String> primarySourceGurmukhi = {};
+        for (final res in allResults) {
+          final sIdInt = int.tryParse(res.shabadId ?? '0') ?? 0;
+          // Primary source shabads have IDs < 999,999 and known sources.
+          final isPrimary = res.sourceName != 'Nitnem / Banis' && 
+                          !res.sourceName.toLowerCase().contains('unknown') &&
+                          sIdInt > 0 && sIdInt < 999999;
+          
+          if (isPrimary) {
+            primarySourceGurmukhi.add(res.gurmukhi.trim());
+          }
+        }
+
+        final filteredResults = allResults.where((res) {
+          final sIdInt = int.tryParse(res.shabadId ?? '0') ?? 0;
+          final isVirtual = res.sourceName == 'Nitnem / Banis' || 
+                           res.sourceName.toLowerCase().contains('unknown') ||
+                           sIdInt >= 999999 || sIdInt == 0;
+                           
+          if (isVirtual) {
+             // Skip this 'Bani' result if the same text is already present from a primary source.
+             return !primarySourceGurmukhi.contains(res.gurmukhi.trim());
+          }
+          return true;
+        }).toList();
+
         final duration = DateTime.now().difference(methodStart).inMilliseconds;
-        print('[GURBANI_LOG] [${DateTime.now()}] SEARCH_COMPLETE: Hits: ${results.length}. Duration: ${duration}ms');
+        print('[GURBANI_LOG] [${DateTime.now()}] [sqlite_punjabi_search_repository.dart] SEARCH_COMPLETE: Hits: ${filteredResults.length} (Filtered from ${allResults.length}). Duration: ${duration}ms');
+        
         return PunjabiSearchResponse(
           status: PunjabiSearchStatus.complete,
           query: query,
-          results: results,
+          results: filteredResults,
           source: 'Local',
         );
       }

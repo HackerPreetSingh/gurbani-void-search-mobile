@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../domain/models/gurbani_search_result.dart';
+import '../domain/providers/shabad_providers.dart';
 import 'search_view_model.dart';
 
 class SearchScreen extends ConsumerWidget {
@@ -78,12 +79,20 @@ class SearchScreen extends ConsumerWidget {
     return ListTile(
       onTap: () async {
         if (result.shabadId != null) {
-          // [AI_GUARD:PERMANENT_LOG] Navigation to shabad detail with highlight verse ID
-          print('[GURBANI_LOG] [${DateTime.now()}] [search_screen.dart] UI_ACTION: Open shabad ${result.shabadId}, highlighting verse ${result.stableId}');
+          // [AI_GUARD:PERMANENT_LOG] Starting pre-load for smooth transition.
+          print('[GURBANI_LOG] [${DateTime.now()}] [search_screen.dart] UI_ACTION: Pre-loading shabad ${result.shabadId}...');
           
+          // 1. Show a non-blocking loading indicator if needed (optional)
+          // 2. Add to history
           await ref.read(searchViewModelProvider.notifier).addToHistory(result);
+          
+          // 3. Pre-fetch the shabad data into Riverpod cache
+          await ref.read(shabadDetailsProvider(result.shabadId!).future);
+          
+          // 4. Navigate only when data is ready
           if (context.mounted) {
-            context.push('/shabad/${result.shabadId}?verseId=${result.stableId}');
+             print('[GURBANI_LOG] [${DateTime.now()}] [search_screen.dart] UI_ACTION: Pre-load complete. Pushing shabad page.');
+             context.push('/shabad/${result.shabadId}?verseId=${result.stableId}');
           }
         }
       },

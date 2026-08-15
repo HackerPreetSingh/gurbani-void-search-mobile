@@ -1,8 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/core_providers.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../models/bani.dart';
-import '../../data/search_result_mapper.dart';
 import 'search_providers.dart';
 
 final banisListProvider = AsyncNotifierProvider<BanisNotifier, List<Bani>>(() {
@@ -12,14 +12,51 @@ final banisListProvider = AsyncNotifierProvider<BanisNotifier, List<Bani>>(() {
 class BanisNotifier extends AsyncNotifier<List<Bani>> {
   @override
   Future<List<Bani>> build() async {
-    print('${AppConstants.logTag} [${DateTime.now()}] PROVIDER_FETCH: BanisNotifier');
-    final db = ref.watch(localDatabaseProvider);
+    print('${AppConstants.logTag} [${DateTime.now()}] PROVIDER_FETCH: BanisNotifier (Web: $kIsWeb)');
+    
+    if (kIsWeb) {
+      final remote = ref.watch(remoteSearchDataSourceProvider);
+      final List rows = await remote.getBanis();
+      
+      final defaultOrder = AppConstants.defaultBaniOrder;
+      
+      // Sort using the same custom liturgical logic as sync
+      rows.sort((a, b) {
+        final idA = a['ID'] as int;
+        final idB = b['ID'] as int;
+        final indexA = defaultOrder.indexOf(idA);
+        final indexB = defaultOrder.indexOf(idB);
+        
+        if (indexA != -1 && indexB != -1) return indexA.compareTo(indexB);
+        if (indexA != -1) return -1;
+        if (indexB != -1) return 1;
+        return idA.compareTo(idB);
+      });
+
+      return rows.asMap().entries.map((entry) {
+        final i = entry.key;
+        final r = entry.value;
+        return Bani(
+          id: r['ID'],
+          namePa: r['gurmukhiUni'] ?? r['gurmukhi'],
+          nameEn: r['transliterations']?['english'] ?? r['transliteration'],
+          userOrder: i,
+          updatedAt: r['updated'],
+        );
+      }).toList();
+    }
+
+    final db = ref.watch(nitnemDatabaseProvider);
     final rows = await db.read((executor) => executor.runSelect('SELECT * FROM banis ORDER BY user_order ASC, id ASC', []));
-    print('${AppConstants.logTag} [${DateTime.now()}] PROVIDER_RESULT: Found ${rows.length} banis in database');
+    print('${AppConstants.logTag} [${DateTime.now()}] PROVIDER_RESULT: Found ${rows.length} banis in Nitnem database');
     return rows.map((r) => Bani.fromMap(r)).toList();
   }
 
   Future<void> reorder(int oldIndex, int newIndex) async {
+    if (kIsWeb) {
+      // Reordering is only supported on native platforms for now
+      return;
+    }
     final currentList = state.value;
     if (currentList == null) return;
 
@@ -34,8 +71,8 @@ class BanisNotifier extends AsyncNotifier<List<Bani>> {
     // [AI_GUARD:PERMANENT_LOG] Optimistically update UI
     state = AsyncData(updatedList);
 
-    // Save to DB
-    final db = ref.read(localDatabaseProvider);
+    // Save to Nitnem DB
+    final db = ref.read(nitnemDatabaseProvider);
     try {
       await db.transaction((executor) async {
         for (int i = 0; i < updatedList.length; i++) {
@@ -45,7 +82,7 @@ class BanisNotifier extends AsyncNotifier<List<Bani>> {
           );
         }
       });
-      print('${AppConstants.logTag} [${DateTime.now()}] BANI_REORDER_SUCCESS: New order saved to DB');
+      print('${AppConstants.logTag} [${DateTime.now()}] BANI_REORDER_SUCCESS: New order saved to Nitnem DB');
     } catch (e) {
       print('${AppConstants.logTag} [${DateTime.now()}] BANI_REORDER_ERROR: $e');
       // [AI_GUARD:PERMANENT_LOG] Rollback UI on error
@@ -55,10 +92,35 @@ class BanisNotifier extends AsyncNotifier<List<Bani>> {
 }
 
 final baniDetailsProvider = FutureProvider.family<List<BaniVerse>, int>((ref, baniId) async {
-  print('${AppConstants.logTag} [${DateTime.now()}] PROVIDER_FETCH: baniDetailsProvider(id: $baniId)');
-  final db = ref.watch(localDatabaseProvider);
+  print('${AppConstants.logTag} [${DateTime.now()}] PROVIDER_FETCH: baniDetailsProvider(id: $baniId, Web: $kIsWeb)');
+  final mapper = ref.read(searchResultMapperProvider);
+
+  if (kIsWeb) {
+    final remote = ref.watch(remoteSearchDataSourceProvider);
+    final data = await remote.getBaniDetails(baniId);
+    if (data == null) return [];
+    
+    final Map<String, dynamic>? baniInfo = data['baniInfo'] as Map<String, dynamic>?;
+    final List verses = data['verses'] ?? [];
+    
+    return verses.asMap().entries.map((entry) {
+      final i = entry.key;
+      final v = entry.value;
+      final verseData = v['verse'] ?? v;
+      return BaniVerse(
+        sequenceOrder: i,
+        header: int.tryParse(v['header']?.toString() ?? '0') ?? 0,
+        mangalPosition: int.tryParse(v['mangalPosition']?.toString() ?? ''),
+        existsSGPC: (int.tryParse(v['existsSGPC']?.toString() ?? '0') ?? 0) == 1,
+        existsTaksal: (int.tryParse(v['existsTaksal']?.toString() ?? '0') ?? 0) == 1,
+        verse: mapper.mapApi(verseData, shabadInfo: baniInfo),
+      );
+    }).toList();
+  }
+
+  final db = ref.watch(nitnemDatabaseProvider);
   
-  // We need to join bani_verses with verses to get the content
+  // We need to join bani_verses with verses to get the content from the Nitnem DB
   final rows = await db.read((executor) => executor.runSelect('''
     SELECT bv.*, v.*
     FROM bani_verses bv
@@ -68,7 +130,6 @@ final baniDetailsProvider = FutureProvider.family<List<BaniVerse>, int>((ref, ba
   ''', [baniId]));
 
   print('${AppConstants.logTag} [${DateTime.now()}] PROVIDER_RESULT: Fetched ${rows.length} verses for bani $baniId');
-  final mapper = SearchResultMapper(ref.read(metadataDataSourceProvider));
   
   final results = rows.map((r) {
     // [AI_GUARD:PERMANENT_LOG] Use robust conversion to prevent type cast errors (String vs int)

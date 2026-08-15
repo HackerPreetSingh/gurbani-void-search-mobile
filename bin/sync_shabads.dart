@@ -7,7 +7,7 @@ import 'package:gurbani_voice_search/features/search/domain/services/shabad_sync
 void main() async {
   // [AI_GUARD:PERMANENT_LOG] Entry point for Shabad Sync Utility
   final methodStart = DateTime.now();
-  final dbPath = 'assets/database/${AppConstants.dbFileName}';
+  final dbPath = 'assets/database/${AppConstants.shabadDbFile}';
   print('${AppConstants.logTag} [$methodStart] [sync_shabads.dart] START: Shabad Sync Engine');
 
   final dir = Directory('assets/database');
@@ -23,14 +23,11 @@ void main() async {
   db.execute('CREATE TABLE raags (id INTEGER PRIMARY KEY, name_pa TEXT, name_en TEXT)');
   db.execute('CREATE TABLE shabads (id INTEGER PRIMARY KEY, source_id TEXT, writer_id INTEGER, raag_id INTEGER, ang INTEGER)');
   db.execute('CREATE TABLE verses (id INTEGER PRIMARY KEY, shabad_id INTEGER, verse_order INTEGER, gurmukhi TEXT, transliteration TEXT, transliteration_hi TEXT, translation TEXT, translation_pa TEXT, first_letter_str TEXT, initials_en TEXT, initials_pa TEXT, main_letters TEXT, visraams TEXT, source_id TEXT, raag_id INTEGER, writer_id INTEGER, ang INTEGER)');
-  db.execute('CREATE TABLE banis (id INTEGER PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL, user_order INTEGER, updated_at TEXT)');
-  db.execute('CREATE TABLE bani_verses (id INTEGER PRIMARY KEY AUTOINCREMENT, bani_id INTEGER NOT NULL, verse_id INTEGER NOT NULL, sequence_order INTEGER NOT NULL, header INTEGER, mangal_position INTEGER, exists_sgpc INTEGER, exists_medium INTEGER, exists_taksal INTEGER, exists_buddha_dal INTEGER, paragraph INTEGER)');
   
   db.execute('CREATE INDEX idx_verses_sid ON verses (shabad_id)');
   db.execute('CREATE INDEX idx_shabads_src ON shabads (source_id)');
   db.execute('CREATE INDEX idx_verses_initials_en ON verses (initials_en)');
   db.execute('CREATE INDEX idx_verses_initials_pa ON verses (initials_pa)');
-  db.execute('CREATE INDEX idx_bani_verses_bani ON bani_verses (bani_id)');
 
   final dio = Dio(BaseOptions(
     connectTimeout: const Duration(seconds: 45),
@@ -39,7 +36,7 @@ void main() async {
   ));
 
   const baseUrl = AppConstants.banidbBaseUrl;
-  final syncService = ShabadSyncService(db: db, dio: dio, baseUrl: baseUrl);
+  final syncService = ShabadSyncService(db: db, dio: dio, baseUrl: baseUrl, dbPath: dbPath);
 
   print('🔍 Fetching master source list...');
   final sourceListRes = await dio.get('$baseUrl/sources');
@@ -53,7 +50,7 @@ void main() async {
 
     if (sId == 'A') {
       print('\n📥 SYNCING: $sName [$sId] via Specialized Header Index...');
-      await _syncSourceALegacy(db, dio, baseUrl, sId, (count) => totalSynced += count);
+      await _syncSourceALegacy(db, dio, baseUrl, sId, (count) => totalSynced += count, dbPath);
       continue;
     }
 
@@ -66,8 +63,8 @@ void main() async {
   print('\n\n🏁 SHABAD SYNC COMPLETE! Total: $totalSynced');
 }
 
-Future<void> _syncSourceALegacy(Database db, Dio dio, String baseUrl, String sId, Function(int) onSynced) async {
-  final shabadSync = ShabadSyncService(db: db, dio: dio, baseUrl: baseUrl);
+Future<void> _syncSourceALegacy(Database db, Dio dio, String baseUrl, String sId, Function(int) onSynced, String dbPath) async {
+  final shabadSync = ShabadSyncService(db: db, dio: dio, baseUrl: baseUrl, dbPath: dbPath);
   try {
     final headersRes = await dio.get('$baseUrl/amritkeertan');
     final headers = headersRes.data['headers'] as List;

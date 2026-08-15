@@ -7,29 +7,31 @@ import 'package:path_provider/path_provider.dart';
 import '../constants/app_constants.dart';
 
 class LocalDatabase {
-  LocalDatabase({this._connection})
-      : _connectionUser = _LocalDatabaseConnectionUser();
+  LocalDatabase({required this.dbName, DatabaseConnection? connection})
+      : _connection = connection,
+        _connectionUser = _LocalDatabaseConnectionUser();
 
-  static String? _cachedDocsPath;
+  final String dbName;
+  static final Map<String, String?> _cachedPaths = {};
 
   DatabaseConnection? _connection;
   final _LocalDatabaseConnectionUser _connectionUser;
   Future<DatabaseStatus>? _initialization;
 
   Future<DatabaseStatus> initialize() async {
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT: initialize() called');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT: initialize($dbName) called');
     if (_initialization != null) {
-      print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT: Returning existing initialization Future');
+      print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT: Returning existing initialization Future for $dbName');
       return _initialization!;
     }
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT: Creating new initialization Future');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT: Creating new initialization Future for $dbName');
     return _initialization = _initialize();
   }
 
   Future<void> hardReset() async {
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_RESET: hardReset() requested. Purging all state.');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_RESET: hardReset($dbName) requested. Purging all state.');
     _initialization = null;
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_RESET: Closing existing connection...');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_RESET: Closing existing connection for $dbName...');
     await _connection?.close();
     _connection = null;
     if (!kIsWeb) {
@@ -45,7 +47,7 @@ class LocalDatabase {
   }
 
   void close() {
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_CLOSE: Closing connection and clearing Future');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_CLOSE: Closing connection for $dbName');
     _connection?.close();
     _connection = null;
     _initialization = null;
@@ -74,12 +76,12 @@ class LocalDatabase {
   }
 
   Future<String> getDatabasePath() async {
-    if (kIsWeb) return AppConstants.dbFileName;
-    if (_cachedDocsPath == null) {
+    if (kIsWeb) return dbName;
+    if (_cachedPaths[dbName] == null) {
       final directory = await getApplicationDocumentsDirectory();
-      _cachedDocsPath = directory.path;
+      _cachedPaths[dbName] = directory.path;
     }
-    return p.join(_cachedDocsPath!, AppConstants.dbFileName);
+    return p.join(_cachedPaths[dbName]!, dbName);
   }
 
   Future<bool> databaseFileExists() async {
@@ -89,36 +91,36 @@ class LocalDatabase {
   }
 
   Future<void> reload() async {
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_RELOAD: Starting database reload sequence...');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_RELOAD: Starting database reload sequence for $dbName...');
     close();
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_RELOAD: Re-initializing...');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_RELOAD: Re-initializing $dbName...');
     await initialize();
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_RELOAD: Reload sequence complete');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_RELOAD: Reload sequence complete for $dbName');
   }
 
   Future<DatabaseStatus> _initialize() async {
     final start = DateTime.now();
-    print('${AppConstants.logTag} [$start] DB_INIT_INTERNAL: Entering _initialize()');
+    print('${AppConstants.logTag} [$start] DB_INIT_INTERNAL: Entering _initialize() for $dbName');
     
     if (!kIsWeb) {
       await getDatabasePath();
-      print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT_INTERNAL: Database path resolved to $_cachedDocsPath');
+      print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT_INTERNAL: Database path resolved to ${_cachedPaths[dbName]}');
       
-      final path = p.join(_cachedDocsPath!, AppConstants.dbFileName);
+      final path = p.join(_cachedPaths[dbName]!, dbName);
       final exists = File(path).existsSync();
       print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT_INTERNAL: File exists check = $exists');
     } else {
       print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT_INTERNAL: Web platform detected, using drift indexedDB');
     }
 
-    print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT_INTERNAL: Creating Drift connection...');
+    print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT_INTERNAL: Creating Drift connection for $dbName...');
     _connection ??= driftDatabase(
-      name: 'gurbani_offline',
+      name: dbName.replaceAll('.sqlite', ''),
       native: DriftNativeOptions(
         databaseDirectory: () async {
           if (kIsWeb) throw UnsupportedError('Native directory not used on web');
-          print('${AppConstants.logTag} [${DateTime.now()}] DB_CALLBACK: Drift requesting databaseDirectory: $_cachedDocsPath');
-          return Directory(_cachedDocsPath!);
+          print('${AppConstants.logTag} [${DateTime.now()}] DB_CALLBACK: Drift requesting databaseDirectory for $dbName: ${_cachedPaths[dbName]}');
+          return Directory(_cachedPaths[dbName]!);
         },
       ),
       web: DriftWebOptions(
@@ -133,7 +135,7 @@ class LocalDatabase {
       final end = DateTime.now();
       print('${AppConstants.logTag} [$end] DB_INIT_INTERNAL: Connection opened successfully. Duration: ${end.difference(start).inMilliseconds}ms');
     } catch (e) {
-      print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT_INTERNAL: FATAL - Connection failed to open: $e');
+      print('${AppConstants.logTag} [${DateTime.now()}] DB_INIT_INTERNAL: FATAL - Connection failed to open for $dbName: $e');
       rethrow;
     }
     
@@ -157,8 +159,7 @@ class LocalDatabase {
     if (kIsWeb) return;
     print('${AppConstants.logTag} Prefetching documents path...');
     getApplicationDocumentsDirectory().then((dir) {
-      _cachedDocsPath = dir.path;
-      print('${AppConstants.logTag} Documents path cached: $_cachedDocsPath');
+      // Logic for prefetching paths if needed
     }).catchError((e) {
       print('${AppConstants.logTag} Failed to prefetch path: $e');
     });

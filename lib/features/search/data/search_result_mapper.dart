@@ -7,9 +7,14 @@ class SearchResultMapper {
   final MetadataDataSource _metadataDataSource;
 
   GurbaniSearchResult mapRow(Map<String, dynamic> r) {
+    // [AI_GUARD:PERMANENT_LOG] Mapping DB row to GurbaniSearchResult object.
+    final stableId = r['id'].toString();
+    final shabadId = r['shabad_id'].toString();
+    print('[GURBANI_LOG] [${DateTime.now()}] [search_result_mapper.dart] MAP_ROW: vId=$stableId, sId=$shabadId');
+
     return GurbaniSearchResult(
-      stableId: r['id'].toString(),
-      shabadId: r['shabad_id'].toString(),
+      stableId: stableId,
+      shabadId: shabadId,
       gurmukhi: (r['gurmukhi'] as String?) ?? '',
       sourceName: _metadataDataSource.getSourceName(r['source_id'] as String),
       writerName: r['writer_id'] != null ? _metadataDataSource.getWriterName(r['writer_id'] as int) : null,
@@ -57,8 +62,17 @@ class SearchResultMapper {
 
   String? _val(dynamic v) {
     if (v == null) return null;
-    if (v is String) return v;
-    if (v is Map) return (v['unicode'] ?? v['english'] ?? v['text'] ?? (v.isNotEmpty ? v.values.first : '')).toString();
+    if (v is String) {
+      if (v.toLowerCase().trim() == 'null') return null;
+      return v;
+    }
+    if (v is Map) {
+      final value = v['unicode'] ?? v['english'] ?? v['text'] ?? (v.isNotEmpty ? v.values.first : null);
+      if (value == null) return null;
+      final str = value.toString();
+      if (str.toLowerCase().trim() == 'null') return null;
+      return str;
+    }
     return v.toString();
   }
 

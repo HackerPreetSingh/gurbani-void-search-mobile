@@ -3,8 +3,9 @@ import '../domain/models/gurbani_corpus.dart';
 import '../domain/models/gurbani_search_result.dart';
 
 class LocalSearchDataSource {
-  LocalSearchDataSource(this._database);
+  LocalSearchDataSource(this._database, this._nitnemDatabase);
   final LocalDatabase _database;
+  final LocalDatabase _nitnemDatabase;
 
   Future<GurbaniCorpusSummary?> activeCorpus() async {
     try {
@@ -29,41 +30,82 @@ class LocalSearchDataSource {
     int limit = 40,
     String? orderBy,
   }) async {
+    // [AI_GUARD:PERMANENT_LOG] Deep logging for search query execution (Multi-DB).
+    final startTime = DateTime.now();
     try {
       final orderClause = orderBy ?? '''
           (CASE WHEN source_id = 'G' THEN 0 ELSE 1 END) ASC,
           id ASC
       ''';
 
-      return await _database.read((executor) => executor.runSelect('''
+      // 1. Search Primary Shabad DB
+      final shabadResults = await _database.read((executor) => executor.runSelect('''
         SELECT *
         FROM verses
         WHERE $condition
         ORDER BY $orderClause
         LIMIT ?
       ''', [...parameters, limit]));
+      
+      // 2. Search Nitnem DB
+      final nitnemResults = await _nitnemDatabase.read((executor) => executor.runSelect('''
+        SELECT *
+        FROM verses
+        WHERE $condition
+        ORDER BY $orderClause
+        LIMIT ?
+      ''', [...parameters, limit]));
+
+      // 3. Combine with tagging (to know which DB to load the shabad from later)
+      final all = [
+        ...shabadResults,
+        ...nitnemResults
+      ];
+
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_SEARCH_HIT: Shabad(${shabadResults.length}), Nitnem(${nitnemResults.length}) in ${duration}ms');
+      
+      return all;
     } catch (e) {
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_SEARCH_ERROR: $e');
       return [];
     }
   }
 
   Future<List<Map<String, dynamic>>> getLocalShabad(String shabadId) async {
-    // [AI_GUARD:PERMANENT_LOG] Fetching shabad by ID with strict liturgical ordering.
-    // Note: We use 'id' for ordering because 'verse_order' from the API can reset 
-    // mid-shabad, causing erratic sorting. Since verses are ingested sequentially, 
-    // the primary key 'id' is the only reliable sort field.
+    final sId = int.tryParse(shabadId) ?? 0;
+    
+    // Virtual IDs (999,999+) always go to Nitnem DB
+    if (sId >= 999999) {
+       return await _fetchFromDb(_nitnemDatabase, sId);
+    }
+    
+    // Otherwise try Shabad DB
+    final res = await _fetchFromDb(_database, sId);
+    if (res.isNotEmpty) return res;
+
+    // Last resort fallback to Nitnem DB
+    return await _fetchFromDb(_nitnemDatabase, sId);
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchFromDb(LocalDatabase db, int sId) async {
+    final startTime = DateTime.now();
     try {
-      final sId = int.tryParse(shabadId) ?? 0;
-      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_FETCH_SHABAD: id=$sId');
+      if (sId == 0) return [];
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_FETCH_START: shabadId=$sId from ${db.dbName}');
       
-      return await _database.read((executor) => executor.runSelect('''
+      final results = await db.read((executor) => executor.runSelect('''
         SELECT *
         FROM verses
         WHERE shabad_id = ? 
         ORDER BY id ASC
       ''', [sId]));
+      
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_FETCH_COMPLETE: Found ${results.length} verses in ${duration}ms');
+      
+      return results;
     } catch (e) {
-      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_FETCH_ERROR: $e');
       return [];
     }
   }

@@ -73,13 +73,16 @@ class ProductionIngestor {
                 final shId = _toInt(v['shabadId']);
                 final vId = _toInt(v['verseId']);
                 if (shId == null || vId == null) continue;
+                
+                // [AI_GUARD:PERMANENT_LOG] Prevent shabad_id 0 in production corpus.
+                final effectiveShId = shId == 0 ? (10000000 + vId) : shId;
 
                 await _saveMeta(executor, 'writers', v['writer'], 'writerId');
                 await _saveMeta(executor, 'raags', v['raag'], 'raagId');
                 
                 final ang = _toInt(v['pageNo'] ?? v['ang']);
-                await executor.runCustom('INSERT OR REPLACE INTO shabads VALUES (?, ?, ?, ?, ?)', 
-                    [shId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), ang]);
+                await executor.runCustom('INSERT OR REPLACE INTO shabads (id, source_id, writer_id, raag_id, ang) VALUES (?, ?, ?, ?, ?)', 
+                    [effectiveShId, sId, _toInt(v['writer']?['writerId']), _toInt(v['raag']?['raagId']), ang]);
 
                 final gur = _val(v['verse']?['unicode'] ?? v['gurmukhi'] ?? v['verse'] ?? '');
                 final hi = _val(v['transliteration']?['hindi'] ?? v['transliteration']?['hi'] ?? v['transliteration']?['hi_text']);
@@ -92,7 +95,7 @@ class ProductionIngestor {
 
                 verseBatch.add([
                   vId, 
-                  shId, 
+                  effectiveShId, 
                   _toInt(v['lineNo']) ?? _toInt(v['verseNo']) ?? 0, 
                   gur, 
                   en, 

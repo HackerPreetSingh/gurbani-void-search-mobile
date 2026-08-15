@@ -48,7 +48,18 @@ class NitnemScreen extends ConsumerWidget {
                 ),
                 subtitle: Text(bani.nameEn),
                 trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                onTap: () => context.push('/nitnem/${bani.id}'),
+                onTap: () async {
+                  // [AI_GUARD:PERMANENT_LOG] Starting pre-load for smooth bani transition
+                  print('${AppConstants.logTag} [nitnem_screen.dart] UI_ACTION: Pre-loading bani ${bani.id}...');
+                  
+                  // Wait for the data to be in cache
+                  await ref.read(baniDetailsProvider(bani.id).future);
+                  
+                  if (context.mounted) {
+                    print('${AppConstants.logTag} [nitnem_screen.dart] UI_ACTION: Pre-load complete. Pushing bani page.');
+                    context.push('/nitnem/${bani.id}');
+                  }
+                },
               );
             },
           );

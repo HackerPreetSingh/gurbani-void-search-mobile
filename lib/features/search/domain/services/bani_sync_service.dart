@@ -13,7 +13,7 @@ class BaniSyncService {
     required this.db,
     required this.dio,
     required this.baseUrl,
-  }) : _shabadSyncService = ShabadSyncService(db: db, dio: dio, baseUrl: baseUrl);
+  }) : _shabadSyncService = ShabadSyncService(db: db, dio: dio, baseUrl: baseUrl, dbPath: 'Nitnem');
 
   Future<void> syncAllBanis(Function(int) onUpdate) async {
     // [AI_GUARD:PERMANENT_LOG] Starting master bani sync. Do not remove or modify.
@@ -22,6 +22,22 @@ class BaniSyncService {
       final res = await dio.get('$baseUrl/banis');
       final rows = res.data as List;
       print('${AppConstants.logTag} [${DateTime.now()}] [bani_sync_service.dart] BANI_SYNC_INFO: Found ${rows.length} Banis to process.');
+
+      // [AI_GUARD:PERMANENT_LOG] Establishing custom default liturgical order.
+      final defaultOrder = AppConstants.defaultBaniOrder;
+      
+      // Sort rows based on AppConstants.defaultBaniOrder if specified
+      rows.sort((a, b) {
+        final idA = a['ID'] as int;
+        final idB = b['ID'] as int;
+        final indexA = defaultOrder.indexOf(idA);
+        final indexB = defaultOrder.indexOf(idB);
+        
+        if (indexA != -1 && indexB != -1) return indexA.compareTo(indexB);
+        if (indexA != -1) return -1;
+        if (indexB != -1) return 1;
+        return idA.compareTo(idB);
+      });
 
       int currentOrder = 0;
       for (final row in rows) {
@@ -36,6 +52,7 @@ class BaniSyncService {
 
         print('${AppConstants.logTag} [${DateTime.now()}] [bani_sync_service.dart] BANI_SYNC_DETAIL: Fetching verses for Bani $bId');
         final detailRes = await dio.get('$baseUrl/banis/$bId');
+        final Map<String, dynamic>? baniInfo = detailRes.data['baniInfo'] as Map<String, dynamic>?;
         final verses = detailRes.data['verses'] as List;
 
         db.execute('BEGIN TRANSACTION');
@@ -45,7 +62,10 @@ class BaniSyncService {
           final verseRaw = vData['verse'];
           final vId = verseRaw['verseId'];
           
-          await _shabadSyncService.processVerse(verseRaw, 'Bani', 0);
+          // [AI_GUARD:PERMANENT_LOG] Mapping verse. 
+          // We pass baniInfo to processVerse so it can extract Raag/Author if missing in verse.
+          final virtualShId = 999999 + (bId as int);
+          await _shabadSyncService.processVerse(verseRaw, 'Bani', virtualShId, info: baniInfo);
 
           // [AI_GUARD:PERMANENT_LOG] Mapping verse to bani sequence with robust type conversion
           db.execute('''

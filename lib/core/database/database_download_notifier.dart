@@ -53,85 +53,38 @@ class DatabaseDownloadNotifier extends Notifier<DownloadState> {
 
     try {
       final dio = ref.read(dioProvider);
-      final database = ref.read(localDatabaseProvider);
+      final shabadDb = ref.read(shabadDatabaseProvider);
+      final nitnemDb = ref.read(nitnemDatabaseProvider);
       
-      final pathStart = DateTime.now();
       final docsDir = await getApplicationDocumentsDirectory();
-      final savePath = p.join(docsDir.path, AppConstants.dbFileName);
-      final pathEnd = DateTime.now();
-      print('${AppConstants.logTag} [$pathEnd] PATH_INFO: savePath=$savePath. getApplicationDocumentsDirectory took: ${pathEnd.difference(pathStart).inMilliseconds}ms');
       
-      const url = AppConstants.databaseDownloadUrl;
-
-      print('${AppConstants.logTag} [${DateTime.now()}] !!! IMPORTANT !!! STARTING DOWNLOAD FROM NEW URL: $url');
-      print('${AppConstants.logTag} [${DateTime.now()}] TARGET SAVE PATH: $savePath');
-      
-      double lastLoggedProgress = -1;
-      
-      print('${AppConstants.logTag} [${DateTime.now()}] REQUEST_INFO: Sending GET request via Dio...');
-      
-      final response = await dio.get(
-        url,
-        options: Options(
-          responseType: ResponseType.stream,
-          followRedirects: true,
-          maxRedirects: 5,
-        ),
+      // 1. Download Shabad Database
+      await _downloadSingleFile(
+        dio, 
+        AppConstants.shabadDownloadUrl, 
+        p.join(docsDir.path, AppConstants.shabadDbFile),
+        'SHABAD_DB',
+        0.0, 0.5
       );
 
-      final totalBytes = int.tryParse(response.headers.value('content-length') ?? '-1') ?? -1;
-      print('${AppConstants.logTag} [${DateTime.now()}] DOWNLOAD_METADATA: Content-Length detected as: $totalBytes');
+      // 2. Download Nitnem Database
+      await _downloadSingleFile(
+        dio, 
+        AppConstants.nitnemDownloadUrl, 
+        p.join(docsDir.path, AppConstants.nitnemDbFile),
+        'NITNEM_DB',
+        0.5, 1.0
+      );
 
-      final file = File(savePath);
-      final raf = file.openSync(mode: FileMode.write);
-      int receivedBytes = 0;
-
-      await for (final chunk in response.data.stream) {
-        raf.writeFromSync(chunk);
-        receivedBytes += (chunk as List<int>).length;
-
-        if (totalBytes != -1 && totalBytes > 0) {
-          final progressValue = receivedBytes / totalBytes;
-          state = state.copyWith(progress: progressValue);
-          
-          if ((progressValue * 20).floor() > lastLoggedProgress) {
-            lastLoggedProgress = (progressValue * 20).floor().toDouble();
-            print('${AppConstants.logTag} [${DateTime.now()}] DOWNLOAD_TICK: Received $receivedBytes of $totalBytes bytes (${(progressValue * 100).toStringAsFixed(1)}%)');
-          }
-        } else {
-          // If total size is unknown, show indeterminate progress (null)
-          if (state.progress != null) {
-            state = state.copyWith(isIndeterminate: true);
-          }
-          
-          // Throttled logging for indeterminate downloads
-          final currentMB = receivedBytes ~/ (1024 * 1024);
-          if (currentMB > lastLoggedProgress) {
-            lastLoggedProgress = currentMB.toDouble();
-            print('${AppConstants.logTag} [${DateTime.now()}] DOWNLOAD_TICK: Received $receivedBytes bytes (Indeterminate)...');
-          }
-        }
-      }
-      await raf.close();
-
-      print('${AppConstants.logTag} [${DateTime.now()}] DOWNLOAD_SUCCESS: File written to $savePath');
+      print('${AppConstants.logTag} [${DateTime.now()}] RELOAD_PHASE: Triggering local database reloads');
+      await shabadDb.reload();
+      await nitnemDb.reload();
       
-      final fileLength = await file.length();
-      print('${AppConstants.logTag} [${DateTime.now()}] VERIFY_FILE: Size on disk is $fileLength bytes (${(fileLength / 1024 / 1024).toStringAsFixed(2)} MB)');
-
-      final reloadStart = DateTime.now();
-      print('${AppConstants.logTag} [$reloadStart] RELOAD_PHASE: Triggering local database reload to pick up new file');
-      await database.reload();
-      
-      print('${AppConstants.logTag} [${DateTime.now()}] RELOAD_PHASE: Invalidating databaseStatusProvider to notify UI');
+      print('${AppConstants.logTag} [${DateTime.now()}] RELOAD_PHASE: Invalidating databaseStatusProvider');
       ref.invalidate(databaseStatusProvider);
       
-      final reloadEnd = DateTime.now();
-      print('${AppConstants.logTag} [$reloadEnd] RELOAD_PHASE_COMPLETE: Reload took ${reloadEnd.difference(reloadStart).inMilliseconds}ms');
-
-      state = state.copyWith(status: DownloadStatus.success);
-      final methodEnd = DateTime.now();
-      print('${AppConstants.logTag} [$methodEnd] END_TO_END_SUCCESS: downloadDatabase finished successfully in ${methodEnd.difference(methodStart).inSeconds}s');
+      state = state.copyWith(status: DownloadStatus.success, progress: 1.0);
+      print('${AppConstants.logTag} [${DateTime.now()}] END_TO_END_SUCCESS: All databases downloaded and ready.');
     } catch (e) {
       final methodEnd = DateTime.now();
       print('${AppConstants.logTag} [$methodEnd] END: downloadDatabase FAILED with error: $e');
@@ -140,6 +93,53 @@ class DatabaseDownloadNotifier extends Notifier<DownloadState> {
         errorMessage: e.toString(),
       );
     }
+  }
+
+  Future<void> _downloadSingleFile(
+    Dio dio, 
+    String url, 
+    String savePath, 
+    String logLabel,
+    double startProgress,
+    double endProgress,
+  ) async {
+    print('${AppConstants.logTag} [${DateTime.now()}] $logLabel: Starting download from $url');
+    print('${AppConstants.logTag} [${DateTime.now()}] $logLabel: Save path: $savePath');
+
+    final response = await dio.get(
+      url,
+      options: Options(
+        responseType: ResponseType.stream,
+        followRedirects: true,
+        maxRedirects: 5,
+      ),
+    );
+
+    final totalBytes = int.tryParse(response.headers.value('content-length') ?? '-1') ?? -1;
+    final file = File(savePath);
+    final raf = file.openSync(mode: FileMode.write);
+    int receivedBytes = 0;
+    double lastLoggedProgress = -1;
+
+    await for (final chunk in response.data.stream) {
+      raf.writeFromSync(chunk);
+      receivedBytes += (chunk as List<int>).length;
+
+      if (totalBytes > 0) {
+        final relativeProgress = receivedBytes / totalBytes;
+        final globalProgress = startProgress + (relativeProgress * (endProgress - startProgress));
+        state = state.copyWith(progress: globalProgress);
+        
+        if ((relativeProgress * 10).floor() > lastLoggedProgress) {
+          lastLoggedProgress = (relativeProgress * 10).floor().toDouble();
+          print('${AppConstants.logTag} [${DateTime.now()}] $logLabel: ${(relativeProgress * 100).toStringAsFixed(1)}% complete');
+        }
+      } else {
+        state = state.copyWith(isIndeterminate: true);
+      }
+    }
+    await raf.close();
+    print('${AppConstants.logTag} [${DateTime.now()}] $logLabel: Download successful.');
   }
 }
 

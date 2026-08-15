@@ -17,7 +17,7 @@ This document provides an exhaustive, end-to-end explanation of the Gurbani Voic
 
 ### A. Android & iOS (Native Offline-First)
 1. **Entry Point**: `lib/main.dart` initializes the Flutter engine and triggers `LocalDatabase.prefetchDocsPath()`.
-2. **Foundation Check**: `lib/app/router/app_router.dart` uses `databaseStatusProvider` (`lib/core/di/core_providers.dart`) to check if the `gurbani_offline.sqlite` file exists on disk.
+2. **Foundation Check**: `lib/app/router/app_router.dart` uses `databaseStatusProvider` (`lib/core/di/core_providers.dart`) to check if the essential database files (`shabads_offline.sqlite` and `nitnem_offline.sqlite`) exist on disk.
 3. **Missing DB Action**: If the file is missing, the user is redirected to `lib/features/foundation/presentation/foundation_page.dart`.
 4. **Download Flow**: 
    - User triggers download via `DatabaseDownloadNotifier` (`lib/core/database/database_download_notifier.dart`).

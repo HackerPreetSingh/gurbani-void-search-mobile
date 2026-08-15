@@ -11,8 +11,9 @@ import '../services/production_ingestor.dart';
 import '../services/vishram_service.dart';
 
 final localSearchDataSourceProvider = Provider<LocalSearchDataSource>((ref) {
-  final database = ref.watch(localDatabaseProvider);
-  return LocalSearchDataSource(database);
+  final shabadDb = ref.watch(shabadDatabaseProvider);
+  final nitnemDb = ref.watch(nitnemDatabaseProvider);
+  return LocalSearchDataSource(shabadDb, nitnemDb);
 });
 
 final remoteSearchDataSourceProvider = Provider<RemoteSearchDataSource>((ref) {
