@@ -23,6 +23,12 @@ final nitnemDatabaseProvider = Provider<LocalDatabase>((Ref ref) {
   return database;
 });
 
+final userTrackerDatabaseProvider = Provider<LocalDatabase>((Ref ref) {
+  final database = LocalDatabase(dbName: AppConstants.userTrackerDbFile);
+  ref.onDispose(() => database.close());
+  return database;
+});
+
 final localDatabaseProvider = shabadDatabaseProvider;
 
 final databaseStatusProvider = FutureProvider<DatabaseStatus>((Ref ref) async {
@@ -31,10 +37,12 @@ final databaseStatusProvider = FutureProvider<DatabaseStatus>((Ref ref) async {
   
   final shabadDb = ref.watch(shabadDatabaseProvider);
   final nitnemDb = ref.watch(nitnemDatabaseProvider);
+  final trackerDb = ref.watch(userTrackerDatabaseProvider);
   
   if (kIsWeb) {
     await shabadDb.initialize();
     await nitnemDb.initialize();
+    await trackerDb.initialize();
     return DatabaseStatus(initializedAtUtc: DateTime.now().toUtc(), isAvailable: true);
   }
 
@@ -50,6 +58,7 @@ final databaseStatusProvider = FutureProvider<DatabaseStatus>((Ref ref) async {
   // Actually initialize them if files exist
   await shabadDb.initialize();
   await nitnemDb.initialize();
+  await trackerDb.initialize();
 
   final end = DateTime.now();
   print('${AppConstants.logTag} [$end] END: databaseStatusProvider READY.');

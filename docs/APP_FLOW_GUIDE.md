@@ -19,13 +19,24 @@ This document provides an exhaustive, end-to-end explanation of the Gurbani Voic
 1. **Entry Point**: `lib/main.dart` initializes the Flutter engine and triggers `LocalDatabase.prefetchDocsPath()`.
 2. **Foundation Check**: `lib/app/router/app_router.dart` uses `databaseStatusProvider` (`lib/core/di/core_providers.dart`) to check if the essential database files (`shabads_offline.sqlite` and `nitnem_offline.sqlite`) exist on disk.
 3. **Missing DB Action**: If the file is missing, the user is redirected to `lib/features/foundation/presentation/foundation_page.dart`.
-4. **Download Flow**: 
-   - User triggers download via `DatabaseDownloadNotifier` (`lib/core/database/database_download_notifier.dart`).
-   - The file is streamed from `AppConstants.databaseDownloadUrl` directly to the app's document directory.
-   - Upon success, `LocalDatabase.reload()` is called, and the router pushes the user to the Search screen.
-5. **Search Flow**:
-   - `SqlitePunjabiSearchRepository` (`lib/features/search/data/sqlite_punjabi_search_repository.dart`) queries the local SQLite file.
-   - High-performance numeric prefix matching (Strategy 1) and English initials fallback (Strategy 2) are applied.
+4. **App Shell**: `lib/app/shell/app_shell.dart` provides the 4-tab navigation (Search, Nitnem, Tracker, and About).
+
+---
+
+## 3. Core Feature Flows
+
+### 3.1 Gurbani Search (The "Shabad" Flow)
+- **Engine**: `SqlitePunjabiSearchRepository` queries both Shabad and Nitnem databases but prioritizes Shabad records to ensure clicking a tukk opens a specific Shabad, not a whole book.
+- **Phonetic Mapping**: Users type English initials (e.g., `kejjb`). `GurmukhiProcessor` converts this into a numeric sequence for lookup.
+
+### 3.2 Nitnem & Banis (The "Liturgy" Flow)
+- **Logic**: Uses the `NitnemDB`. Verses are loaded using `sequence_order` to maintain the exact liturgical flow.
+- **Customization**: Users can drag-and-drop Banis in the list to match their personal routine.
+
+### 3.3 Nitnem Tracker (The "Progress" Flow)
+- **Logic**: Uses `user_tracker.sqlite` (entirely isolated).
+- **Templates**: Supports Mool Mantar/Simran (Maala units), Bani Count, and Sehaj Path (Ang tracking).
+- **Analytics**: Calculates if a user is Ahead (Green), On Track (Orange), or Behind (Red) based on daily targets.
 
 ### B. Web (Fallback Architecture)
 1. **No Disk Access**: On Web, `path_provider` is unavailable. The app detects `kIsWeb`.

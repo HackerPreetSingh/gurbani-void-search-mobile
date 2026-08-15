@@ -6,6 +6,7 @@ abstract final class AppConstants {
   /// Filenames for the separate SQLite databases.
   static const String shabadDbFile = 'shabads_offline.sqlite';
   static const String nitnemDbFile = 'nitnem_offline.sqlite';
+  static const String userTrackerDbFile = 'user_tracker.sqlite';
 
   @Deprecated('Use shabadDbFile or nitnemDbFile')
   static const String dbFileName = shabadDbFile;

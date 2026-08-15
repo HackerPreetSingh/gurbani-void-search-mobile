@@ -29,9 +29,19 @@ To create a high-performance, offline-first Gurbani search engine and liturgical
 ### Phase 3: Nitnem & Banis Feature
 - **Goal**: Support structured liturgical paths (Japji Sahib, Jaap Sahib, etc.) which aren't random shabads.
 - **Implementation**:
-  - Extended SQLite schema with `banis` and `bani_verses` (junction table).
+  - Segregated into a second database: `nitnem_offline.sqlite`.
   - Added a **Re-ordering Feature**: Users can drag and drop Banis to customize their Nitnem sequence.
   - **Ordering Fix**: Implemented strict sorting by `id ASC` for shabads to overcome jumbled `verse_order` data from the API.
+
+### Phase 4: Nitnem Tracker & Multi-DB Architecture
+- **Goal**: Add persistence for user spiritual progress without risking data loss during corpus updates.
+- **Implementation**:
+  - Introduced a **Triple-DB Architecture**:
+    1. `shabads_offline.sqlite`: Primary corpus.
+    2. `nitnem_offline.sqlite`: Liturgical sequences.
+    3. `user_tracker.sqlite`: Private user progress.
+  - **Feature**: Developed a 4-template tracker (Mool Mantar, Simran, Bani Count, Sehaj Path) with Red/Amber/Green (RAG) visual feedback.
+  - **Performance**: Implemented a sequential downloader that fetches both essential SQLite files with combined progress tracking.
 
 ---
 
@@ -48,15 +58,17 @@ To create a high-performance, offline-first Gurbani search engine and liturgical
 ---
 
 ## 4. Current State & Critical Guards
-- **Ordering**: Strict `id ASC` sorting is used for Shabads, and `sequence_order` for Banis. Do NOT use `verse_order` for sorting.
-- **Search**: Strictly maintain the "One Character = One Word Initial" rule.
-- **Logging**: All critical paths are marked with `// [AI_GUARD:PERMANENT_LOG]`. Do not remove these logs as they are essential for debugging data discrepancies.
-- **Highlighting**: The app passes `verseId` via URL query parameters to highlight the specific tukk clicked by the user.
+- **Multi-DB Architecture**: 
+  - `ShabadDB`: Individual search results from primary sources.
+  - `NitnemDB`: Sequential liturgical path reading.
+  - `TrackerDB`: Private user spiritual progress.
+- **De-duplication**: The search engine prioritizes ShabadDB over NitnemDB to avoid the "Whole Bani" loading bug.
+- **Logging**: All critical paths are marked with `// [AI_GUARD:PERMANENT_LOG]`.
 
 ---
 
 ## 5. Next Steps / Future Roadmap
+- [x] Implement Nitnem Tracker with RAG analytics.
+- [ ] Add cloud synchronization for `user_tracker.sqlite`.
 - [ ] Implement audio streaming integration for Nitnem paths.
-- [ ] Add bookmarking support for specific verses.
 - [ ] Enhance "Lareevar" (continuous text) display mode in settings.
-- [ ] Global search across all Banis simultaneously.

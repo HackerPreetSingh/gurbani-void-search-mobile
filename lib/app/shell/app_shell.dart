@@ -23,6 +23,12 @@ class AppShell extends StatelessWidget {
       selectedIcon: Icons.menu_book,
     ),
     _AppDestination(
+      label: 'Tracker',
+      location: AppRoute.tracker,
+      icon: Icons.track_changes_outlined,
+      selectedIcon: Icons.track_changes,
+    ),
+    _AppDestination(
       label: 'About',
       location: AppRoute.about,
       icon: Icons.info_outline,
@@ -38,8 +44,11 @@ class AppShell extends StatelessWidget {
     final resolvedIndex = selectedIndex == -1 ? 0 : selectedIndex;
     final useNavigationRail = MediaQuery.sizeOf(context).width >= 840;
     
-    // Hide global elements when viewing a Shabad/Bani or on the Search screen (which has its own AppBar)
-    final isDetailView = currentPath.startsWith('/shabad') || currentPath.startsWith('/nitnem/');
+    // Hide global elements when viewing a Shabad/Bani, tracker details, or in a creation flow
+    final isDetailView = currentPath.startsWith('/shabad') || 
+                         currentPath.startsWith('/nitnem/') || 
+                         currentPath.startsWith('/tracker/') ||
+                         currentPath.contains('/create');
     final isSearchView = currentPath == AppRoute.search;
     final hideAppBar = isDetailView || isSearchView;
 

@@ -12,10 +12,14 @@ import '../shell/app_shell.dart';
 
 import '../../features/search/presentation/nitnem_screen.dart';
 import '../../features/search/presentation/bani_page.dart';
+import '../../features/tracker/presentation/tracker_list_screen.dart';
+import '../../features/tracker/presentation/tracker_creation_wizard.dart';
+import '../../features/tracker/presentation/tracker_details_page.dart';
 
 abstract final class AppRoute {
   static const search = '/';
   static const nitnem = '/nitnem';
+  static const tracker = '/tracker';
   static const about = '/about';
   static const shabad = '/shabad';
   static const foundation = '/foundation';
@@ -77,6 +81,25 @@ GoRouter createAppRouter(Ref ref) {
             path: AppRoute.nitnem,
             builder: (BuildContext context, GoRouterState state) {
               return const NitnemScreen();
+            },
+          ),
+          GoRoute(
+            path: AppRoute.tracker,
+            builder: (BuildContext context, GoRouterState state) {
+              return const TrackerListScreen();
+            },
+          ),
+          GoRoute(
+            path: '/tracker/create',
+            builder: (BuildContext context, GoRouterState state) {
+              return const TrackerCreationWizard();
+            },
+          ),
+          GoRoute(
+            path: '/tracker/:id',
+            builder: (BuildContext context, GoRouterState state) {
+              final id = state.pathParameters['id']!;
+              return TrackerDetailsPage(trackerId: id);
             },
           ),
           GoRoute(

@@ -7,9 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import '../constants/app_constants.dart';
 
 class LocalDatabase {
-  LocalDatabase({required this.dbName, DatabaseConnection? connection})
-      : _connection = connection,
-        _connectionUser = _LocalDatabaseConnectionUser();
+  LocalDatabase({required this.dbName, this._connection})
+      : _connectionUser = _LocalDatabaseConnectionUser();
 
   final String dbName;
   static final Map<String, String?> _cachedPaths = {};
@@ -181,6 +180,9 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
     // Ensure core production schema (sources, writers, raags, shabads, verses)
     await _createProductionSchema(executor);
     
+    // --- TRACKER EXTENSIONS ---
+    await _createTrackerSchema(executor);
+    
     // Safety Check: Downloaded databases might be missing newer columns like initials_pa
     await _ensureColumnExists(executor, 'verses', 'initials_pa', 'TEXT');
     await _ensureColumnExists(executor, 'verses', 'main_letters', 'TEXT');
@@ -235,6 +237,39 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
 
     await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_first_letter ON verses (first_letter_str)');
     await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_bani_verses_bani ON bani_verses (bani_id)');
+  }
+
+  Future<void> _createTrackerSchema(QueryExecutor executor) async {
+    // trackers: template_type, title, total_goal, daily_target, start_date, deadline_date, unit_name
+    await executor.runCustom('''
+      CREATE TABLE IF NOT EXISTS trackers (
+        id TEXT PRIMARY KEY NOT NULL,
+        template_type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        total_goal INTEGER,
+        daily_target INTEGER,
+        start_date TEXT NOT NULL,
+        deadline_date TEXT,
+        unit_name TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    // tracker_logs: tracker_id, log_date, count, input_mode, created_at
+    await executor.runCustom('''
+      CREATE TABLE IF NOT EXISTS tracker_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tracker_id TEXT NOT NULL,
+        log_date TEXT NOT NULL,
+        count INTEGER NOT NULL,
+        input_mode TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (tracker_id) REFERENCES trackers (id) ON DELETE CASCADE
+      )
+    ''');
+    
+    await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_logs_tracker ON tracker_logs (tracker_id)');
+    await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_logs_date ON tracker_logs (log_date)');
   }
 }
 
