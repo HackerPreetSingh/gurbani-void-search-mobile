@@ -16,3 +16,7 @@ When a Bani is selected, `BaniScreen` (lib/features/search/bani/presentation/ban
 - **Vishram (Pauses)**: The `VishramService` checks the database for pause markers. If the "Pauses" setting is ON, it colors specific words (Green for main pause, Blue for secondary) to help with correct pronunciation.
 - **Larivaar (Continuous)**: If the "Larivaar" setting is ON, the app removes all spaces between Gurmukhi words, presenting the text in the traditional continuous script style.
 - **Jaap Sahib Layout**: For Jaap Sahib specifically, verses are not shown line-by-line. Instead, they are grouped into paragraphs using the `BaniParagraphView` for a more authentic pothi experience.
+
+## 4. Gestures & Navigation
+- **Pinch-to-Zoom**: Users can pinch in or out anywhere on the reading screen to dynamically adjust the font size. This updates the global Gurmukhi font size setting.
+- **Clean Interface**: The main Bani list now only displays the traditional Punjabi names, removing English subtitles for a focused liturgical experience.

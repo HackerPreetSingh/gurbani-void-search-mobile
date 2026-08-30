@@ -26,9 +26,11 @@ To create a high-performance, offline-first Gurbani search engine and liturgical
 - **Custom Keyboards**: Built in-app Punjabi and English keyboards to ensure input consistency and fix height-related UI bugs.
 - **Prakaran**: Added "Folder" functionality allowing users to save and organize Shabads into personal collections.
 
-### Phase 7: Liturgical Polish
+### Phase 7: Liturgical Polish & Gestures
 - **Sukhmani Sahib Pagination**: Replaced unreliable long-scroll jumping with a robust paginated system (24 Ashtapadis).
-- **Navigation**: Added sticky arrow-based navigation and Salok body styling (Dark Blue).
+- **Sticky Navigation**: Added fixed arrow-based navigation and Salok body styling (Dark Blue).
+- **Gestures**: Implemented Pinch-to-Zoom for all reading screens and Swipe-to-Delete for Tracker goals.
+- **UI Refinement**: Optimized keyboard layout and cleaned up Nitnem list titles.
 
 ---
 

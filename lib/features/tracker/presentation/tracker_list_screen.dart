@@ -42,7 +42,26 @@ class TrackerListScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             itemCount: trackers.length,
             itemBuilder: (context, index) {
-              return _TrackerCard(goal: trackers[index]);
+              final goal = trackers[index];
+              return Dismissible(
+                key: Key('tracker_${goal.id}'),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.delete_outline, color: Colors.white),
+                ),
+                confirmDismiss: (direction) => _confirmDelete(context, ref, goal.id),
+                onDismissed: (direction) {
+                  ref.read(trackerViewModelProvider.notifier).deleteTracker(goal.id);
+                },
+                child: _TrackerCard(goal: goal),
+              );
             },
           );
         },
@@ -56,6 +75,23 @@ class TrackerListScreen extends ConsumerWidget {
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
+    );
+  }
+
+  Future<bool?> _confirmDelete(BuildContext context, WidgetRef ref, String id) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Tracker?'),
+        content: const Text('This will permanently remove all progress logs for this goal.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }

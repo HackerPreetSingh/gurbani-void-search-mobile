@@ -64,7 +64,6 @@ class NitnemScreen extends ConsumerWidget {
                 bani.namePa,
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
               ),
-              subtitle: Text(bani.nameEn),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () async {
                 // [AI_GUARD:PERMANENT_LOG] Starting pre-load for smooth bani transition

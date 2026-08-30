@@ -44,9 +44,9 @@ class CustomKeyboard extends ConsumerWidget {
 
   Widget _buildEnglishLayout(WidgetRef ref) {
     final rows = [
-      ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-      ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-      ['Z', 'X', 'C', 'V', 'B', 'N', 'M'],
+      ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+      ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
+      ['z', 'x', 'c', 'v', 'b', 'n', 'm'],
     ];
 
     return Column(
@@ -76,9 +76,17 @@ class CustomKeyboard extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
+            flex: 1,
+            child: _KeyboardKey(
+              icon: Icons.delete_forever_outlined,
+              onTap: () => ref.read(searchQueryProvider.notifier).setQuery(''),
+              color: Colors.orangeAccent.withAlpha(40),
+            ),
+          ),
+          Expanded(
             flex: 2,
             child: _KeyboardKey(
-              label: 'DEL',
+              icon: Icons.backspace_outlined,
               onTap: () => ref.read(searchQueryProvider.notifier).delete(),
               color: Colors.redAccent.withAlpha(40),
             ),
@@ -86,7 +94,7 @@ class CustomKeyboard extends ConsumerWidget {
           Expanded(
             flex: 4,
             child: _KeyboardKey(
-              label: 'SPACE',
+              icon: Icons.space_bar,
               onTap: () => ref.read(searchQueryProvider.notifier).append(' '),
               color: Colors.white,
             ),
@@ -94,7 +102,7 @@ class CustomKeyboard extends ConsumerWidget {
           Expanded(
             flex: 2,
             child: _KeyboardKey(
-              label: 'DONE',
+              icon: Icons.keyboard_hide_outlined,
               onTap: () => ref.read(customKeyboardVisibleProvider.notifier).setVisible(false),
               color: Colors.teal.withAlpha(40),
             ),
@@ -106,11 +114,12 @@ class CustomKeyboard extends ConsumerWidget {
 }
 
 class _KeyboardKey extends StatelessWidget {
-  final String label;
+  final String? label;
+  final IconData? icon;
   final VoidCallback onTap;
   final Color? color;
 
-  const _KeyboardKey({required this.label, required this.onTap, this.color});
+  const _KeyboardKey({this.label, this.icon, required this.onTap, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -128,10 +137,12 @@ class _KeyboardKey extends StatelessWidget {
             ],
           ),
           alignment: Alignment.center,
-          child: Text(
-            label,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+          child: icon != null 
+            ? Icon(icon, size: 20, color: Colors.black87)
+            : Text(
+                label!,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
         ),
       ),
     );

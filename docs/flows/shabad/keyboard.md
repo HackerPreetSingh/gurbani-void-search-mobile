@@ -18,7 +18,10 @@ The `CustomKeyboard` widget (lib/features/search/presentation/widgets/custom_key
 - Whenever the provider changes (because the user typed on the custom keyboard), it manually updates the text in the `SearchBar` controller.
 - This ensures that what you type on the custom keys shows up in the search box at the top.
 
-## 4. Switching Languages
+## 4. Switching Languages & Layouts
 In the side menu, the user can pick "Punjabi" or "English".
 - Selecting a new language triggers `setType` in the `KeyboardTypeNotifier`.
-- **Reset Logic**: To ensure a clean start, switching keyboards automatically clears the current search text so the user can begin a new query in the chosen language.
+- **English Default**: The English keyboard now uses **lowercase letters** by default for a more natural phonetic typing experience.
+- **Iconic Controls**: Replaced text labels with intuitive icons for Backspace, Space, and Done.
+- **Quick Clear**: Added a dedicated "Clear All" icon (trash icon) to the bottom-left of the keyboard to wipe the search box instantly.
+- **Reset Logic**: Switching keyboards automatically clears the current search text.

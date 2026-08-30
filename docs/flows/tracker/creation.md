@@ -19,6 +19,12 @@ Based on the template, the user enters details:
 - **Duration**: The user can pick a "Deadline Date" using a calendar, or select "Infinite" if they don't have a specific end date in mind.
 - **Start Date**: When they began this discipline.
 
+## 5. Deletion (Swipe-to-Delete)
+Users can remove a tracker directly from the dashboard:
+- **Action**: Swipe left on any goal card.
+- **Safety**: A confirmation dialog appears to prevent accidental deletion.
+- **Outcome**: The goal and all its associated progress history are permanently removed from `user_tracker.sqlite`.
+
 ## 4. Persistence
 Once the user clicks "Create Tracker":
 - The `trackerViewModelProvider` calls the `TrackerRepository`.
