@@ -5,10 +5,14 @@ import 'package:drift_flutter/drift_flutter.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import '../constants/app_constants.dart';
+import 'schema/metadata_schema.dart';
+import 'schema/production_schema.dart';
+import 'schema/tracker_schema.dart';
 
 class LocalDatabase {
   LocalDatabase({required this.dbName, this._connection})
       : _connectionUser = _LocalDatabaseConnectionUser();
+// ... (rest of the class)
 
   final String dbName;
   static final Map<String, String?> _cachedPaths = {};
@@ -168,108 +172,23 @@ class LocalDatabase {
 class _LocalDatabaseConnectionUser extends QueryExecutorUser {
   @override
   int get schemaVersion => 1;
+
   @override
   Future<void> beforeOpen(QueryExecutor executor, OpeningDetails details) async {
     await executor.ensureOpen(this);
     await executor.runCustom('PRAGMA foreign_keys = ON');
     
-    // Create auxiliary tables if they don't exist (app metadata, history, banis)
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS app_metadata (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL, updated_at_utc TEXT NOT NULL)');
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS search_history (shabad_id INTEGER PRIMARY KEY NOT NULL, query TEXT, gurmukhi TEXT NOT NULL, source_name TEXT NOT NULL, raag_name TEXT, writer_name TEXT, ang INTEGER, viewed_at_utc TEXT NOT NULL)');
+    // Create auxiliary tables if they don't exist
+    await MetadataSchema.create(executor);
     
-    // Ensure core production schema (sources, writers, raags, shabads, verses)
-    await _createProductionSchema(executor);
+    // Ensure core production schema
+    await ProductionSchema.create(executor);
     
-    // --- TRACKER EXTENSIONS ---
-    await _createTrackerSchema(executor);
+    // Create tracker schema
+    await TrackerSchema.create(executor);
     
-    // Safety Check: Downloaded databases might be missing newer columns like initials_pa
-    await _ensureColumnExists(executor, 'verses', 'initials_pa', 'TEXT');
-    await _ensureColumnExists(executor, 'verses', 'main_letters', 'TEXT');
-    await _ensureColumnExists(executor, 'banis', 'user_order', 'INTEGER');
-
-    // Create indexes safely
-    await _createIndexSafe(executor, 'idx_shabads_source', 'shabads', 'source_id');
-    await _createIndexSafe(executor, 'idx_shabads_writer', 'shabads', 'writer_id');
-    await _createIndexSafe(executor, 'idx_shabads_raag', 'raags', 'id');
-    await _createIndexSafe(executor, 'idx_verses_shabad', 'verses', 'shabad_id');
-    await _createIndexSafe(executor, 'idx_verses_first_letter', 'verses', 'first_letter_str');
-    await _createIndexSafe(executor, 'idx_verses_initials_en', 'verses', 'initials_en');
-    await _createIndexSafe(executor, 'idx_verses_initials_pa', 'verses', 'initials_pa');
-    await _createIndexSafe(executor, 'idx_bani_verses_bani', 'bani_verses', 'bani_id');
-  }
-
-  Future<void> _ensureColumnExists(QueryExecutor executor, String table, String column, String type) async {
-    try {
-      final columns = await executor.runSelect('PRAGMA table_info($table)', []);
-      final hasColumn = columns.any((c) => c['name'] == column);
-      if (!hasColumn) {
-        await executor.runCustom('ALTER TABLE $table ADD COLUMN $column $type');
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _createIndexSafe(QueryExecutor executor, String indexName, String table, String column) async {
-    try {
-      // Check if column exists in table
-      final columns = await executor.runSelect('PRAGMA table_info($table)', []);
-      final hasColumn = columns.any((c) => c['name'] == column);
-      if (hasColumn) {
-        await executor.runCustom('CREATE INDEX IF NOT EXISTS $indexName ON $table ($column)');
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _createProductionSchema(QueryExecutor executor) async {
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS sources (id TEXT PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL)');
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS writers (id INTEGER PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL)');
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS raags (id INTEGER PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL)');
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS shabads (id INTEGER PRIMARY KEY NOT NULL, source_id TEXT NOT NULL, writer_id INTEGER, raag_id INTEGER, ang INTEGER, FOREIGN KEY (source_id) REFERENCES sources (id), FOREIGN KEY (writer_id) REFERENCES writers (id), FOREIGN KEY (raag_id) REFERENCES raags (id))');
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS verses (id INTEGER PRIMARY KEY NOT NULL, shabad_id INTEGER NOT NULL, verse_order INTEGER NOT NULL, gurmukhi TEXT NOT NULL, transliteration TEXT, transliteration_hi TEXT, translation TEXT, translation_pa TEXT, first_letter_str TEXT NOT NULL, initials_en TEXT, initials_pa TEXT, main_letters TEXT, visraams TEXT, source_id TEXT, raag_id INTEGER, writer_id INTEGER, ang INTEGER, FOREIGN KEY (shabad_id) REFERENCES shabads (id) ON DELETE CASCADE)');
-    
-    // --- NITNEM / BANI EXTENSIONS ---
-    // Stores the master list of Banis (Japji Sahib, Jaap Sahib, etc)
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS banis (id INTEGER PRIMARY KEY NOT NULL, name_pa TEXT NOT NULL, name_en TEXT NOT NULL, user_order INTEGER, updated_at TEXT)');
-    
-    // Junction table to map verses to Banis in a specific liturgical order.
-    // Includes flags for different Maryada lengths (exists_sgpc, etc).
-    await executor.runCustom('CREATE TABLE IF NOT EXISTS bani_verses (id INTEGER PRIMARY KEY AUTOINCREMENT, bani_id INTEGER NOT NULL, verse_id INTEGER NOT NULL, sequence_order INTEGER NOT NULL, header INTEGER, mangal_position INTEGER, exists_sgpc INTEGER, exists_medium INTEGER, exists_taksal INTEGER, exists_buddha_dal INTEGER, paragraph INTEGER, FOREIGN KEY (bani_id) REFERENCES banis (id) ON DELETE CASCADE, FOREIGN KEY (verse_id) REFERENCES verses (id) ON DELETE CASCADE)');
-
-    await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_verses_first_letter ON verses (first_letter_str)');
-    await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_bani_verses_bani ON bani_verses (bani_id)');
-  }
-
-  Future<void> _createTrackerSchema(QueryExecutor executor) async {
-    // trackers: template_type, title, total_goal, daily_target, start_date, deadline_date, unit_name
-    await executor.runCustom('''
-      CREATE TABLE IF NOT EXISTS trackers (
-        id TEXT PRIMARY KEY NOT NULL,
-        template_type TEXT NOT NULL,
-        title TEXT NOT NULL,
-        total_goal INTEGER,
-        daily_target INTEGER,
-        start_date TEXT NOT NULL,
-        deadline_date TEXT,
-        unit_name TEXT NOT NULL,
-        created_at TEXT NOT NULL
-      )
-    ''');
-
-    // tracker_logs: tracker_id, log_date, count, input_mode, created_at
-    await executor.runCustom('''
-      CREATE TABLE IF NOT EXISTS tracker_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tracker_id TEXT NOT NULL,
-        log_date TEXT NOT NULL,
-        count INTEGER NOT NULL,
-        input_mode TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        FOREIGN KEY (tracker_id) REFERENCES trackers (id) ON DELETE CASCADE
-      )
-    ''');
-    
-    await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_logs_tracker ON tracker_logs (tracker_id)');
-    await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_logs_date ON tracker_logs (log_date)');
+    // Column integrity checks
+    await ProductionSchema.ensureColumns(executor);
   }
 }
 

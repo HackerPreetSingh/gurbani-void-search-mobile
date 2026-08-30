@@ -44,23 +44,23 @@ class VishramService {
         spans.add(TextSpan(
           text: words[i],
           style: TextStyle(
-            color: textColor ?? Colors.black,
+            color: textColor ?? baseStyle.color,
             fontWeight: baseStyle.fontWeight,
           ),
         ));
 
         // In Larivaar mode, we skip adding spaces between words.
         if (!isLarivaar && i < words.length - 1) {
-          spans.add(const TextSpan(text: ' ', style: TextStyle(color: Colors.black)));
+          spans.add(TextSpan(text: ' ', style: TextStyle(color: baseStyle.color)));
         }
       }
 
       // Add double danda if it was lost during splitting
       if (gurmukhi.endsWith('॥') && !words.last.contains('॥')) {
         if (!isLarivaar) {
-          spans.add(const TextSpan(text: ' ॥', style: TextStyle(color: Colors.black)));
+          spans.add(TextSpan(text: ' ॥', style: TextStyle(color: baseStyle.color)));
         } else {
-          spans.add(const TextSpan(text: '॥', style: TextStyle(color: Colors.black)));
+          spans.add(TextSpan(text: '॥', style: TextStyle(color: baseStyle.color)));
         }
       }
 

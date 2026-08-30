@@ -115,4 +115,41 @@ abstract final class GurmukhiProcessor {
     }
     return codes.isEmpty ? '' : ',${codes.join(',')}';
   }
+
+  static List<String> generatePhoneticVariations(String input) {
+    const mapping = {
+      'i': ['e'], 'e': ['i'],
+      'u': ['o'], 'o': ['u', 'a'],
+      'a': ['o'], 'v': ['w'], 'w': ['v'], 'z': ['j'],
+      's': ['S'], 'S': ['s'],
+      'k': ['K'], 'K': ['k'],
+      'g': ['G'], 'G': ['g'],
+      'c': ['C'], 'C': ['c'],
+      'j': ['J', 'z'], 'J': ['j'],
+      't': ['T', 'q', 'Q'],
+      'q': ['Q', 't'],
+      'd': ['D'], 'D': ['d'],
+      'p': ['P'], 'P': ['p'],
+      'b': ['B'], 'B': ['b'],
+    };
+    var variations = <String>{input.toLowerCase()};
+    final rawInput = input.toLowerCase();
+    final limit = rawInput.length > 6 ? 6 : rawInput.length;
+    for (int i = 0; i < limit; i++) {
+      final char = rawInput[i];
+      if (mapping.containsKey(char)) {
+        final newVariations = <String>{};
+        for (final variant in variations) {
+          for (final substitution in mapping[char]!) {
+            final variantChars = variant.split('');
+            variantChars[i] = substitution;
+            newVariations.add(variantChars.join(''));
+          }
+        }
+        variations.addAll(newVariations);
+        if (variations.length > 64) break; 
+      }
+    }
+    return variations.toList();
+  }
 }

@@ -77,6 +77,30 @@ class TrackerGoal {
       'created_at': createdAt.toIso8601String(),
     };
   }
+
+  TrackerGoal copyWith({
+    String? id,
+    TrackerTemplateType? templateType,
+    String? title,
+    int? totalGoal,
+    int? dailyTarget,
+    DateTime? startDate,
+    DateTime? deadlineDate,
+    String? unitName,
+    DateTime? createdAt,
+  }) {
+    return TrackerGoal(
+      id: id ?? this.id,
+      templateType: templateType ?? this.templateType,
+      title: title ?? this.title,
+      totalGoal: totalGoal ?? this.totalGoal,
+      dailyTarget: dailyTarget ?? this.dailyTarget,
+      startDate: startDate ?? this.startDate,
+      deadlineDate: deadlineDate ?? this.deadlineDate,
+      unitName: unitName ?? this.unitName,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
 }
 
 class TrackerLog {
