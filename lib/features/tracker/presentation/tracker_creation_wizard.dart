@@ -30,8 +30,8 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
   final _dailyTargetController = TextEditingController();
 
   final List<String> _predefinedBanis = [
-    'Japji Sahib', 'Jaap Sahib', 'Tav Prasad Savaiye', 'Chaupai Sahib',
-    'Anand Sahib', 'Sukhmani Sahib', 'Rehras Sahib', 'Sohila'
+    'Japji Sahib', 'Chaupai Sahib', 'Sukhmani Sahib', 'Jaap Sahib',
+    "Dukh Bhanjani Sahib"
   ];
 
   @override

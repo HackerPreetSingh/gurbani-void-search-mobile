@@ -7,11 +7,11 @@ import '../../core/di/core_providers.dart';
 import '../../features/about/presentation/about_page.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
 import '../../features/search/presentation/search_screen.dart';
-import '../../features/search/presentation/shabad_page.dart';
+import '../../features/search/shabad/presentation/shabad_screen.dart';
 import '../shell/app_shell.dart';
 
 import '../../features/search/presentation/nitnem_screen.dart';
-import '../../features/search/presentation/bani_page.dart';
+import '../../features/search/bani/presentation/bani_screen.dart';
 import '../../features/tracker/presentation/tracker_list_screen.dart';
 import '../../features/tracker/presentation/tracker_creation_wizard.dart';
 import '../../features/tracker/presentation/tracker_details_page.dart';
@@ -92,7 +92,7 @@ GoRouter createAppRouter(Ref ref) {
             builder: (BuildContext context, GoRouterState state) {
               final id = state.pathParameters['id']!;
               final highlightId = state.uri.queryParameters['verseId'];
-              return ShabadPage(shabadId: id, highlightVerseId: highlightId);
+              return ShabadScreen(shabadId: id, highlightVerseId: highlightId);
             },
           ),
           GoRoute(
@@ -100,7 +100,7 @@ GoRouter createAppRouter(Ref ref) {
             builder: (BuildContext context, GoRouterState state) {
               final id = int.parse(state.pathParameters['id']!);
               final highlightId = state.uri.queryParameters['verseId'];
-              return BaniPage(baniId: id, highlightVerseId: highlightId);
+              return BaniScreen(baniId: id, highlightVerseId: highlightId);
             },
           ),
         ],
