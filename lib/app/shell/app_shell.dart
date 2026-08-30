@@ -11,19 +11,19 @@ class AppShell extends StatelessWidget {
 
   static const _destinations = <_AppDestination>[
     _AppDestination(
-      label: 'Search',
+      label: 'Gurbani Search',
       location: AppRoute.search,
       icon: Icons.manage_search_outlined,
       selectedIcon: Icons.manage_search,
     ),
     _AppDestination(
-      label: 'Nitnem',
+      label: 'Nitnem & Banis',
       location: AppRoute.nitnem,
       icon: Icons.menu_book_outlined,
       selectedIcon: Icons.menu_book,
     ),
     _AppDestination(
-      label: 'Tracker',
+      label: 'Nitnem Tracker',
       location: AppRoute.tracker,
       icon: Icons.track_changes_outlined,
       selectedIcon: Icons.track_changes,
@@ -49,12 +49,9 @@ class AppShell extends StatelessWidget {
                          currentPath.startsWith('/nitnem/') || 
                          currentPath.startsWith('/tracker/') ||
                          currentPath.contains('/create');
-    final isSearchView = currentPath == AppRoute.search;
-    final hideAppBar = isDetailView || isSearchView;
 
     if (!useNavigationRail) {
       return Scaffold(
-        appBar: hideAppBar ? null : AppBar(title: const Text('Gurbani Search')),
         body: SafeArea(top: false, child: child),
         bottomNavigationBar: isDetailView 
             ? null 

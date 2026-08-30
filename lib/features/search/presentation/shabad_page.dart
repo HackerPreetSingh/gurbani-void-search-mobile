@@ -59,7 +59,7 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
     print('${AppConstants.logTag} [${DateTime.now()}] [shabad_page.dart] WIDGET_BUILD: id=${widget.shabadId}');
     
     final shabadAsync = ref.watch(shabadDetailsProvider(widget.shabadId));
-    final settingsAsync = ref.watch(displaySettingsProvider);
+    final settingsAsync = ref.watch(shabadSettingsProvider);
     final settings = settingsAsync.value ?? DisplaySettings.defaults();
 
     return Theme(
@@ -156,39 +156,39 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                           // [AI_GUARD:PERMANENT_LOG] Assigning global key for auto-scrolling
                           final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
 
-                          return Container(
+                            return Container(
                             key: key,
                             width: double.infinity,
                             color: isHighlighted ? Colors.teal.withAlpha(25) : null,
-                            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+                            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 24),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
                                 _buildGurmukhiText(verse.gurmukhi, verse.visraams, settings),
                               if (settings.showHindi && hasHindi) ...[
                                 // [AI_GUARD:PERMANENT_LOG] Displaying Hindi transliteration
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 4),
                                 Text(verse.transliterationHi!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeHindi, color: Colors.red.shade900)),
                               ],
                               if (settings.showTransliteration && hasTranslit) ...[
                                 // [AI_GUARD:PERMANENT_LOG] Displaying English transliteration
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 4),
                                 Text(verse.transliteration!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeEnglish, color: Colors.blueGrey)),
                               ],
                               if (settings.showEnglishMeaning && hasEnglishMeaning) ...[
                                 // [AI_GUARD:PERMANENT_LOG] Displaying English meaning
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 4),
                                 Text(verse.translation!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
                               ],
                               if (settings.showPunjabiMeaning && hasPunjabiMeaning) ...[
                                 // [AI_GUARD:PERMANENT_LOG] Displaying Punjabi meaning
-                                const SizedBox(height: 12),
+                                const SizedBox(height: 4),
                                 Text(verse.translationPa!,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(fontSize: settings.fontSizePunjabiMeaning, color: Colors.teal.shade900)),
@@ -228,8 +228,8 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
       builder: (context) {
         return Consumer(
           builder: (context, ref, child) {
-            final currentSettings = ref.watch(displaySettingsProvider).value ?? settings;
-            final notifier = ref.read(displaySettingsProvider.notifier);
+            final currentSettings = ref.watch(shabadSettingsProvider).value ?? settings;
+            final notifier = ref.read(shabadSettingsProvider.notifier);
 
             return AlertDialog(
               title: const Text('Display Settings'),
@@ -280,6 +280,14 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
                       size: 0,
                       isVisibilityOnly: true,
                       onToggle: (_) => notifier.toggleVishrams(),
+                      onSizeChanged: (_) {},
+                    ),
+                    _buildUnifiedControl(
+                      label: 'Larivaar',
+                      isVisible: currentSettings.showLarivaar,
+                      size: 0,
+                      isVisibilityOnly: true,
+                      onToggle: (_) => notifier.toggleLarivaar(),
                       onSizeChanged: (_) {},
                     ),
                   ],
@@ -341,12 +349,18 @@ class _ShabadPageState extends ConsumerState<ShabadPage> {
     final baseStyle = TextStyle(
       fontSize: settings.fontSizeGurmukhi,
       fontWeight: FontWeight.w500,
-      height: 1.6,
+      height: 1.4,
       color: Colors.black,
     );
 
     final vishramService = ref.read(vishramServiceProvider);
-    final span = vishramService.buildGurmukhiText(gurmukhi, visraamsJson, baseStyle, settings.showVishrams);
+    final span = vishramService.buildGurmukhiText(
+      gurmukhi, 
+      visraamsJson, 
+      baseStyle, 
+      settings.showVishrams,
+      settings.showLarivaar,
+    );
 
     return Text.rich(
       span as TextSpan,

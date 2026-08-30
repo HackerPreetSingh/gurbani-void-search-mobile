@@ -37,11 +37,23 @@ To create a high-performance, offline-first Gurbani search engine and liturgical
 - **Goal**: Add persistence for user spiritual progress without risking data loss during corpus updates.
 - **Implementation**:
   - Introduced a **Triple-DB Architecture**:
-    1. `shabads_offline.sqlite`: Primary corpus.
-    2. `nitnem_offline.sqlite`: Liturgical sequences.
-    3. `user_tracker.sqlite`: Private user progress.
-  - **Feature**: Developed a 4-template tracker (Mool Mantar, Simran, Bani Count, Sehaj Path) with Red/Amber/Green (RAG) visual feedback.
-  - **Performance**: Implemented a sequential downloader that fetches both essential SQLite files with combined progress tracking.
+    1. `shabads_offline.sqlite`: Primary corpus for search.
+    2. `nitnem_offline.sqlite`: Sequential liturgical paths for reading.
+    3. `user_tracker.sqlite`: Private user progress (never synced/overwritten).
+  - **Nitnem Tracker Features**:
+    - CRUD operations for spiritual goals (Mool Mantar, Simran, Bani, Sehaj Path).
+    - Full editing support for both tracker definitions and individual progress logs.
+    - Consistent input formats across all templates.
+    - Visual RAG (Red/Amber/Green) feedback with intuitive trending icons.
+
+### Phase 5: Reading Experience & Maintenance Polish
+- **Goal**: Enhance traditional reading styles and accessibility.
+- **Implementation**:
+  - **Larivaar Mode**: Added a global setting to remove spaces within Gurbani lines.
+  - **Vishram Engine**: Re-engineered to work simultaneously with Larivaar mode (colored pauses without spaces).
+  - **Jaap Sahib Paragraphing**: Implemented liturgical collation for Jaap Sahib to render verses as paragraphs.
+  - **Isolated Foundation**: Decoupled the database download prompt so only Search/Nitnem tabs are blocked if files are missing; Tracker and About remain accessible.
+  - **Manual Updates**: Added a translucent modal in the About section for manual database maintenance and sequential downloading.
 
 ---
 

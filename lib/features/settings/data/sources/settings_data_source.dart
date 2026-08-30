@@ -6,14 +6,15 @@ import '../../domain/models/display_settings.dart';
 
 class SettingsDataSource {
   final LocalDatabase _database;
-  static const _key = 'display_settings';
+  static const shabadKey = 'display_settings_shabad';
+  static const baniKey = 'display_settings_bani';
 
   SettingsDataSource(this._database);
 
-  Future<DisplaySettings> getDisplaySettings() async {
+  Future<DisplaySettings> getDisplaySettings(String key) async {
     final rows = await _database.read((executor) => executor.runSelect(
           'SELECT value FROM app_metadata WHERE key = ?',
-          [_key],
+          [key],
         ));
 
     if (rows.isEmpty) {
@@ -28,14 +29,14 @@ class SettingsDataSource {
     }
   }
 
-  Future<void> saveDisplaySettings(DisplaySettings settings) async {
+  Future<void> saveDisplaySettings(String key, DisplaySettings settings) async {
     final value = jsonEncode(settings.toJson());
     final now = DateTime.now().toUtc().toIso8601String();
 
     await _database.transaction((executor) async {
       await executor.runCustom(
         'INSERT OR REPLACE INTO app_metadata (key, value, updated_at_utc) VALUES (?, ?, ?)',
-        [_key, value, now],
+        [key, value, now],
       );
     });
   }

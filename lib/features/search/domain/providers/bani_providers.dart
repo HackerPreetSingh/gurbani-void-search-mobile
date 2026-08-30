@@ -113,6 +113,7 @@ final baniDetailsProvider = FutureProvider.family<List<BaniVerse>, int>((ref, ba
         mangalPosition: int.tryParse(v['mangalPosition']?.toString() ?? ''),
         existsSGPC: (int.tryParse(v['existsSGPC']?.toString() ?? '0') ?? 0) == 1,
         existsTaksal: (int.tryParse(v['existsTaksal']?.toString() ?? '0') ?? 0) == 1,
+        paragraph: int.tryParse(v['paragraph']?.toString() ?? ''),
         verse: mapper.mapApi(verseData, shabadInfo: baniInfo),
       );
     }).toList();
@@ -142,6 +143,7 @@ final baniDetailsProvider = FutureProvider.family<List<BaniVerse>, int>((ref, ba
       mangalPosition: toInt(r['mangal_position']),
       existsSGPC: toBool(r['exists_sgpc']),
       existsTaksal: toBool(r['exists_taksal']),
+      paragraph: toInt(r['paragraph']),
       verse: mapper.mapRow(r),
     );
   }).toList();

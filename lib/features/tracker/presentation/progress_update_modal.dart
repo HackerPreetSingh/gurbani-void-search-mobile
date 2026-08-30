@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../data/tracker_repository.dart';
 import '../domain/models/tracker_models.dart';
+import 'tracker_view_model.dart';
 
 class ProgressUpdateModal extends ConsumerStatefulWidget {
   final TrackerGoal goal;
-  const ProgressUpdateModal({super.key, required this.goal});
+  final TrackerLog? editLog;
+  const ProgressUpdateModal({super.key, required this.goal, this.editLog});
 
   @override
   ConsumerState<ProgressUpdateModal> createState() => _ProgressUpdateModalState();
@@ -20,6 +22,20 @@ class _ProgressUpdateModalState extends ConsumerState<ProgressUpdateModal> {
 
   bool get _isSimran => widget.goal.templateType == TrackerTemplateType.moolMantar || 
                         widget.goal.templateType == TrackerTemplateType.waheguruSimran;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.editLog != null) {
+      _logDate = widget.editLog!.logDate;
+      if (_isSimran) {
+        _maalaController.text = (widget.editLog!.count ~/ 108).toString();
+        _rawController.text = (widget.editLog!.count % 108).toString();
+      } else {
+        _countController.text = widget.editLog!.count.toString();
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -56,6 +72,11 @@ class _ProgressUpdateModalState extends ConsumerState<ProgressUpdateModal> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('Log Daily Progress', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            if (widget.editLog != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text('Editing entry from ${DateFormat('HH:mm').format(widget.editLog!.createdAt)}', style: const TextStyle(color: Colors.orange)),
+              ),
             const SizedBox(height: 24),
             
             ListTile(
@@ -127,7 +148,7 @@ class _ProgressUpdateModalState extends ConsumerState<ProgressUpdateModal> {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text('Save Entry', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text(widget.editLog != null ? 'Update Entry' : 'Save Entry', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 32),
@@ -153,16 +174,30 @@ class _ProgressUpdateModalState extends ConsumerState<ProgressUpdateModal> {
       return;
     }
 
-    final log = TrackerLog(
-      trackerId: widget.goal.id,
-      logDate: _logDate,
-      count: totalUnits,
-      inputMode: _isSimran ? 'mixed' : 'raw',
-      createdAt: DateTime.now(),
-    );
+    if (widget.editLog != null) {
+      final updatedLog = TrackerLog(
+        id: widget.editLog!.id,
+        trackerId: widget.goal.id,
+        logDate: _logDate,
+        count: totalUnits,
+        inputMode: _isSimran ? 'mixed' : 'raw',
+        createdAt: widget.editLog!.createdAt,
+      );
+      ref.read(trackerViewModelProvider.notifier).updateLog(updatedLog).then((_) {
+        if (mounted) Navigator.pop(context);
+      });
+    } else {
+      final log = TrackerLog(
+        trackerId: widget.goal.id,
+        logDate: _logDate,
+        count: totalUnits,
+        inputMode: _isSimran ? 'mixed' : 'raw',
+        createdAt: DateTime.now(),
+      );
 
-    ref.read(trackerRepositoryProvider).addLog(log).then((_) {
-      if (mounted) Navigator.pop(context);
-    });
+      ref.read(trackerRepositoryProvider).addLog(log).then((_) {
+        if (mounted) Navigator.pop(context);
+      });
+    }
   }
 }

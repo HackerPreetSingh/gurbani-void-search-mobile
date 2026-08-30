@@ -17,9 +17,10 @@ This document provides an exhaustive, end-to-end explanation of the Gurbani Voic
 
 ### A. Android & iOS (Native Offline-First)
 1. **Entry Point**: `lib/main.dart` initializes the Flutter engine and triggers `LocalDatabase.prefetchDocsPath()`.
-2. **Foundation Check**: `lib/app/router/app_router.dart` uses `databaseStatusProvider` (`lib/core/di/core_providers.dart`) to check if the essential database files (`shabads_offline.sqlite` and `nitnem_offline.sqlite`) exist on disk.
-3. **Missing DB Action**: If the file is missing, the user is redirected to `lib/features/foundation/presentation/foundation_page.dart`.
-4. **App Shell**: `lib/app/shell/app_shell.dart` provides the 4-tab navigation (Search, Nitnem, Tracker, and About).
+2. **Foundation Check**: `lib/app/router/app_router.dart` uses `databaseStatusProvider` (`lib/core/di/core_providers.dart`) to check for `shabads_offline.sqlite` and `nitnem_offline.sqlite`.
+3. **In-Tab Access**: If files are missing, the **Search** and **Nitnem** tabs display a download prompt. The **Tracker** and **About** tabs remain fully functional immediately upon install.
+4. **Manual Updates**: Users can manually refresh their database via the "Update Database" modal in the **About** tab.
+5. **App Shell**: `lib/app/shell/app_shell.dart` provides 4-tab navigation with dynamic headers per section.
 
 ---
 
@@ -28,15 +29,17 @@ This document provides an exhaustive, end-to-end explanation of the Gurbani Voic
 ### 3.1 Gurbani Search (The "Shabad" Flow)
 - **Engine**: `SqlitePunjabiSearchRepository` queries both Shabad and Nitnem databases but prioritizes Shabad records to ensure clicking a tukk opens a specific Shabad, not a whole book.
 - **Phonetic Mapping**: Users type English initials (e.g., `kejjb`). `GurmukhiProcessor` converts this into a numeric sequence for lookup.
+- **Reading Modes**: Supports **Larivaar** (continuous text) and **Vishram** (colored pauses) toggles.
 
 ### 3.2 Nitnem & Banis (The "Liturgy" Flow)
 - **Logic**: Uses the `NitnemDB`. Verses are loaded using `sequence_order` to maintain the exact liturgical flow.
+- **Special Layouts**: **Jaap Sahib** automatically collates verses into paragraphs for a pothi-style experience.
 - **Customization**: Users can drag-and-drop Banis in the list to match their personal routine.
 
 ### 3.3 Nitnem Tracker (The "Progress" Flow)
 - **Logic**: Uses `user_tracker.sqlite` (entirely isolated).
 - **Templates**: Supports Mool Mantar/Simran (Maala units), Bani Count, and Sehaj Path (Ang tracking).
-- **Analytics**: Calculates if a user is Ahead (Green), On Track (Orange), or Behind (Red) based on daily targets.
+- **Analytics**: Calculates if a user is Ahead (Green), On Track (Orange), or Behind (Red) with intuitive trending icons.
 
 ### B. Web (Fallback Architecture)
 1. **No Disk Access**: On Web, `path_provider` is unavailable. The app detects `kIsWeb`.

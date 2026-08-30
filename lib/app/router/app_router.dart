@@ -33,33 +33,12 @@ GoRouter createAppRouter(Ref ref) {
   }, fireImmediately: true);
 
   return GoRouter(
-    initialLocation: AppRoute.foundation,
+    initialLocation: AppRoute.search,
     refreshListenable: dbListenable,
     redirect: (context, state) {
-      final dbState = dbListenable.value;
-      final bool isAtFoundation = state.uri.path == AppRoute.foundation;
-      print('[GURBANI_LOG] Router Redirect: path=${state.uri.path}, dbState=${dbState.runtimeType}');
-
-      return dbState.when(
-        data: (status) {
-          print('[GURBANI_LOG] Router: DB is Ready, available=${status.isAvailable}');
-          if (!status.isAvailable) {
-            if (!isAtFoundation) return AppRoute.foundation;
-            return null;
-          }
-          if (isAtFoundation) return AppRoute.search;
-          return null; 
-        },
-        error: (error, _) {
-          print('[GURBANI_LOG] Router: Generic DB Error: $error');
-          return null; 
-        },
-        loading: () {
-          print('[GURBANI_LOG] Router: DB is Checking...');
-          if (!isAtFoundation) return AppRoute.foundation;
-          return null;
-        },
-      );
+      // Logic for redirection removed to allow all tabs to be accessible.
+      // Database missing screens will be handled inside specific tabs.
+      return null;
     },
     routes: [
       GoRoute(

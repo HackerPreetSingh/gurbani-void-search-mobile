@@ -48,6 +48,7 @@ class BaniVerse {
   final int? mangalPosition;
   final bool existsSGPC;
   final bool existsTaksal;
+  final int? paragraph;
   final GurbaniSearchResult verse;
 
   BaniVerse({
@@ -56,6 +57,7 @@ class BaniVerse {
     this.mangalPosition,
     required this.existsSGPC,
     required this.existsTaksal,
+    this.paragraph,
     required this.verse,
   });
 }

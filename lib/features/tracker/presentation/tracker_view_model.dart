@@ -39,6 +39,11 @@ class TrackerViewModel extends AsyncNotifier<List<TrackerGoal>> {
     ref.invalidateSelf();
   }
 
+  Future<void> updateTracker(TrackerGoal goal) async {
+    await ref.read(trackerRepositoryProvider).updateTracker(goal);
+    ref.invalidateSelf();
+  }
+
   Future<void> deleteTracker(String id) async {
     await ref.read(trackerRepositoryProvider).deleteTracker(id);
     ref.invalidateSelf();
@@ -47,6 +52,14 @@ class TrackerViewModel extends AsyncNotifier<List<TrackerGoal>> {
   Future<TrackerStatus> getStatus(TrackerGoal goal) async {
     final logs = await ref.read(trackerRepositoryProvider).getLogsForTracker(goal.id);
     return TrackerAnalyticsService().calculateStatus(goal, logs);
+  }
+
+  Future<void> deleteLog(int id) async {
+    await ref.read(trackerRepositoryProvider).deleteLog(id);
+  }
+
+  Future<void> updateLog(TrackerLog log) async {
+    await ref.read(trackerRepositoryProvider).updateLog(log);
   }
 }
 

@@ -60,7 +60,7 @@ class _BaniPageState extends ConsumerState<BaniPage> {
     print('${AppConstants.logTag} [${DateTime.now()}] [bani_page.dart] WIDGET_BUILD: id=${widget.baniId}, highlight=${widget.highlightVerseId}');
     
     final baniDetailsAsync = ref.watch(baniDetailsProvider(widget.baniId));
-    final settingsAsync = ref.watch(displaySettingsProvider);
+    final settingsAsync = ref.watch(baniSettingsProvider);
     final settings = settingsAsync.value ?? DisplaySettings.defaults();
 
     return Theme(
@@ -84,6 +84,8 @@ class _BaniPageState extends ConsumerState<BaniPage> {
               }
 
               final firstVerse = verses.first.verse;
+              final bool isJaapSahib = widget.baniId == 4;
+
               // [AI_GUARD:PERMANENT_LOG] Checking header metadata presence
               final bool hasRaag = firstVerse.raagName != null &&
                   firstVerse.raagName!.trim().isNotEmpty &&
@@ -140,66 +142,105 @@ class _BaniPageState extends ConsumerState<BaniPage> {
                       ),
                     ),
                   ),
-                  SliverPadding(
-                    padding: EdgeInsets.zero,
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final baniVerse = verses[index];
-                          final verse = baniVerse.verse;
-                          
-                          // [AI_GUARD:PERMANENT_LOG] Robust null/empty check for each verse line
-                          final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty && !verse.transliterationHi!.toLowerCase().contains('null');
-                          final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty && !verse.transliteration!.toLowerCase().contains('null');
-                          final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty && !verse.translation!.toLowerCase().contains('null');
-                          final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty && !verse.translationPa!.toLowerCase().contains('null');
+                  if (isJaapSahib)
+                    SliverPadding(
+                      padding: const EdgeInsets.all(24),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, pIndex) {
+                            final List<int> pIds = verses.map((v) => v.paragraph ?? 0).toSet().toList()..sort();
+                            final pId = pIds[pIndex];
+                            final pVerses = verses.where((v) => (v.paragraph ?? 0) == pId).toList();
 
-                          final bool isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 8,
+                                runSpacing: 4,
+                                children: pVerses.map((bv) {
+                                  final verse = bv.verse;
+                                  final bool isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
+                                  final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
+                                  
+                                  return Container(
+                                    key: key,
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: isHighlighted ? Colors.teal.withAlpha(25) : null,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: _buildGurmukhiText(ref, verse.gurmukhi, verse.visraams, settings),
+                                  );
+                                }).toList(),
+                              ),
+                            );
+                          },
+                          childCount: verses.map((v) => v.paragraph ?? 0).toSet().length,
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: EdgeInsets.zero,
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final baniVerse = verses[index];
+                            final verse = baniVerse.verse;
+                            
+                            // [AI_GUARD:PERMANENT_LOG] Robust null/empty check for each verse line
+                            final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty && !verse.transliterationHi!.toLowerCase().contains('null');
+                            final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty && !verse.transliteration!.toLowerCase().contains('null');
+                            final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty && !verse.translation!.toLowerCase().contains('null');
+                            final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty && !verse.translationPa!.toLowerCase().contains('null');
 
-                          // [AI_GUARD:PERMANENT_LOG] Assigning global key for auto-scrolling
-                          final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
+                            final bool isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
 
-                          return Container(
-                            key: key,
-                            width: double.infinity,
-                            color: isHighlighted ? Colors.teal.withAlpha(25) : null,
-                            padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                _buildGurmukhiText(ref, verse.gurmukhi, verse.visraams, settings),
-                                if (settings.showHindi && hasHindi) ...[
-                                  const SizedBox(height: 12),
-                                  Text(verse.transliterationHi!,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: settings.fontSizeHindi, color: Colors.red.shade900)),
+                            // [AI_GUARD:PERMANENT_LOG] Assigning global key for auto-scrolling
+                            final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
+
+                            return Container(
+                              key: key,
+                              width: double.infinity,
+                              color: isHighlighted ? Colors.teal.withAlpha(25) : null,
+                              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 24),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  _buildGurmukhiText(ref, verse.gurmukhi, verse.visraams, settings),
+                                  if (settings.showHindi && hasHindi) ...[
+                                    const SizedBox(height: 4),
+                                    Text(verse.transliterationHi!,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: settings.fontSizeHindi, color: Colors.red.shade900)),
+                                  ],
+                                  if (settings.showTransliteration && hasTranslit) ...[
+                                    const SizedBox(height: 4),
+                                    Text(verse.transliteration!,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: settings.fontSizeEnglish, color: Colors.blueGrey)),
+                                  ],
+                                  if (settings.showEnglishMeaning && hasEnglishMeaning) ...[
+                                    const SizedBox(height: 4),
+                                    Text(verse.translation!,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: settings.fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
+                                  ],
+                                  if (settings.showPunjabiMeaning && hasPunjabiMeaning) ...[
+                                    const SizedBox(height: 4),
+                                    Text(verse.translationPa!,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: settings.fontSizePunjabiMeaning, color: Colors.teal.shade900)),
+                                  ],
                                 ],
-                                if (settings.showTransliteration && hasTranslit) ...[
-                                  const SizedBox(height: 12),
-                                  Text(verse.transliteration!,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: settings.fontSizeEnglish, color: Colors.blueGrey)),
-                                ],
-                                if (settings.showEnglishMeaning && hasEnglishMeaning) ...[
-                                  const SizedBox(height: 12),
-                                  Text(verse.translation!,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: settings.fontSizeMeaning, fontStyle: FontStyle.italic, color: Colors.black87)),
-                                ],
-                                if (settings.showPunjabiMeaning && hasPunjabiMeaning) ...[
-                                  const SizedBox(height: 12),
-                                  Text(verse.translationPa!,
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: settings.fontSizePunjabiMeaning, color: Colors.teal.shade900)),
-                                ],
-                              ],
-                            ),
-                          );
-                        },
-                        childCount: verses.length,
+                              ),
+                            );
+                          },
+                          childCount: verses.length,
+                        ),
                       ),
                     ),
-                  ),
                 ],
               );
             },
@@ -229,8 +270,8 @@ class _BaniPageState extends ConsumerState<BaniPage> {
       builder: (context) {
         return Consumer(
           builder: (context, ref, child) {
-            final currentSettings = ref.watch(displaySettingsProvider).value ?? settings;
-            final notifier = ref.read(displaySettingsProvider.notifier);
+            final currentSettings = ref.watch(baniSettingsProvider).value ?? settings;
+            final notifier = ref.read(baniSettingsProvider.notifier);
 
             return AlertDialog(
               title: const Text('Display Settings'),
@@ -281,6 +322,14 @@ class _BaniPageState extends ConsumerState<BaniPage> {
                       size: 0,
                       isVisibilityOnly: true,
                       onToggle: (_) => notifier.toggleVishrams(),
+                      onSizeChanged: (_) {},
+                    ),
+                    _buildUnifiedControl(
+                      label: 'Larivaar',
+                      isVisible: currentSettings.showLarivaar,
+                      size: 0,
+                      isVisibilityOnly: true,
+                      onToggle: (_) => notifier.toggleLarivaar(),
                       onSizeChanged: (_) {},
                     ),
                   ],
@@ -342,12 +391,18 @@ class _BaniPageState extends ConsumerState<BaniPage> {
     final baseStyle = TextStyle(
       fontSize: settings.fontSizeGurmukhi,
       fontWeight: FontWeight.w500,
-      height: 1.6,
+      height: 1.4,
       color: Colors.black,
     );
 
     final vishramService = ref.read(vishramServiceProvider);
-    final span = vishramService.buildGurmukhiText(gurmukhi, visraamsJson, baseStyle, settings.showVishrams);
+    final span = vishramService.buildGurmukhiText(
+      gurmukhi, 
+      visraamsJson, 
+      baseStyle, 
+      settings.showVishrams,
+      settings.showLarivaar,
+    );
 
     return Text.rich(
       span as TextSpan,

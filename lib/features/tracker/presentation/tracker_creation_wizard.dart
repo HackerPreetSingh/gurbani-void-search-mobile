@@ -7,7 +7,8 @@ import '../domain/services/tracker_analytics_service.dart';
 import 'tracker_view_model.dart';
 
 class TrackerCreationWizard extends ConsumerStatefulWidget {
-  const TrackerCreationWizard({super.key});
+  final TrackerGoal? editGoal;
+  const TrackerCreationWizard({super.key, this.editGoal});
 
   @override
   ConsumerState<TrackerCreationWizard> createState() => _TrackerCreationWizardState();
@@ -38,6 +39,29 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
     'Rehras Sahib',
     'Sohila'
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.editGoal != null) {
+      final goal = widget.editGoal!;
+      _selectedType = goal.templateType;
+      _titleController.text = goal.title;
+      _totalGoalController.text = goal.totalGoal?.toString() ?? '';
+      _dailyTargetController.text = goal.dailyTarget?.toString() ?? '';
+      _startDate = goal.startDate;
+      _deadlineDate = goal.deadlineDate;
+      
+      // Determine if it was infinite based on deadline presence
+      _isInfinite = goal.deadlineDate == null;
+      
+      if (!_isInfinite && goal.totalGoal != null && goal.dailyTarget != null && goal.dailyTarget! > 0) {
+        final days = (goal.totalGoal! / goal.dailyTarget!).ceil();
+        _daysController.text = days.toString();
+      }
+      _currentStep = 1;
+    }
+  }
 
   @override
   void dispose() {
@@ -98,75 +122,71 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Nitnem Goal'),
+        title: Text(widget.editGoal != null ? 'Edit Nitnem Goal' : 'New Nitnem Goal'),
       ),
-      body: Theme(
-        data: Theme.of(context).copyWith(
-          canvasColor: Colors.transparent, 
-        ),
-        child: Stepper(
-          type: StepperType.horizontal,
-          physics: const BouncingScrollPhysics(),
-          currentStep: _currentStep,
-          onStepCancel: () {
-            if (_currentStep > 0) setState(() => _currentStep--);
-          },
-          onStepContinue: () {
-            if (_currentStep == 1) {
-              _handleFinalStep();
-            }
-          },
-          controlsBuilder: (context, details) {
-            if (_currentStep == 0) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(top: 24.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: details.onStepContinue,
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
-                      child: const Text('Create Tracker'),
-                    ),
+      body: Stepper(
+        type: StepperType.horizontal,
+        physics: const BouncingScrollPhysics(),
+        currentStep: _currentStep,
+        onStepCancel: () {
+          if (_currentStep > 0 && widget.editGoal == null) setState(() => _currentStep--);
+        },
+        onStepContinue: () {
+          if (_currentStep == 1) {
+            _handleFinalStep();
+          }
+        },
+        controlsBuilder: (context, details) {
+          if (_currentStep == 0 && widget.editGoal == null) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 24.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: details.onStepContinue,
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, foregroundColor: Colors.white),
+                    child: Text(widget.editGoal != null ? 'Update Tracker' : 'Create Tracker'),
                   ),
-                  const SizedBox(width: 12),
+                ),
+                const SizedBox(width: 12),
+                if (widget.editGoal == null)
                   TextButton(
                     onPressed: details.onStepCancel,
                     child: const Text('Back'),
                   ),
-                ],
+              ],
+            ),
+          );
+        },
+        steps: [
+          Step(
+            title: const Text('Template'),
+            isActive: _currentStep >= 0,
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.6,
               ),
-            );
-          },
-          steps: [
-            Step(
-              title: const Text('Template'),
-              isActive: _currentStep >= 0,
-              content: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.6,
-                ),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: _buildTemplateSelection(),
-                ),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: _buildTemplateSelection(),
               ),
             ),
-            Step(
-              title: const Text('Configure'),
-              isActive: _currentStep >= 1,
-              content: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.6,
-                ),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: _buildConfiguration(),
-                ),
+          ),
+          Step(
+            title: const Text('Configure'),
+            isActive: _currentStep >= 1,
+            content: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.6,
+              ),
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: _buildConfiguration(),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -236,26 +256,55 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
             const Text('Select Bani', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Autocomplete<String>(
-              optionsBuilder: (textEditingValue) {
-                return _predefinedBanis.where((String option) {
-                  return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
-                });
-              },
-              onSelected: (String selection) {
-                setState(() => _titleController.text = selection);
-              },
-              fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                return TextField(
-                  controller: controller,
-                  focusNode: focusNode,
-                  decoration: const InputDecoration(
-                    hintText: 'Search or enter custom name...',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.search),
+            initialValue: TextEditingValue(text: _titleController.text),
+            optionsBuilder: (textEditingValue) {
+              return _predefinedBanis.where((String option) {
+                return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+              });
+            },
+            onSelected: (String selection) {
+              setState(() => _titleController.text = selection);
+            },
+            fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+              return TextField(
+                controller: controller,
+                focusNode: focusNode,
+                decoration: const InputDecoration(
+                  hintText: 'Search or enter custom name...',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.search),
+                ),
+              );
+            },
+            optionsViewBuilder: (context, onSelected, options) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 8,
+                  color: Colors.white,
+                  surfaceTintColor: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 250, maxWidth: 400),
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: options.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        final String option = options.elementAt(index);
+                        return ListTile(
+                          title: Text(option),
+                          onTap: () => onSelected(option),
+                        );
+                      },
+                    ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
+          ),
           ] else ...[
             TextField(
               controller: _titleController,
@@ -274,11 +323,10 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
           ),
           const SizedBox(height: 16),
 
-          if (_selectedType == TrackerTemplateType.moolMantar || _selectedType == TrackerTemplateType.waheguruSimran) 
-            _buildSimranConfig(),
-            
-          if (_selectedType == TrackerTemplateType.baniCount)
-            _buildBaniConfig(),
+          if (_selectedType == TrackerTemplateType.moolMantar || 
+            _selectedType == TrackerTemplateType.waheguruSimran ||
+            _selectedType == TrackerTemplateType.baniCount) 
+          _buildSimranConfig(),
 
           if (_selectedType == TrackerTemplateType.sehajPath)
             _buildSehajPathConfig(),
@@ -288,12 +336,19 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
   }
 
   Widget _buildSimranConfig() {
+    String goalLabel = 'Total Target (Units)';
+    String dailyLabel = 'Daily Target (Optional Units)';
+    if (_selectedType == TrackerTemplateType.baniCount) {
+      goalLabel = 'Total Target (Paths)';
+      dailyLabel = 'Daily Target (Optional Paths)';
+    }
+
     return Column(
       children: [
         TextField(
           controller: _totalGoalController,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Total Target (Units)', border: OutlineInputBorder()),
+          decoration: InputDecoration(labelText: goalLabel, border: const OutlineInputBorder()),
         ),
         const SizedBox(height: 16),
         Row(
@@ -329,7 +384,7 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
           TextField(
             controller: _dailyTargetController,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Daily Target (Optional Units)', hintText: 'Leave empty for free hand', border: OutlineInputBorder()),
+            decoration: InputDecoration(labelText: dailyLabel, hintText: 'Leave empty for free hand', border: const OutlineInputBorder()),
           ),
         ]
       ],
@@ -379,7 +434,7 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
     int? totalGoal = int.tryParse(_totalGoalController.text);
     int? dailyTarget = int.tryParse(_dailyTargetController.text);
 
-    if (!_isInfinite && _selectedType != TrackerTemplateType.baniCount) {
+    if (!_isInfinite) {
       final days = int.tryParse(_daysController.text);
       if (days != null && totalGoal != null) {
         dailyTarget = (totalGoal / days).ceil();
@@ -395,17 +450,34 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
       }
     }
 
-    ref.read(trackerViewModelProvider.notifier).createTracker(
-      type: _selectedType!,
-      title: title,
-      totalGoal: totalGoal,
-      dailyTarget: dailyTarget,
-      startDate: _startDate,
-      deadlineDate: _deadlineDate,
-      unitName: unitName,
-    ).then((_) {
-      if (mounted) context.pop();
-    });
+    if (widget.editGoal != null) {
+      final updatedGoal = TrackerGoal(
+        id: widget.editGoal!.id,
+        templateType: _selectedType!,
+        title: title,
+        totalGoal: totalGoal,
+        dailyTarget: dailyTarget,
+        startDate: _startDate,
+        deadlineDate: _deadlineDate,
+        unitName: unitName,
+        createdAt: widget.editGoal!.createdAt,
+      );
+      ref.read(trackerViewModelProvider.notifier).updateTracker(updatedGoal).then((_) {
+        if (mounted) context.pop();
+      });
+    } else {
+      ref.read(trackerViewModelProvider.notifier).createTracker(
+        type: _selectedType!,
+        title: title,
+        totalGoal: totalGoal,
+        dailyTarget: dailyTarget,
+        startDate: _startDate,
+        deadlineDate: _deadlineDate,
+        unitName: unitName,
+      ).then((_) {
+        if (mounted) context.pop();
+      });
+    }
   }
 }
 

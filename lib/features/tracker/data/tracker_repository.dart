@@ -38,6 +38,24 @@ class TrackerRepository {
     });
   }
 
+  Future<void> updateTracker(TrackerGoal goal) async {
+    await _database.transaction((executor) async {
+      await executor.runCustom(
+        'UPDATE trackers SET template_type = ?, title = ?, total_goal = ?, daily_target = ?, start_date = ?, deadline_date = ?, unit_name = ? WHERE id = ?',
+        [
+          goal.templateType.name,
+          goal.title,
+          goal.totalGoal,
+          goal.dailyTarget,
+          goal.startDate.toIso8601String(),
+          goal.deadlineDate?.toIso8601String(),
+          goal.unitName,
+          goal.id,
+        ],
+      );
+    });
+  }
+
   Future<void> deleteTracker(String id) async {
     await _database.transaction((executor) async {
       await executor.runCustom('DELETE FROM trackers WHERE id = ?', [id]);
@@ -66,9 +84,18 @@ class TrackerRepository {
     });
   }
 
-  Future<void> updateLog(int id, int count) async {
+  Future<void> updateLog(TrackerLog log) async {
     await _database.transaction((executor) async {
-      await executor.runCustom('UPDATE tracker_logs SET count = ? WHERE id = ?', [count, id]);
+      final map = log.toMap();
+      await executor.runCustom(
+        'UPDATE tracker_logs SET log_date = ?, count = ?, input_mode = ? WHERE id = ?',
+        [
+          map['log_date'],
+          map['count'],
+          map['input_mode'],
+          log.id,
+        ],
+      );
     });
   }
 

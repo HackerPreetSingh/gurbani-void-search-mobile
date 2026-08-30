@@ -2,15 +2,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/sources/settings_data_source.dart';
 import '../domain/models/display_settings.dart';
 
-class DisplaySettingsNotifier extends AsyncNotifier<DisplaySettings> {
+abstract class DisplaySettingsBaseNotifier extends AsyncNotifier<DisplaySettings> {
+  String get storageKey;
+
   @override
   Future<DisplaySettings> build() async {
-    return ref.watch(settingsDataSourceProvider).getDisplaySettings();
+    return ref.watch(settingsDataSourceProvider).getDisplaySettings(storageKey);
   }
 
   Future<void> updateSettings(DisplaySettings settings) async {
     state = AsyncData(settings);
-    await ref.read(settingsDataSourceProvider).saveDisplaySettings(settings);
+    await ref.read(settingsDataSourceProvider).saveDisplaySettings(storageKey, settings);
   }
 
   Future<void> toggleEnglishMeaning() async {
@@ -40,6 +42,12 @@ class DisplaySettingsNotifier extends AsyncNotifier<DisplaySettings> {
   Future<void> toggleVishrams() async {
     final current = state.value ?? DisplaySettings.defaults();
     final updated = current.copyWith(showVishrams: !current.showVishrams);
+    await updateSettings(updated);
+  }
+
+  Future<void> toggleLarivaar() async {
+    final current = state.value ?? DisplaySettings.defaults();
+    final updated = current.copyWith(showLarivaar: !current.showLarivaar);
     await updateSettings(updated);
   }
 
@@ -74,6 +82,20 @@ class DisplaySettingsNotifier extends AsyncNotifier<DisplaySettings> {
   }
 }
 
-final displaySettingsProvider = AsyncNotifierProvider<DisplaySettingsNotifier, DisplaySettings>(() {
-  return DisplaySettingsNotifier();
+class ShabadDisplaySettingsNotifier extends DisplaySettingsBaseNotifier {
+  @override
+  String get storageKey => SettingsDataSource.shabadKey;
+}
+
+class BaniDisplaySettingsNotifier extends DisplaySettingsBaseNotifier {
+  @override
+  String get storageKey => SettingsDataSource.baniKey;
+}
+
+final shabadSettingsProvider = AsyncNotifierProvider<ShabadDisplaySettingsNotifier, DisplaySettings>(() {
+  return ShabadDisplaySettingsNotifier();
+});
+
+final baniSettingsProvider = AsyncNotifierProvider<BaniDisplaySettingsNotifier, DisplaySettings>(() {
+  return BaniDisplaySettingsNotifier();
 });
