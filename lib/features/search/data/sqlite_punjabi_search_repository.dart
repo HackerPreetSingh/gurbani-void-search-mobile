@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import '../domain/models/gurbani_corpus.dart';
 import '../domain/models/gurbani_search_result.dart';
 import '../domain/models/punjabi_search_query.dart';
+import '../domain/models/shabad_navigation.dart';
 import '../domain/repositories/punjabi_search_repository.dart';
 import 'local_search_data_source.dart';
 import 'remote_search_data_source.dart';
@@ -152,6 +153,10 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
     } catch (_) {}
     return [];
   }
+
+  @override
+  Future<ShabadNavigation> getShabadNavigation(String shabadId) => 
+      _localDataSource.getShabadNavigation(shabadId);
 
   @override
   Future<void> addToHistory(GurbaniSearchResult result, String query) => 

@@ -49,7 +49,7 @@ class NitnemScreen extends ConsumerWidget {
         }
         return ReorderableListView.builder(
           itemCount: banis.length,
-          onReorder: (oldIndex, newIndex) {
+          onReorderItem: (oldIndex, newIndex) {
             ref.read(banisListProvider.notifier).reorder(oldIndex, newIndex);
           },
           itemBuilder: (context, index) {

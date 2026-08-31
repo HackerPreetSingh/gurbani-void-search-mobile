@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/gurbani_search_result.dart';
+import '../models/shabad_navigation.dart';
 import 'search_providers.dart';
 
 /// Fully offline provider for Shabad details.
@@ -30,4 +31,9 @@ final shabadDetailsProvider = FutureProvider.family<List<GurbaniSearchResult>, S
   
   print('[GURBANI_LOG] [${DateTime.now()}] [shabad_providers.dart] PROVIDER_RESULT: ${results.length} verses sorted liturgically');
   return results;
+});
+
+final shabadNavigationProvider = FutureProvider.family<ShabadNavigation, String>((ref, shabadId) async {
+  final repository = ref.watch(punjabiSearchRepositoryProvider);
+  return repository.getShabadNavigation(shabadId);
 });

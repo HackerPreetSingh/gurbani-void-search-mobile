@@ -1,6 +1,7 @@
 import '../../../core/database/local_database.dart';
 import '../domain/models/gurbani_corpus.dart';
 import '../domain/models/gurbani_search_result.dart';
+import '../domain/models/shabad_navigation.dart';
 
 class LocalSearchDataSource {
   LocalSearchDataSource(this._database, this._nitnemDatabase);
@@ -140,5 +141,39 @@ class LocalSearchDataSource {
     await _database.transaction((executor) async {
       await executor.runCustom('DELETE FROM search_history');
     });
+  }
+
+  Future<ShabadNavigation> getShabadNavigation(String shabadId) async {
+    final sId = int.tryParse(shabadId) ?? 0;
+    if (sId == 0) return const ShabadNavigation();
+
+    // Determine which DB to use
+    final db = sId >= 999999 ? _nitnemDatabase : _database;
+
+    try {
+      final rows = await db.read((executor) => executor.runSelect(
+        'SELECT source_id FROM shabads WHERE id = ?', [sId]
+      ));
+
+      if (rows.isEmpty) return const ShabadNavigation();
+      final sourceId = rows.first['source_id'] as String;
+
+      final prev = await db.read((executor) => executor.runSelect(
+        'SELECT id FROM shabads WHERE source_id = ? AND id < ? ORDER BY id DESC LIMIT 1',
+        [sourceId, sId]
+      ));
+
+      final next = await db.read((executor) => executor.runSelect(
+        'SELECT id FROM shabads WHERE source_id = ? AND id > ? ORDER BY id ASC LIMIT 1',
+        [sourceId, sId]
+      ));
+
+      return ShabadNavigation(
+        previousId: prev.isNotEmpty ? prev.first['id'].toString() : null,
+        nextId: next.isNotEmpty ? next.first['id'].toString() : null,
+      );
+    } catch (e) {
+      return const ShabadNavigation();
+    }
   }
 }

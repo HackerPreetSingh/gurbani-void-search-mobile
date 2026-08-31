@@ -37,7 +37,7 @@ class GurbaniHeader extends StatelessWidget {
           if (hasSource) ...[
             const SizedBox(height: 4),
             Text(
-              '${firstVerse.sourceName}${firstVerse.ang != null ? " • Ang ${firstVerse.ang}" : ""}',
+              '${firstVerse.sourceName}${firstVerse.ang != null && firstVerse.ang != 0 ? " • Ang ${firstVerse.ang}" : ""}',
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),

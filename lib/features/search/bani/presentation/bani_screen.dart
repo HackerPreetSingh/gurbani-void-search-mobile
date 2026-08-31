@@ -26,7 +26,7 @@ class _BaniScreenState extends ConsumerState<BaniScreen> {
   
   // Pagination for Sukhmani Sahib
   int _currentSectionIndex = 0;
-  List<List<BaniVerse>> _sections = [];
+  final List<List<BaniVerse>> _sections = [];
 
   @override
   void initState() {
@@ -145,7 +145,8 @@ class _BaniScreenState extends ConsumerState<BaniScreen> {
                     CustomScrollView(
                       key: ValueKey('data_${widget.baniId}_$_currentSectionIndex'),
                       // [AI_GUARD:PERMANENT_LOG] Each section section renders independently for better performance
-                      cacheExtent: 2000, 
+                      // ignore: deprecated_member_use
+                      cacheExtent: 2000.0, 
                       slivers: [
                         SliverAppBar(
                           title: Text(isSukhmaniSahib 

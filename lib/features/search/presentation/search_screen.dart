@@ -129,7 +129,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           RadioListTile<KeyboardType>(
             title: const Text('Punjabi (Gurmukhi)'),
             value: KeyboardType.punjabi,
+            // ignore: deprecated_member_use
             groupValue: keyboardType,
+            // ignore: deprecated_member_use
             onChanged: (val) {
               if (val != null) {
                 ref.read(keyboardTypeProvider.notifier).setType(val);
@@ -140,7 +142,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           RadioListTile<KeyboardType>(
             title: const Text('English (Phonetic)'),
             value: KeyboardType.english,
+            // ignore: deprecated_member_use
             groupValue: keyboardType,
+            // ignore: deprecated_member_use
             onChanged: (val) {
               if (val != null) {
                 ref.read(keyboardTypeProvider.notifier).setType(val);

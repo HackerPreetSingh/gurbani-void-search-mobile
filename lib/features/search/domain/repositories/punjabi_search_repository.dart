@@ -3,6 +3,8 @@ import '../models/gurbani_corpus.dart';
 import '../models/gurbani_search_result.dart';
 import '../models/punjabi_search_query.dart';
 
+import '../models/shabad_navigation.dart';
+
 abstract interface class PunjabiSearchRepository {
   Future<GurbaniCorpusSummary?> activeCorpus();
 
@@ -13,7 +15,7 @@ abstract interface class PunjabiSearchRepository {
 
   Future<PunjabiSearchResponse> search(
     PunjabiSearchQuery query, {
-    int limit = 40,
+    int limit = 500,
     CancelToken? cancelToken,
   });
 
@@ -21,6 +23,8 @@ abstract interface class PunjabiSearchRepository {
     String shabadId, {
     CancelToken? cancelToken,
   });
+
+  Future<ShabadNavigation> getShabadNavigation(String shabadId);
 
   Future<void> addToHistory(GurbaniSearchResult result, String query);
   

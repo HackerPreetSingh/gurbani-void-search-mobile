@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../domain/providers/shabad_providers.dart';
 import '../../../settings/domain/models/display_settings.dart';
@@ -63,6 +64,7 @@ class _ShabadScreenState extends ConsumerState<ShabadScreen> {
   @override
   Widget build(BuildContext context) {
     final shabadAsync = ref.watch(shabadDetailsProvider(widget.shabadId));
+    final navigationAsync = ref.watch(shabadNavigationProvider(widget.shabadId));
     final settingsAsync = ref.watch(shabadSettingsProvider);
     final settings = settingsAsync.value ?? DisplaySettings.defaults();
 
@@ -87,60 +89,98 @@ class _ShabadScreenState extends ConsumerState<ShabadScreen> {
                   );
                 }
 
-                return CustomScrollView(
-                  key: const ValueKey('data'),
-                  cacheExtent: 5000, 
-                  slivers: [
-                    SliverAppBar(
-                      title: const Text('Shabad View'),
-                      floating: true, 
-                      snap: true,
-                      pinned: false,
-                      actions: [
-                        IconButton(
-                          icon: const Icon(Icons.create_new_folder_outlined),
-                          onPressed: () {
-                            String displayTitle = verses.first.gurmukhi;
-                            String? targetVerseId = widget.highlightVerseId;
-                            
-                            if (targetVerseId != null) {
-                              try {
-                                final highlightedVerse = verses.firstWhere((v) => v.stableId == targetVerseId);
-                                displayTitle = highlightedVerse.gurmukhi;
-                              } catch (_) {}
-                            }
-                            _showAddToPrakaranDialog(context, displayTitle, targetVerseId);
-                          },
-                          tooltip: 'Add to Prakaran',
+                return Stack(
+                  children: [
+                    CustomScrollView(
+                      key: ValueKey('data_${widget.shabadId}'),
+                      // ignore: deprecated_member_use
+                      cacheExtent: 5000.0, 
+                      slivers: [
+                        SliverAppBar(
+                          title: const Text('Shabad View'),
+                          floating: true, 
+                          snap: true,
+                          pinned: false,
+                          actions: [
+                            IconButton(
+                              icon: const Icon(Icons.create_new_folder_outlined),
+                              onPressed: () {
+                                String displayTitle = verses.first.gurmukhi;
+                                String? targetVerseId = widget.highlightVerseId;
+                                
+                                if (targetVerseId != null) {
+                                  try {
+                                    final highlightedVerse = verses.firstWhere((v) => v.stableId == targetVerseId);
+                                    displayTitle = highlightedVerse.gurmukhi;
+                                  } catch (_) {}
+                                }
+                                _showAddToPrakaranDialog(context, displayTitle, targetVerseId);
+                              },
+                              tooltip: 'Add to Prakaran',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.settings_outlined),
+                              onPressed: () => _showSettingsDialog(context, settings),
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.settings_outlined),
-                          onPressed: () => _showSettingsDialog(context, settings),
+                        SliverToBoxAdapter(
+                          child: GurbaniHeader(firstVerse: verses.first),
                         ),
+                        SliverPadding(
+                          padding: EdgeInsets.zero,
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final verse = verses[index];
+                                final isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
+                                final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
+
+                                return GurbaniVerseView(
+                                  key: key,
+                                  verse: verse,
+                                  settings: settings,
+                                  isHighlighted: isHighlighted,
+                                );
+                              },
+                              childCount: verses.length,
+                            ),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(child: SizedBox(height: 100)),
                       ],
                     ),
-                    SliverToBoxAdapter(
-                      child: GurbaniHeader(firstVerse: verses.first),
-                    ),
-                    SliverPadding(
-                      padding: EdgeInsets.zero,
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final verse = verses[index];
-                            final isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
-                            final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
-
-                            return GurbaniVerseView(
-                              key: key,
-                              verse: verse,
-                              settings: settings,
-                              isHighlighted: isHighlighted,
-                            );
-                          },
-                          childCount: verses.length,
+                    navigationAsync.when(
+                      data: (nav) => Positioned(
+                        bottom: 20,
+                        left: 20,
+                        right: 20,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            if (nav.hasPrevious)
+                              FloatingActionButton.small(
+                                heroTag: 'prev_shabad',
+                                onPressed: () => context.pushReplacement('/shabad/${nav.previousId}'),
+                                backgroundColor: Colors.teal.withAlpha(200),
+                                foregroundColor: Colors.white,
+                                child: const Icon(Icons.arrow_back_ios_new),
+                              )
+                            else
+                              const SizedBox.shrink(),
+                            if (nav.hasNext)
+                              FloatingActionButton.small(
+                                heroTag: 'next_shabad',
+                                onPressed: () => context.pushReplacement('/shabad/${nav.nextId}'),
+                                backgroundColor: Colors.teal.withAlpha(200),
+                                foregroundColor: Colors.white,
+                                child: const Icon(Icons.arrow_forward_ios),
+                              ),
+                          ],
                         ),
                       ),
+                      loading: () => const SizedBox.shrink(),
+                      error: (e, _) => const SizedBox.shrink(),
                     ),
                   ],
                 );

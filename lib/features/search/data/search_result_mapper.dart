@@ -19,7 +19,7 @@ class SearchResultMapper {
       sourceName: _metadataDataSource.getSourceName(r['source_id'] as String),
       writerName: r['writer_id'] != null ? _metadataDataSource.getWriterName(r['writer_id'] as int) : null,
       raagName: r['raag_id'] != null ? _metadataDataSource.getRaagName(r['raag_id'] as int) : null,
-      ang: r['ang'] as int?,
+      ang: _toInt(r['ang']),
       displayOrder: (r['verse_order'] as int?) ?? 0,
       match: SearchResultMatch.initial,
       transliteration: r['transliteration'] as String?,
