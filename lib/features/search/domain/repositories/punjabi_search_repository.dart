@@ -24,6 +24,8 @@ abstract interface class PunjabiSearchRepository {
     CancelToken? cancelToken,
   });
 
+  Future<List<GurbaniSearchResult>> getVersesForAng(int ang, String sourceId);
+
   Future<ShabadNavigation> getShabadNavigation(String shabadId);
 
   Future<void> addToHistory(GurbaniSearchResult result, String query);

@@ -67,6 +67,11 @@ class NitnemScreen extends ConsumerWidget {
               ),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () async {
+                if (bani.id == AppConstants.sggsVirtualId) {
+                  context.push('/sggs/1');
+                  return;
+                }
+
                 // [AI_GUARD:PERMANENT_LOG] Starting pre-load for smooth bani transition
                 print('${AppConstants.logTag} [nitnem_screen.dart] UI_ACTION: Pre-loading bani ${bani.id}...');
                 

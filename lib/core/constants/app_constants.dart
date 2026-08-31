@@ -35,6 +35,9 @@ abstract final class AppConstants {
   /// Standard prefix for all debug logs related to Gurbani data or engine.
   static const String logTag = '[GURBANI_LOG]';
 
+  /// Virtual ID used for Sri Guru Granth Sahib Ji in the Bani tab.
+  static const int sggsVirtualId = 9999999;
+
   // --- LITURGICAL CONSTANTS ---
 
   /// The default order of Banis by ID. 
@@ -52,6 +55,7 @@ abstract final class AppConstants {
     23,  // Sohila
     22,  // Aarti
     90,  // Aasa Ki Var
+    sggsVirtualId, // Sri Guru Granth Sahib Ji (inserted after Aasa Ki Var)
     104, // Basant Ki Vaar
   ];
 }

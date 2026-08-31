@@ -49,7 +49,31 @@ class BanisNotifier extends AsyncNotifier<List<Bani>> {
     final db = ref.watch(nitnemDatabaseProvider);
     final rows = await db.read((executor) => executor.runSelect('SELECT * FROM banis ORDER BY user_order ASC, id ASC', []));
     print('${AppConstants.logTag} [${DateTime.now()}] PROVIDER_RESULT: Found ${rows.length} banis in Nitnem database');
-    return rows.map((r) => Bani.fromMap(r)).toList();
+    
+    final dbBanis = rows.map((r) => Bani.fromMap(r)).toList();
+    
+    // Inject SGGS if not present
+    if (!dbBanis.any((b) => b.id == AppConstants.sggsVirtualId)) {
+      dbBanis.add(Bani(
+        id: AppConstants.sggsVirtualId,
+        namePa: 'ਸ੍ਰੀ ਗੁਰੂ ਗ੍ਰੰਥ ਸਾਹਿਬ ਜੀ',
+        nameEn: 'Sri Guru Granth Sahib Ji',
+        userOrder: -1, // Will be handled by sorting
+      ));
+    }
+
+    final defaultOrder = AppConstants.defaultBaniOrder;
+    dbBanis.sort((a, b) {
+      final indexA = defaultOrder.indexOf(a.id);
+      final indexB = defaultOrder.indexOf(b.id);
+      
+      if (indexA != -1 && indexB != -1) return indexA.compareTo(indexB);
+      if (indexA != -1) return -1;
+      if (indexB != -1) return 1;
+      return a.id.compareTo(b.id);
+    });
+
+    return dbBanis;
   }
 
   Future<void> reorder(int oldIndex, int newIndex) async {

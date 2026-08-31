@@ -8,6 +8,7 @@ import '../../features/about/presentation/about_page.dart';
 import '../../features/foundation/presentation/foundation_page.dart';
 import '../../features/search/presentation/search_screen.dart';
 import '../../features/search/shabad/presentation/shabad_screen.dart';
+import '../../features/search/shabad/presentation/sggs_ang_screen.dart';
 import '../shell/app_shell.dart';
 
 import '../../features/search/presentation/nitnem_screen.dart';
@@ -93,6 +94,13 @@ GoRouter createAppRouter(Ref ref) {
               final id = state.pathParameters['id']!;
               final highlightId = state.uri.queryParameters['verseId'];
               return ShabadScreen(shabadId: id, highlightVerseId: highlightId);
+            },
+          ),
+          GoRoute(
+            path: '/sggs/:ang',
+            builder: (BuildContext context, GoRouterState state) {
+              final ang = int.tryParse(state.pathParameters['ang'] ?? '1') ?? 1;
+              return SggsAngScreen(initialAng: ang);
             },
           ),
           GoRoute(

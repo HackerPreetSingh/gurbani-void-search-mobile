@@ -111,6 +111,28 @@ class LocalSearchDataSource {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getVersesForAng(int ang, String sourceId) async {
+    final startTime = DateTime.now();
+    try {
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_ANG_FETCH_START: ang=$ang, sourceId=$sourceId');
+      
+      final results = await _database.read((executor) => executor.runSelect('''
+        SELECT *
+        FROM verses
+        WHERE source_id = ? AND ang = ?
+        ORDER BY id ASC
+      ''', [sourceId, ang]));
+      
+      final duration = DateTime.now().difference(startTime).inMilliseconds;
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_ANG_FETCH_COMPLETE: Found ${results.length} verses in ${duration}ms');
+      
+      return results;
+    } catch (e) {
+      print('[GURBANI_LOG] [${DateTime.now()}] [local_search_data_source.dart] DB_ANG_FETCH_ERROR: $e');
+      return [];
+    }
+  }
+
   Future<void> addToHistory(GurbaniSearchResult result, String query) async {
     final sId = int.tryParse(result.shabadId ?? '');
     if (sId == null) return;

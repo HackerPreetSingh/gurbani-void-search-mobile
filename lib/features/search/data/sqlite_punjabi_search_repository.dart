@@ -155,6 +155,17 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
   }
 
   @override
+  Future<List<GurbaniSearchResult>> getVersesForAng(int ang, String sourceId) async {
+    try {
+      await _metadataDataSource.ensureMetadataCached();
+      final rows = await _localDataSource.getVersesForAng(ang, sourceId);
+      return rows.map((r) => _mapper.mapRow(r)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  @override
   Future<ShabadNavigation> getShabadNavigation(String shabadId) => 
       _localDataSource.getShabadNavigation(shabadId);
 

@@ -37,3 +37,8 @@ final shabadNavigationProvider = FutureProvider.family<ShabadNavigation, String>
   final repository = ref.watch(punjabiSearchRepositoryProvider);
   return repository.getShabadNavigation(shabadId);
 });
+
+final angVersesProvider = FutureProvider.family<List<GurbaniSearchResult>, int>((ref, ang) async {
+  final repository = ref.watch(punjabiSearchRepositoryProvider);
+  return repository.getVersesForAng(ang, 'G');
+});
