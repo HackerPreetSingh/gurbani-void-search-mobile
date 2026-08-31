@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../domain/providers/shabad_providers.dart';
 import '../../../settings/domain/models/display_settings.dart';
 import '../../../settings/presentation/display_settings_notifier.dart';
@@ -25,6 +26,7 @@ class _ShabadScreenState extends ConsumerState<ShabadScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     if (widget.highlightVerseId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Future.delayed(const Duration(milliseconds: 600), () {
@@ -32,6 +34,12 @@ class _ShabadScreenState extends ConsumerState<ShabadScreen> {
         });
       });
     }
+  }
+
+  @override
+  void dispose() {
+    WakelockPlus.disable();
+    super.dispose();
   }
 
   void _scrollToHighlightedVerse() {

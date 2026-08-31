@@ -165,25 +165,44 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           child: Row(
             children: [
               Expanded(
-                child: SearchBar(
-                  controller: _searchController,
-                  hintText: 'Search...',
-                  onTap: () {
-                    if (isCustomKeyboardVisible) {
-                      // Custom keyboard is visible, system keyboard will also appear by default.
-                    }
-                  },
-                  leading: const Icon(Icons.search),
-                  trailing: [
-                    if (_searchController.text.isNotEmpty)
-                      IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          ref.read(searchQueryProvider.notifier).setQuery('');
-                        },
+                child: Container(
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.search, color: Colors.grey),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          readOnly: isCustomKeyboardVisible,
+                          showCursor: true,
+                          decoration: const InputDecoration(
+                            hintText: 'Search...',
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                          onTap: () {
+                            if (!isCustomKeyboardVisible) {
+                              // If custom keyboard is off, system keyboard will show naturally
+                            }
+                          },
+                        ),
                       ),
-                  ],
+                      if (_searchController.text.isNotEmpty)
+                        IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                            ref.read(searchQueryProvider.notifier).setQuery('');
+                          },
+                        ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

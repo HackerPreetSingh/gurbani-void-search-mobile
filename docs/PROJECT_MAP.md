@@ -34,3 +34,8 @@ This document maps application features to their respective files and folders. U
 - **Routing**: `lib/app/router/app_router.dart`
 - **Theming**: `lib/app/theme/app_theme.dart`
 - **Sync/Ingestion**: `bin/sync_shabads.dart` & `lib/features/search/domain/services/shabad_sync_service.dart`
+
+---
+
+## Current Status: STABLE BASELINE
+This project is currently at a **Stable Baseline** state. Voice Search and external API dependencies for STT/ASR are intentionally absent to ensure high performance and reliability of the core search and tracking engines.

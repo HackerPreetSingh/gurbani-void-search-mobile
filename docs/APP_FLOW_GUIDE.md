@@ -79,6 +79,7 @@ If you are an AI model building on this app:
 1. **Schema Changes**: Add columns in `LocalDatabase._createProductionSchema`. Update `SearchResultMapper` to map new fields.
 2. **Data Ingestion**: Add new sources in `bin/sync_shabads.dart` and define the extraction logic in `ShabadSyncService`.
 3. **UI Enhancements**: Reuse `_buildUnifiedControl` in settings dialogs for consistency.
+4. **Stable Baseline Note**: Ensure all new features are built on top of the Phase 7 stable architecture. Avoid experimental dependencies that break JVM alignment (Java 17/Kotlin 1.9+).
 
 ---
 

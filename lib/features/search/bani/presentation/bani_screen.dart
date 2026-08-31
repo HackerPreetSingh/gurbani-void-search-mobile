@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../domain/models/bani.dart';
 import '../../domain/providers/bani_providers.dart';
 import '../../../settings/domain/models/display_settings.dart';
@@ -30,6 +31,13 @@ class _BaniScreenState extends ConsumerState<BaniScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
+  }
+
+  @override
+  void dispose() {
+    WakelockPlus.disable();
+    super.dispose();
   }
 
   void _prepareSections(List<BaniVerse> allVerses) {
