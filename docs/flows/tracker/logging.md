@@ -20,3 +20,8 @@ When "Save" is clicked:
 - A new entry is added to the `tracker_logs` table in `user_tracker.sqlite`.
 - Each log is tied to a specific `tracker_id`.
 - Multiple "chunks" can be added for the same day (e.g., 100 in the morning and 100 in the evening). The app will sum them up automatically.
+
+## 5. Deletion Flow & Stability
+When a user deletes a tracker goal or a log entry:
+- **Immediate State Update**: The `TrackerViewModel` removes the item from the in-memory list **synchronously** before awaiting the database deletion. 
+- **Purpose**: This prevents "Dismissible widget still part of tree" errors in Flutter by ensuring the widget tree and the data state are perfectly synchronized during the swipe animation.

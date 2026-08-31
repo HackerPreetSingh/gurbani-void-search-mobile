@@ -33,6 +33,14 @@ To create a high-performance, offline-first Gurbani search engine and liturgical
 - **UI Refinement**: Optimized keyboard layout and cleaned up Nitnem list titles.
 - **Production Status**: This version is the verified stable baseline intended for initial release. All experimental voice-search and SDK-version recovery attempts have been reverted.
 
+### Phase 8: Release Polish & Navigation Depth
+- **Middle-of-Line Search**: Enhanced `SearchQueryBuilder` with substring matching (`LIKE '%query%'`), allowing users to find lines by entering initials of continuous words from anywhere in the line.
+- **Deep-Link Folders**: Upgraded Prakaran (folders) to store specific `verse_id`. Opening a Shabad from a folder now automatically scrolls to and highlights the exact saved line.
+- **Input Hardening**: Permanently disabled system keyboard on Shabad Search (`TextInputType.none`) and implemented auto-reopen for the custom keyboard on search box tap.
+- **Reading Comfort**: Integrated `wakelock_plus` to keep the screen active during Gurbani reading.
+- **Search Scale**: Increased search result limits from 40 to 500 across all data sources.
+- **Stability**: Fixed `Dismissible` state synchronization crashes in the Nitnem Tracker.
+
 ---
 
 ## 3. Technology Stack & Key Files

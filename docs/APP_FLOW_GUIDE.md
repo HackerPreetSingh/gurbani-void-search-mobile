@@ -27,9 +27,12 @@ This document provides an exhaustive, end-to-end explanation of the Gurbani Voic
 ## 3. Core Feature Flows
 
 ### 3.1 Gurbani Search (The "Shabad" Flow)
-- **Engine**: `SqlitePunjabiSearchRepository` queries both Shabad and Nitnem databases but prioritizes Shabad records to ensure clicking a tukk opens a specific Shabad, not a whole book.
+- **Search Logic**: `SqlitePunjabiSearchRepository` queries both Shabad and Nitnem databases but prioritizes Shabad records to ensure clicking a tukk opens a specific Shabad, not a whole book.
 - **Phonetic Mapping**: Users type English initials (e.g., `kejjb`). `GurmukhiProcessor` converts this into a numeric sequence for lookup.
+- **Middle-of-Line**: Supports searching from anywhere in a line using substring matching (`LIKE '%query%'`).
+- **Input Control**: The system keyboard is physically blocked on this screen; the custom keyboard is the mandatory input method and auto-reopens on field tap.
 - **Reading Modes**: Supports **Larivaar** (continuous text) and **Vishram** (colored pauses) toggles.
+- **Screen Stability**: Uses `wakelock_plus` to keep the screen on while reading.
 
 ### 3.2 Nitnem & Banis (The "Liturgy" Flow)
 - **Logic**: Uses the `NitnemDB`. Verses are loaded using `sequence_order` to maintain the exact liturgical flow.
@@ -40,6 +43,12 @@ This document provides an exhaustive, end-to-end explanation of the Gurbani Voic
 - **Logic**: Uses `user_tracker.sqlite` (entirely isolated).
 - **Templates**: Supports Mool Mantar/Simran (Maala units), Bani Count, and Sehaj Path (Ang tracking).
 - **Analytics**: Calculates if a user is Ahead (Green), On Track (Orange), or Behind (Red) with intuitive trending icons.
+- **Safety**: Synchronous state updates prevent `Dismissible` widget tree crashes during deletion.
+
+3.4 Prakaran (The "Organization" Flow)
+- **Persistence**: Items are stored with a `shabad_id` and an optional `verse_id`.
+- **Deep-Linking**: If an item is saved with a `verse_id`, opening it from the folder will trigger an automatic scroll and highlight of that specific verse.
+- **Real-time Sync**: The cache is invalidated on every add/delete to ensure the folder view is always current.
 
 ### B. Web (Fallback Architecture)
 1. **No Disk Access**: On Web, `path_provider` is unavailable. The app detects `kIsWeb`.
@@ -52,7 +61,7 @@ This document provides an exhaustive, end-to-end explanation of the Gurbani Voic
 The app perfectly replicates the official BaniDB search sequence:
 
 1. **Normalization**: `lib/features/search/domain/services/gurmukhi_processor.dart` strips spaces and maps Roman characters to Gurmukhi ASCII.
-2. **Strategy 1 (Numeric)**: Uses `BETWEEN` on `first_letter_str` column. This uses comma-padded ASCII codes (e.g., `,115`) for millisecond-fast prefix lookups.
+2. **Strategy 1 (Numeric/Substrings)**: Uses `LIKE '%query%'` on `first_letter_str` column. This uses comma-padded ASCII codes (e.g., `,115`) for millisecond-fast substring lookups. This allows matching initials from the beginning or middle of a line.
 3. **Strategy 2 (English Initials)**: If Strategy 1 fails, the engine searches the `initials_en` column using `LIKE "%query%"`. This handles phonetic matches like `mkmgh`.
 4. **Strategy 3 (Permutations)**: As a final safety net, deep phonetic permutations (swapping aspirated characters) are tried.
 

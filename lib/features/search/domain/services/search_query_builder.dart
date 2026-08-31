@@ -24,25 +24,22 @@ class SearchQueryBuilder {
   }
 
   static Map<String, dynamic> buildBindiQuery(String charCodeQuery) {
-    final charCodeQueryWildcard = '$charCodeQuery,z';
     final bindiMap = {'103': '090', '106': '122', '115': '083', '075': '094', '080': '038'};
     String updatedQuery = charCodeQuery;
-    String updatedWildcard = charCodeQueryWildcard;
     
     for (var entry in bindiMap.entries) {
       updatedQuery = updatedQuery.replaceAll(entry.key, entry.value);
-      updatedWildcard = updatedWildcard.replaceAll(entry.key, entry.value);
     }
     
     if (updatedQuery != charCodeQuery) {
       return {
-        'condition': '(first_letter_str BETWEEN ? AND ? OR first_letter_str BETWEEN ? AND ?)',
-        'parameters': [charCodeQuery, charCodeQueryWildcard, updatedQuery, updatedWildcard],
+        'condition': '(first_letter_str LIKE ? OR first_letter_str LIKE ?)',
+        'parameters': ['%$charCodeQuery%', '%$updatedQuery%'],
       };
     }
     return {
-      'condition': 'first_letter_str BETWEEN ? AND ?',
-      'parameters': [charCodeQuery, charCodeQueryWildcard],
+      'condition': 'first_letter_str LIKE ?',
+      'parameters': ['%$charCodeQuery%'],
     };
   }
 }
