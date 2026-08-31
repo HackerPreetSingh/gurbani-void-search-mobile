@@ -4,11 +4,13 @@ import '../../data/prakaran_repository.dart';
 
 class AddToPrakaranDialog extends ConsumerStatefulWidget {
   final String shabadId;
+  final String? verseId;
   final String titleGurmukhi;
 
   const AddToPrakaranDialog({
     super.key,
     required this.shabadId,
+    this.verseId,
     required this.titleGurmukhi,
   });
 
@@ -112,8 +114,12 @@ class _AddToPrakaranDialogState extends ConsumerState<AddToPrakaranDialog> {
     await ref.read(prakaranRepositoryProvider).addShabadToPrakaran(
       prakaranId: prakaranId,
       shabadId: widget.shabadId,
+      verseId: widget.verseId,
       titleGurmukhi: widget.titleGurmukhi,
     );
+    // Force refresh of the items list for this folder
+    ref.invalidate(prakaranItemsProvider(prakaranId));
+    
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Added to Prakaran')),
@@ -136,10 +142,13 @@ class _AddToPrakaranDialogState extends ConsumerState<AddToPrakaranDialog> {
     await repo.addShabadToPrakaran(
       prakaranId: newPrakaran.id,
       shabadId: widget.shabadId,
+      verseId: widget.verseId,
       titleGurmukhi: widget.titleGurmukhi,
     );
 
     ref.invalidate(prakaransProvider);
+    // Force refresh of the items list for this new folder
+    ref.invalidate(prakaranItemsProvider(newPrakaran.id));
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

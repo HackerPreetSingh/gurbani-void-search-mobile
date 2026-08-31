@@ -38,7 +38,7 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
   @override
   Future<PunjabiSearchResponse> search(
     PunjabiSearchQuery query, {
-    int limit = 40,
+    int limit = 500,
     CancelToken? cancelToken,
   }) async {
     try {

@@ -8,7 +8,7 @@ class RemoteSearchDataSource {
 
   Future<List<dynamic>> search(
     PunjabiSearchQuery query, {
-    int limit = 40,
+    int limit = 500,
     CancelToken? cancelToken,
   }) async {
     try {

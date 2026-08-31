@@ -27,7 +27,7 @@ class LocalSearchDataSource {
   Future<List<Map<String, dynamic>>> search({
     required String condition,
     required List<dynamic> parameters,
-    int limit = 40,
+    int limit = 500,
     String? orderBy,
   }) async {
     // [AI_GUARD:PERMANENT_LOG] Deep logging for search query execution (Multi-DB).

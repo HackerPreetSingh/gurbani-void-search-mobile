@@ -32,7 +32,11 @@ class PrakaranDetailsScreen extends ConsumerWidget {
                   onPressed: () => _removeItem(ref, item.id!),
                 ),
                 onTap: () {
-                  context.push('/shabad/${item.shabadId}');
+                  String path = '/shabad/${item.shabadId}';
+                  if (item.verseId != null) {
+                    path += '?verseId=${item.verseId}';
+                  }
+                  context.push(path);
                 },
               );
             },

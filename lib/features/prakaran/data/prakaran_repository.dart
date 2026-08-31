@@ -32,12 +32,13 @@ class PrakaranRepository {
   Future<void> addShabadToPrakaran({
     required String prakaranId,
     required String shabadId,
+    String? verseId,
     required String titleGurmukhi,
   }) async {
     await _database.transaction((executor) async {
       await executor.runCustom(
-        'INSERT INTO prakaran_items (prakaran_id, shabad_id, title_gurmukhi, created_at) VALUES (?, ?, ?, ?)',
-        [prakaranId, shabadId, titleGurmukhi, DateTime.now().toIso8601String()],
+        'INSERT INTO prakaran_items (prakaran_id, shabad_id, verse_id, title_gurmukhi, created_at) VALUES (?, ?, ?, ?, ?)',
+        [prakaranId, shabadId, verseId, titleGurmukhi, DateTime.now().toIso8601String()],
       );
     });
   }

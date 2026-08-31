@@ -58,6 +58,8 @@ class PrakaranListScreen extends ConsumerWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           TextButton(
             onPressed: () async {
+              // Clear items from cache before deleting the folder
+              ref.invalidate(prakaranItemsProvider(id));
               await ref.read(prakaranRepositoryProvider).deletePrakaran(id);
               ref.invalidate(prakaransProvider);
               if (context.mounted) Navigator.pop(context);

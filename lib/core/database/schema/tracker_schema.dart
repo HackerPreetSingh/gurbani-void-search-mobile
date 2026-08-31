@@ -45,6 +45,7 @@ class TrackerSchema {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         prakaran_id TEXT NOT NULL,
         shabad_id TEXT NOT NULL,
+        verse_id TEXT,
         title_gurmukhi TEXT NOT NULL,
         created_at TEXT NOT NULL,
         FOREIGN KEY (prakaran_id) REFERENCES prakarans (id) ON DELETE CASCADE
@@ -52,5 +53,15 @@ class TrackerSchema {
     ''');
 
     await executor.runCustom('CREATE INDEX IF NOT EXISTS idx_prakaran_items_folder ON prakaran_items (prakaran_id)');
+  }
+
+  static Future<void> ensureColumns(QueryExecutor executor) async {
+    try {
+      final columns = await executor.runSelect('PRAGMA table_info(prakaran_items)', []);
+      final hasVerseId = columns.any((c) => c['name'] == 'verse_id');
+      if (!hasVerseId) {
+        await executor.runCustom('ALTER TABLE prakaran_items ADD COLUMN verse_id TEXT');
+      }
+    } catch (_) {}
   }
 }

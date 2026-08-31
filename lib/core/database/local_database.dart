@@ -189,6 +189,7 @@ class _LocalDatabaseConnectionUser extends QueryExecutorUser {
     
     // Column integrity checks
     await ProductionSchema.ensureColumns(executor);
+    await TrackerSchema.ensureColumns(executor);
   }
 }
 

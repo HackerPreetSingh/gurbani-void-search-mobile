@@ -99,7 +99,18 @@ class _ShabadScreenState extends ConsumerState<ShabadScreen> {
                       actions: [
                         IconButton(
                           icon: const Icon(Icons.create_new_folder_outlined),
-                          onPressed: () => _showAddToPrakaranDialog(context, verses.first.gurmukhi),
+                          onPressed: () {
+                            String displayTitle = verses.first.gurmukhi;
+                            String? targetVerseId = widget.highlightVerseId;
+                            
+                            if (targetVerseId != null) {
+                              try {
+                                final highlightedVerse = verses.firstWhere((v) => v.stableId == targetVerseId);
+                                displayTitle = highlightedVerse.gurmukhi;
+                              } catch (_) {}
+                            }
+                            _showAddToPrakaranDialog(context, displayTitle, targetVerseId);
+                          },
                           tooltip: 'Add to Prakaran',
                         ),
                         IconButton(
@@ -156,12 +167,13 @@ class _ShabadScreenState extends ConsumerState<ShabadScreen> {
     );
   }
 
-  void _showAddToPrakaranDialog(BuildContext context, String firstVerseGurmukhi) {
+  void _showAddToPrakaranDialog(BuildContext context, String titleGurmukhi, String? verseId) {
     showDialog(
       context: context,
       builder: (context) => AddToPrakaranDialog(
         shabadId: widget.shabadId,
-        titleGurmukhi: firstVerseGurmukhi,
+        verseId: verseId,
+        titleGurmukhi: titleGurmukhi,
       ),
     );
   }

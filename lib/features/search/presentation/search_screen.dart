@@ -96,7 +96,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildKeyboardDrawer() {
     final keyboardType = ref.watch(keyboardTypeProvider);
-    final isVisible = ref.watch(customKeyboardVisibleProvider);
 
     return Drawer(
       child: ListView(
@@ -116,12 +115,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               ],
             ),
           ),
-          SwitchListTile(
-            title: const Text('Show Custom Keyboard'),
-            value: isVisible,
-            onChanged: (val) => ref.read(customKeyboardVisibleProvider.notifier).setVisible(val),
-          ),
-          const Divider(),
           const Padding(
             padding: EdgeInsets.all(16.0),
             child: Text('Select Language', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -156,7 +149,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _buildSearchContent(BuildContext context, WidgetRef ref) {
     final searchState = ref.watch(searchViewModelProvider);
     final vm = ref.read(searchViewModelProvider.notifier);
-    final isCustomKeyboardVisible = ref.watch(customKeyboardVisibleProvider);
 
     return Column(
       children: [
@@ -179,7 +171,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       Expanded(
                         child: TextField(
                           controller: _searchController,
-                          readOnly: isCustomKeyboardVisible,
+                          keyboardType: TextInputType.none,
                           showCursor: true,
                           decoration: const InputDecoration(
                             hintText: 'Search...',
@@ -187,9 +179,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                             isDense: true,
                           ),
                           onTap: () {
-                            if (!isCustomKeyboardVisible) {
-                              // If custom keyboard is off, system keyboard will show naturally
-                            }
+                            // System keyboard is permanently blocked by keyboardType: TextInputType.none
+                            // Re-show custom keyboard if it was minimized
+                            ref.read(customKeyboardVisibleProvider.notifier).setVisible(true);
                           },
                         ),
                       ),

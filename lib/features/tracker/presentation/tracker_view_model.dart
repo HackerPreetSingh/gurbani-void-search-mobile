@@ -45,8 +45,11 @@ class TrackerViewModel extends AsyncNotifier<List<TrackerGoal>> {
   }
 
   Future<void> deleteTracker(String id) async {
+    final previousState = state.value;
+    if (previousState != null) {
+      state = AsyncValue.data(previousState.where((t) => t.id != id).toList());
+    }
     await ref.read(trackerRepositoryProvider).deleteTracker(id);
-    ref.invalidateSelf();
   }
 
   Future<TrackerStatus> getStatus(TrackerGoal goal) async {
