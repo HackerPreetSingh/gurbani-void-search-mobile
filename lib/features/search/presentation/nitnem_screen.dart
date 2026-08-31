@@ -58,11 +58,12 @@ class NitnemScreen extends ConsumerWidget {
               key: ValueKey(bani.id),
               leading: CircleAvatar(
                 backgroundColor: Colors.teal.shade50,
-                child: const Icon(Icons.menu_book, size: 20, color: Colors.teal),
+                radius: 24,
+                child: const Icon(Icons.menu_book, size: 24, color: Colors.teal),
               ),
               title: Text(
                 bani.namePa,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
               ),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () async {

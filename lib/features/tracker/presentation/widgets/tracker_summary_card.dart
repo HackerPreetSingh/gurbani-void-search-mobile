@@ -85,17 +85,36 @@ class TrackerSummaryCard extends ConsumerWidget {
       icon = Icons.trending_down;
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(color: color.withAlpha(20), borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(width: 12),
-          Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
-        ],
-      ),
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(color: color.withAlpha(20), borderRadius: BorderRadius.circular(12)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color),
+              const SizedBox(width: 12),
+              Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Expected: ${status.expectedPerDay} ${goal.unitName} / day',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.teal),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              'Avg: ${status.averagePerDay.toStringAsFixed(1)} / day',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

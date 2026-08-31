@@ -159,9 +159,19 @@ class _TrackerCard extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildTrendInfo(status, goal),
-                          Text(
-                            'Avg: ${status.averagePerDay.toStringAsFixed(1)} / day',
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              if (status.expectedPerDay != null)
+                                Text(
+                                  'Expected: ${status.expectedPerDay} / day',
+                                  style: const TextStyle(fontSize: 12, color: Colors.teal, fontWeight: FontWeight.w500),
+                                ),
+                              Text(
+                                'Avg: ${status.averagePerDay.toStringAsFixed(1)} / day',
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
                           ),
                         ],
                       ),

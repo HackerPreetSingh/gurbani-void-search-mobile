@@ -49,7 +49,7 @@ class _ProgressUpdateModalState extends ConsumerState<ProgressUpdateModal> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _logDate,
-      firstDate: widget.goal.startDate,
+      firstDate: DateTime(1900),
       lastDate: DateTime.now().add(const Duration(days: 1)),
     );
     if (picked != null) {

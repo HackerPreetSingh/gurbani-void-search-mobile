@@ -165,6 +165,7 @@ class TrackerStatus {
   final double completionPercentage;
   final int daysElapsed;
   final double averagePerDay;
+  final int? expectedPerDay;
 
   TrackerStatus({
     required this.totalDone,
@@ -174,5 +175,6 @@ class TrackerStatus {
     required this.completionPercentage,
     required this.daysElapsed,
     required this.averagePerDay,
+    this.expectedPerDay,
   });
 }

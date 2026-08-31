@@ -42,7 +42,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final dbStatus = ref.watch(databaseStatusProvider);
+    final searchState = ref.watch(searchViewModelProvider);
     
+    String appBarTitle = 'Gurbani Search';
+    final searchData = searchState.value;
+    if (searchData != null && searchData.results.isNotEmpty && searchData.source != null) {
+      appBarTitle += ' (${searchData.source})';
+    }
+
     // Sync external query changes back to controller (when using custom keyboard)
     ref.listen<String>(searchQueryProvider, (previous, next) {
       if (_searchController.text != next) {
@@ -56,7 +63,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Gurbani Search'),
+        title: Text(appBarTitle),
         leading: IconButton(
           icon: const Icon(Icons.folder_special_outlined),
           onPressed: () => Navigator.push(

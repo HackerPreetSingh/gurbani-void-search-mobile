@@ -99,7 +99,7 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: isStart ? _startDate : (_deadlineDate ?? DateTime.now().add(const Duration(days: 40))),
-      firstDate: DateTime(2020),
+      firstDate: DateTime(1900),
       lastDate: DateTime(2101),
     );
     if (picked != null) {
@@ -190,8 +190,7 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
           onTap: () => _selectDate(context, true),
         ),
         const SizedBox(height: 16),
-        if (_selectedType != TrackerTemplateType.sehajPath) _buildGoalInputs(),
-        if (_selectedType == TrackerTemplateType.sehajPath) _buildSehajPathInputs(),
+        _buildGoalInputs(),
         const SizedBox(height: 60),
       ],
     );
@@ -199,16 +198,25 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
 
   Widget _buildGoalInputs() {
     final isBani = _selectedType == TrackerTemplateType.baniCount;
+    final isSehajPath = _selectedType == TrackerTemplateType.sehajPath;
+
     return Column(
       children: [
-        TextField(
-          controller: _totalGoalController,
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            labelText: isBani ? 'Total Target (Paths)' : 'Total Target (Units)',
-            border: const OutlineInputBorder(),
+        if (!isSehajPath)
+          TextField(
+            controller: _totalGoalController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: isBani ? 'Total Target (Paths)' : 'Total Target (Units)',
+              border: const OutlineInputBorder(),
+            ),
+          )
+        else
+          const ListTile(
+            title: Text('Total Target'),
+            subtitle: Text('1430 Angs (Sri Guru Granth Sahib Ji)'),
+            leading: Icon(Icons.auto_stories, color: Colors.teal),
           ),
-        ),
         const SizedBox(height: 16),
         _buildDurationRow(),
         if (_isInfinite) ...[
@@ -217,10 +225,19 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
             controller: _dailyTargetController,
             keyboardType: TextInputType.number,
             decoration: InputDecoration(
-              labelText: isBani ? 'Daily Target (Optional Paths)' : 'Daily Target (Optional Units)',
+              labelText: isSehajPath 
+                  ? 'Daily Target (Optional Angs)' 
+                  : (isBani ? 'Daily Target (Optional Paths)' : 'Daily Target (Optional Units)'),
               hintText: 'Leave empty for free hand',
               border: const OutlineInputBorder(),
             ),
+          ),
+        ] else if (isSehajPath) ...[
+          const SizedBox(height: 16),
+          DateSelectorTile(
+            label: 'Deadline Date',
+            date: _deadlineDate ?? DateTime.now().add(const Duration(days: 40)),
+            onTap: () => _selectDate(context, false),
           ),
         ]
       ],
@@ -228,21 +245,25 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
   }
 
   Widget _buildDurationRow() {
+    final isSehajPath = _selectedType == TrackerTemplateType.sehajPath;
     return Row(
       children: [
-        Expanded(
-          child: TextField(
-            controller: _daysController,
-            keyboardType: TextInputType.number,
-            enabled: !_isInfinite,
-            decoration: const InputDecoration(labelText: 'Total Days', border: OutlineInputBorder()),
-          ),
-        ),
+        if (!isSehajPath)
+          Expanded(
+            child: TextField(
+              controller: _daysController,
+              keyboardType: TextInputType.number,
+              enabled: !_isInfinite,
+              decoration: const InputDecoration(labelText: 'Total Days', border: OutlineInputBorder()),
+            ),
+          )
+        else
+          const Spacer(),
         const SizedBox(width: 16),
-        const Text('OR'),
+        if (!isSehajPath) const Text('OR'),
         const SizedBox(width: 16),
         ChoiceChip(
-          label: const Text('Infinite'),
+          label: Text(isSehajPath ? 'No End Date' : 'Infinite'),
           selected: _isInfinite,
           onSelected: (val) {
             setState(() {
@@ -258,25 +279,6 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
     );
   }
 
-  Widget _buildSehajPathInputs() {
-    return Column(
-      children: [
-        DateSelectorTile(
-          label: 'Deadline Date',
-          date: _deadlineDate ?? DateTime.now().add(const Duration(days: 40)),
-          onTap: () => _selectDate(context, false),
-        ),
-        const SizedBox(height: 16),
-        if (_deadlineDate == null)
-          TextField(
-            controller: _dailyTargetController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(labelText: 'Angs per day', border: OutlineInputBorder()),
-          ),
-      ],
-    );
-  }
-
   void _handleFinalStep() {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
@@ -288,19 +290,26 @@ class _TrackerCreationWizardState extends ConsumerState<TrackerCreationWizard> {
     int? totalGoal = int.tryParse(_totalGoalController.text);
     int? dailyTarget = int.tryParse(_dailyTargetController.text);
 
-    if (!_isInfinite) {
-      final days = int.tryParse(_daysController.text);
-      if (days != null && totalGoal != null) {
-        dailyTarget = (totalGoal / days).ceil();
-        _deadlineDate = _startDate.add(Duration(days: days - 1));
-      }
-    }
-
     if (_selectedType == TrackerTemplateType.sehajPath) {
       totalGoal = 1430;
-      if (_deadlineDate != null) {
-        dailyTarget = TrackerAnalyticsService().calculateRequiredDailyTarget(totalGoal, _startDate, _deadlineDate!);
+    }
+
+    if (!_isInfinite) {
+      if (_selectedType == TrackerTemplateType.sehajPath) {
+        _deadlineDate ??= DateTime.now().add(const Duration(days: 40));
+        if (totalGoal != null) {
+          dailyTarget = TrackerAnalyticsService().calculateRequiredDailyTarget(totalGoal, _startDate, _deadlineDate!);
+        }
+      } else {
+        final days = int.tryParse(_daysController.text);
+        if (days != null && totalGoal != null) {
+          dailyTarget = (totalGoal / days).ceil();
+          _deadlineDate = _startDate.add(Duration(days: days - 1));
+        }
       }
+    } else {
+      _deadlineDate = null;
+      // dailyTarget already comes from _dailyTargetController
     }
 
     _saveTracker(title, totalGoal, dailyTarget, unitName);

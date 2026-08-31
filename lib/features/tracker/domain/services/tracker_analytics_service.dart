@@ -45,6 +45,7 @@ class TrackerAnalyticsService {
       completionPercentage: percentage,
       daysElapsed: daysElapsed,
       averagePerDay: averagePerDay,
+      expectedPerDay: goal.dailyTarget,
     );
   }
 
