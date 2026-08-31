@@ -45,7 +45,12 @@ This document provides an exhaustive, end-to-end explanation of the Gurbani Voic
 - **Analytics**: Calculates if a user is Ahead (Green), On Track (Orange), or Behind (Red) with intuitive trending icons.
 - **Safety**: Synchronous state updates prevent `Dismissible` widget tree crashes during deletion.
 
-3.4 Prakaran (The "Organization" Flow)
+3.4 Whole SGGS (The "Scripture" Flow)
+- **Integration**: Injected into the Nitnem tab as a virtual Bani item.
+- **Ang-wise Reading**: Loads verses page-by-page (Ang 1 to 1430) from the main corpus.
+- **Navigator**: Features a bottom control bar for page turning and a "Go to Ang" numeric jump dialog.
+
+3.5 Prakaran (The "Organization" Flow)
 - **Persistence**: Items are stored with a `shabad_id` and an optional `verse_id`.
 - **Deep-Linking**: If an item is saved with a `verse_id`, opening it from the folder will trigger an automatic scroll and highlight of that specific verse.
 - **Real-time Sync**: The cache is invalidated on every add/delete to ensure the folder view is always current.

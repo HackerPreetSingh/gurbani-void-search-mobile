@@ -5,11 +5,13 @@ This document explains how liturgical paths (Banis) are displayed and read.
 ## 1. Selection
 In the Nitnem Tab, the user sees a list of Banis (Japji Sahib, Jaap Sahib, etc.).
 - The list is fetched from the Nitnem Database via `banisListProvider`.
+- **SGGS Injection**: The app dynamically injects "Sri Guru Granth Sahib Ji" into this list as a virtual entry after Aasa Ki Var.
 - Users can drag and drop these to change their daily routine order.
 
 ## 2. Loading Content
-When a Bani is selected, `BaniScreen` (lib/features/search/bani/presentation/bani_screen.dart) is opened.
-- It uses `baniDetailsProvider` to fetch all verses from the `nitnem_offline.sqlite` database.
+When a Bani is selected, `BaniScreen` is opened.
+- If SGGS is selected, `SggsAngScreen` (lib/features/search/shabad/presentation/sggs_ang_screen.dart) is opened instead.
+- It uses `baniDetailsProvider` (or `angVersesProvider` for SGGS) to fetch all verses from the respective database.
 - **Strict Ordering**: Verses are sorted by a `sequence_order` column to ensure they appear in the correct liturgical order, which is different from search results.
 
 ## 3. Special Reading Modes

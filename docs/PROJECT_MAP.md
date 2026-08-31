@@ -13,9 +13,10 @@ This document maps application features to their respective files and folders. U
 - **Components**: `lib/features/search/shabad/`
 
 ## 3. Feature: Nitnem & Banis
-- **Main Page**: `lib/features/search/presentation/bani_page.dart` (Soon to be modularized)
+- **Main Page**: `lib/features/search/presentation/nitnem_screen.dart`
 - **Providers**: `lib/features/search/domain/providers/bani_providers.dart`
 - **Components**: `lib/features/search/bani/`
+- **Whole SGGS Viewer**: `lib/features/search/shabad/presentation/sggs_ang_screen.dart`
 
 ## 4. Feature: Nitnem Tracker
 - **Database**: `lib/features/tracker/data/user_tracker_database.dart`

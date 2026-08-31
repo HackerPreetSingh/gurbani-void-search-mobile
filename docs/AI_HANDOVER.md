@@ -40,6 +40,8 @@ To create a high-performance, offline-first Gurbani search engine and liturgical
 - **Reading Comfort**: Integrated `wakelock_plus` to keep the screen active during Gurbani reading.
 - **Search Scale**: Increased search result limits from 40 to 500 across all data sources.
 - **Stability**: Fixed `Dismissible` state synchronization crashes in the Nitnem Tracker.
+- **Whole SGGS Integration**: Integrated all 1430 Angs of Sri Guru Granth Sahib Ji into the Nitnem tab.
+- **Ang Navigator**: Built a specialized page-turning viewer with direct-jump (Go to Ang) capabilities for full scripture reading.
 
 ---
 
