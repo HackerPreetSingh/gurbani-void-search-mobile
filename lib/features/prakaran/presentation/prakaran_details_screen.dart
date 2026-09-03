@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../settings/presentation/display_settings_notifier.dart';
 import '../domain/models/prakaran_models.dart';
 import '../data/prakaran_repository.dart';
 
@@ -11,6 +12,7 @@ class PrakaranDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itemsAsync = ref.watch(prakaranItemsProvider(prakaran.id));
+    final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -26,7 +28,7 @@ class PrakaranDetailsScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final item = items[index];
               return ListTile(
-                title: Text(item.titleGurmukhi, style: const TextStyle(fontSize: 18)),
+                title: Text(item.titleGurmukhi, style: TextStyle(fontSize: 18, fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
                 trailing: IconButton(
                   icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
                   onPressed: () => _removeItem(ref, item.id!),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../settings/presentation/display_settings_notifier.dart';
 import '../domain/models/tracker_models.dart';
 import 'tracker_view_model.dart';
 import '../domain/services/tracker_analytics_service.dart';
@@ -102,6 +103,8 @@ class _TrackerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
+
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 16),
@@ -120,7 +123,7 @@ class _TrackerCard extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       goal.title,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold),
                     ),
                   ),
                   _buildTypeBadge(goal.templateType),

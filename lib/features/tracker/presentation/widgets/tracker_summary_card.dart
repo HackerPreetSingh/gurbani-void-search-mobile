@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../settings/presentation/display_settings_notifier.dart';
 import '../../domain/models/tracker_models.dart';
 import '../../domain/services/tracker_analytics_service.dart';
 import '../tracker_view_model.dart';
@@ -12,6 +13,8 @@ class TrackerSummaryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
+
     return FutureBuilder<TrackerStatus>(
       future: ref.read(trackerViewModelProvider.notifier).getStatus(goal),
       builder: (context, snapshot) {
@@ -29,20 +32,20 @@ class TrackerSummaryCard extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStatItem('Total Done', analytics.formatCount(status.totalDone, goal.templateType)),
+                    _buildStatItem('Total Done', analytics.formatCount(status.totalDone, goal.templateType), isBold),
                     if (status.totalRemaining != null)
-                      _buildStatItem('Remaining', analytics.formatCount(status.totalRemaining!, goal.templateType)),
+                      _buildStatItem('Remaining', analytics.formatCount(status.totalRemaining!, goal.templateType), isBold),
                   ],
                 ),
                 const Divider(height: 32),
-                _buildStatusIndicator(status, goal),
+                _buildStatusIndicator(status, goal, isBold),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Start: ${DateFormat('MMM dd, yyyy').format(goal.startDate)}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    Text('Start: ${DateFormat('MMM dd, yyyy').format(goal.startDate)}', style: TextStyle(fontSize: 12, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: Colors.grey)),
                     if (goal.deadlineDate != null)
-                      Text('Deadline: ${DateFormat('MMM dd, yyyy').format(goal.deadlineDate!)}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text('Deadline: ${DateFormat('MMM dd, yyyy').format(goal.deadlineDate!)}', style: TextStyle(fontSize: 12, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: Colors.grey)),
                   ],
                 ),
               ],
@@ -53,21 +56,21 @@ class TrackerSummaryCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
+  Widget _buildStatItem(String label, String value, bool isBold) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+        Text(label, style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: Colors.grey)),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal)),
+        Text(value, style: TextStyle(fontSize: 18, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold, color: Colors.teal)),
       ],
     );
   }
 
-  Widget _buildStatusIndicator(TrackerStatus status, TrackerGoal goal) {
+  Widget _buildStatusIndicator(TrackerStatus status, TrackerGoal goal, bool isBold) {
     if (goal.dailyTarget == null) {
       return Text(
         'Average: ${status.averagePerDay.toStringAsFixed(1)} ${goal.unitName} / day',
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.w500),
       );
     }
 
@@ -95,7 +98,7 @@ class TrackerSummaryCard extends ConsumerWidget {
             children: [
               Icon(icon, color: color),
               const SizedBox(width: 12),
-              Text(text, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(text, style: TextStyle(color: color, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold, fontSize: 16)),
             ],
           ),
         ),
@@ -105,12 +108,12 @@ class TrackerSummaryCard extends ConsumerWidget {
           children: [
             Text(
               'Expected: ${status.expectedPerDay} ${goal.unitName} / day',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: Colors.teal),
+              style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.w500, color: Colors.teal),
             ),
             const SizedBox(width: 16),
             Text(
               'Avg: ${status.averagePerDay.toStringAsFixed(1)} / day',
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: Colors.grey),
             ),
           ],
         ),

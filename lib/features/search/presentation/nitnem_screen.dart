@@ -6,6 +6,8 @@ import '../../../core/di/core_providers.dart';
 import '../../foundation/presentation/foundation_page.dart';
 import '../domain/providers/bani_providers.dart';
 
+import '../../settings/presentation/display_settings_notifier.dart';
+
 class NitnemScreen extends ConsumerWidget {
   const NitnemScreen({super.key});
 
@@ -39,6 +41,7 @@ class NitnemScreen extends ConsumerWidget {
   Widget _buildNitnemContent(BuildContext context, WidgetRef ref) {
     print('${AppConstants.logTag} [${DateTime.now()}] WIDGET_BUILD: NitnemScreen');
     final banisAsync = ref.watch(banisListProvider);
+    final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
 
     return banisAsync.when(
       data: (banis) {
@@ -63,7 +66,7 @@ class NitnemScreen extends ConsumerWidget {
               ),
               title: Text(
                 bani.namePa,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 24, fontWeight: isBold ? FontWeight.bold : FontWeight.w500),
               ),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () async {

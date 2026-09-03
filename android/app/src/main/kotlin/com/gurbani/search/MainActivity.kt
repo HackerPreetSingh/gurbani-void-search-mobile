@@ -1,4 +1,4 @@
-package com.example.gurbani_voice_search
+package com.gurbani.search
 
 import io.flutter.embedding.android.FlutterActivity
 

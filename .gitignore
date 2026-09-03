@@ -47,3 +47,5 @@ app.*.map.json
 .firebaserc
 
 /sample-json
+
+android/key.properties

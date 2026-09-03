@@ -99,3 +99,26 @@ final shabadSettingsProvider = AsyncNotifierProvider<ShabadDisplaySettingsNotifi
 final baniSettingsProvider = AsyncNotifierProvider<BaniDisplaySettingsNotifier, DisplaySettings>(() {
   return BaniDisplaySettingsNotifier();
 });
+
+class BoldTextSettingsNotifier extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() async {
+    return ref.watch(settingsDataSourceProvider).getBoldTextSettings();
+  }
+
+  Future<void> toggleBoldText() async {
+    final current = state.value ?? false;
+    final updated = !current;
+    state = AsyncData(updated);
+    await ref.read(settingsDataSourceProvider).saveBoldTextSettings(updated);
+  }
+
+  Future<void> setBoldText(bool val) async {
+    state = AsyncData(val);
+    await ref.read(settingsDataSourceProvider).saveBoldTextSettings(val);
+  }
+}
+
+final boldTextSettingsProvider = AsyncNotifierProvider<BoldTextSettingsNotifier, bool>(() {
+  return BoldTextSettingsNotifier();
+});

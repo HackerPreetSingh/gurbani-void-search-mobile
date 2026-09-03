@@ -8,6 +8,7 @@ class SettingsDataSource {
   final LocalDatabase _database;
   static const shabadKey = 'display_settings_shabad';
   static const baniKey = 'display_settings_bani';
+  static const boldTextKey = 'is_bold_text_enabled';
 
   SettingsDataSource(this._database);
 
@@ -37,6 +38,31 @@ class SettingsDataSource {
       await executor.runCustom(
         'INSERT OR REPLACE INTO app_metadata (key, value, updated_at_utc) VALUES (?, ?, ?)',
         [key, value, now],
+      );
+    });
+  }
+
+  Future<bool> getBoldTextSettings() async {
+    final rows = await _database.read((executor) => executor.runSelect(
+          'SELECT value FROM app_metadata WHERE key = ?',
+          [boldTextKey],
+        ));
+
+    if (rows.isEmpty) {
+      return false;
+    }
+
+    final value = rows.first['value'] as String;
+    return value == 'true';
+  }
+
+  Future<void> saveBoldTextSettings(bool isBold) async {
+    final now = DateTime.now().toUtc().toIso8601String();
+
+    await _database.transaction((executor) async {
+      await executor.runCustom(
+        'INSERT OR REPLACE INTO app_metadata (key, value, updated_at_utc) VALUES (?, ?, ?)',
+        [boldTextKey, isBold.toString(), now],
       );
     });
   }

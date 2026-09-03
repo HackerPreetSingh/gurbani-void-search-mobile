@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../settings/presentation/display_settings_notifier.dart';
 import '../data/prakaran_repository.dart';
 import 'prakaran_details_screen.dart';
 
@@ -9,6 +10,7 @@ class PrakaranListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final prakaransAsync = ref.watch(prakaransProvider);
+    final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -27,7 +29,7 @@ class PrakaranListScreen extends ConsumerWidget {
               final prakaran = prakarans[index];
               return ListTile(
                 leading: const Icon(Icons.folder, color: Colors.teal),
-                title: Text(prakaran.name),
+                title: Text(prakaran.name, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                   onPressed: () => _confirmDelete(context, ref, prakaran.id),

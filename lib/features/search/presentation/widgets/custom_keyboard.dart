@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../settings/presentation/display_settings_notifier.dart';
 import '../providers/keyboard_providers.dart';
 
 class CustomKeyboard extends ConsumerWidget {
@@ -113,7 +114,7 @@ class CustomKeyboard extends ConsumerWidget {
   }
 }
 
-class _KeyboardKey extends StatelessWidget {
+class _KeyboardKey extends ConsumerWidget {
   final String? label;
   final IconData? icon;
   final VoidCallback onTap;
@@ -122,7 +123,9 @@ class _KeyboardKey extends StatelessWidget {
   const _KeyboardKey({this.label, this.icon, required this.onTap, this.color});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1),
       child: InkWell(
@@ -141,7 +144,10 @@ class _KeyboardKey extends StatelessWidget {
             ? Icon(icon, size: 20, color: Colors.black87)
             : Text(
                 label!,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
+                ),
               ),
         ),
       ),

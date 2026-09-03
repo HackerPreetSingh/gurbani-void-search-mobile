@@ -11,6 +11,8 @@ import 'providers/keyboard_providers.dart';
 import 'widgets/custom_keyboard.dart';
 import '../../prakaran/presentation/prakaran_list_screen.dart';
 
+import '../../settings/presentation/display_settings_notifier.dart';
+
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -160,6 +162,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   Widget _buildSearchContent(BuildContext context, WidgetRef ref) {
     final searchState = ref.watch(searchViewModelProvider);
     final vm = ref.read(searchViewModelProvider.notifier);
+    final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
 
     return Column(
       children: [
@@ -184,6 +187,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           controller: _searchController,
                           keyboardType: TextInputType.none,
                           showCursor: true,
+                          style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
                           decoration: const InputDecoration(
                             hintText: 'Search...',
                             border: InputBorder.none,
@@ -234,7 +238,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               }
               return ListView.builder(
                 itemCount: response.results.length,
-                itemBuilder: (context, index) => _buildResultTile(context, ref, response.results[index]),
+                itemBuilder: (context, index) => _buildResultTile(context, ref, response.results[index], isBold),
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -245,7 +249,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
-  Widget _buildResultTile(BuildContext context, WidgetRef ref, GurbaniSearchResult result) {
+  Widget _buildResultTile(BuildContext context, WidgetRef ref, GurbaniSearchResult result, bool isBold) {
     final subtitleParts = [
       if (result.raagName != null && !result.raagName!.toLowerCase().contains('unknown') && result.raagName!.isNotEmpty)
         result.raagName,
@@ -265,8 +269,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           }
         }
       },
-      title: Text(result.gurmukhi, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
-      subtitle: Text(subtitleParts.join(' • '), style: const TextStyle(fontSize: 14, color: Colors.teal)),
+      title: Text(
+        result.gurmukhi, 
+        style: TextStyle(fontSize: 20, fontWeight: isBold ? FontWeight.bold : FontWeight.w500),
+      ),
+      subtitle: Text(
+        subtitleParts.join(' • '), 
+        style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: Colors.teal),
+      ),
     );
   }
 }
