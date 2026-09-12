@@ -3,7 +3,7 @@
 function Show-Menu {
     Clear-Host
     Write-Host "==========================================" -ForegroundColor Cyan
-    Write-Host "   Gurbani Search - Build & Deploy Menu   " -ForegroundColor Yellow
+    Write-Host "    Gurbani Sagar - Build & Deploy Menu   " -ForegroundColor Yellow
     Write-Host "==========================================" -ForegroundColor Cyan
     Write-Host "1. Clean & Fetch Dependencies (flutter clean & pub get)" -ForegroundColor Green
     Write-Host "2. Build Shareable Android APK (.apk)" -ForegroundColor Green
@@ -11,6 +11,22 @@ function Show-Menu {
     Write-Host "4. Build Play Store App Bundle (.aab)" -ForegroundColor Green
     Write-Host "5. Exit" -ForegroundColor Red
     Write-Host "==========================================" -ForegroundColor Cyan
+}
+
+function Auto-IncrementVersion {
+    $file = "pubspec.yaml"
+    $lines = Get-Content $file
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        if ($lines[$i] -match '^version:\s*([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+)') {
+            $vName = $Matches[1]
+            $vCode = [int]$Matches[2]
+            $newVCode = $vCode + 1
+            $lines[$i] = "version: $vName+$newVCode"
+            $lines | Set-Content $file
+            Write-Host "`nAuto-incremented build number: $vName+$vCode -> $vName+$newVCode" -ForegroundColor Yellow
+            break
+        }
+    }
 }
 
 function Run-CleanAndPubGet {
@@ -47,6 +63,7 @@ do {
             Pause-Console
         }
         '2' {
+            Auto-IncrementVersion
             if (Run-CleanAndPubGet) {
                 Write-Host "`nBuilding Shareable Android Release APK (.apk)..." -ForegroundColor Cyan
                 flutter build apk --release
@@ -78,6 +95,7 @@ do {
             Pause-Console
         }
         '4' {
+            Auto-IncrementVersion
             if (Run-CleanAndPubGet) {
                 Write-Host "`nBuilding Play Store Android App Bundle (.aab)..." -ForegroundColor Cyan
                 flutter build appbundle --release

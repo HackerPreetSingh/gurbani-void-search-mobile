@@ -6,8 +6,13 @@ import '../../../shared/presentation/widgets/gurbani_settings_control.dart';
 
 class BaniSettingsDialog extends ConsumerWidget {
   final DisplaySettings initialSettings;
+  final int? baniId;
 
-  const BaniSettingsDialog({super.key, required this.initialSettings});
+  const BaniSettingsDialog({
+    super.key,
+    required this.initialSettings,
+    this.baniId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,7 +24,52 @@ class BaniSettingsDialog extends ConsumerWidget {
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'Bani Maryada Version',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.teal.shade300),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<BaniMaryada>(
+                  value: currentSettings.maryada,
+                  isExpanded: true,
+                  items: const [
+                    DropdownMenuItem(
+                      value: BaniMaryada.sgpc,
+                      child: Text('SGPC / Darbar Sahib (Default)'),
+                    ),
+                    DropdownMenuItem(
+                      value: BaniMaryada.taksal,
+                      child: Text('Damdami Taksal'),
+                    ),
+                    DropdownMenuItem(
+                      value: BaniMaryada.budhaDal,
+                      child: Text('Shiromani Panth Akali Budha Dal'),
+                    ),
+                    DropdownMenuItem(
+                      value: BaniMaryada.medium,
+                      child: Text('Medium / Standard'),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) {
+                      notifier.updateMaryada(val);
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(),
             GurbaniSettingsControl(
               label: 'Gurmukhi',
               isVisible: true,
@@ -73,6 +123,17 @@ class BaniSettingsDialog extends ConsumerWidget {
               onToggle: (_) => notifier.toggleLarivaar(),
               onSizeChanged: (_) {},
             ),
+            if (baniId == 4) ...[
+              const Divider(),
+              GurbaniSettingsControl(
+                label: 'Paragraph View',
+                isVisible: currentSettings.showJaapSahibParagraphView,
+                size: 0,
+                isVisibilityOnly: true,
+                onToggle: (_) => notifier.toggleJaapSahibParagraphView(),
+                onSizeChanged: (_) {},
+              ),
+            ],
           ],
         ),
       ),

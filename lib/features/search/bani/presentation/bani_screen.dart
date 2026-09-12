@@ -90,55 +90,60 @@ class _BaniScreenState extends ConsumerState<BaniScreen> {
     final baniDetailsAsync = ref.watch(baniDetailsProvider(widget.baniId));
     final settingsAsync = ref.watch(baniSettingsProvider);
     final settings = settingsAsync.value ?? DisplaySettings.defaults();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Theme(
-      data: ThemeData.light(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: PinchToZoomWrapper(
-          currentSize: settings.fontSizeGurmukhi,
-          onSizeChanged: (newSize) => ref.read(baniSettingsProvider.notifier).updateFontSizeGurmukhi(newSize),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: baniDetailsAsync.when(
-              data: (allVerses) {
-                if (allVerses.isEmpty) {
-                  return Scaffold(
-                    key: const ValueKey('empty'),
-                    appBar: AppBar(title: const Text('Bani View')),
-                    body: const Center(child: Text('Bani content not found.')),
-                  );
-                }
+    return Scaffold(
+      body: PinchToZoomWrapper(
+        currentSize: settings.fontSizeGurmukhi,
+        onSizeChanged: (newSize) => ref.read(baniSettingsProvider.notifier).updateFontSizeGurmukhi(newSize),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: baniDetailsAsync.when(
+            data: (rawVerses) {
+              if (rawVerses.isEmpty) {
+                return Scaffold(
+                  key: const ValueKey('empty'),
+                  appBar: AppBar(title: const Text('Bani View')),
+                  body: const Center(child: Text('Bani content not found.')),
+                );
+              }
 
-                final bool isSukhmaniSahib = widget.baniId == 31;
-                if (isSukhmaniSahib) {
-                  _prepareSections(allVerses);
-                }
+              // Dynamic Maryada filtering (SGPC Default, Taksal, Budha Dal, Medium)
+              final List<BaniVerse> allVerses = switch (settings.maryada) {
+                BaniMaryada.taksal => rawVerses.where((v) => v.existsTaksal).toList(),
+                BaniMaryada.budhaDal => rawVerses.where((v) => v.existsBudhaDal).toList(),
+                BaniMaryada.medium => rawVerses.where((v) => v.existsMedium).toList(),
+                _ => rawVerses.where((v) => v.existsSGPC).toList(),
+              };
+              final List<BaniVerse> activeVerses = allVerses.isNotEmpty ? allVerses : rawVerses;
 
-                final verses = isSukhmaniSahib ? _sections[_currentSectionIndex] : allVerses;
-                final firstVerse = allVerses.first.verse;
-                final bool isJaapSahib = widget.baniId == 4;
+              final bool isSukhmaniSahib = widget.baniId == 31;
+              if (isSukhmaniSahib) {
+                _prepareSections(activeVerses);
+              }
 
-                // Pre-calculate Salok Body colors for Sukhmani Sahib
-                final List<Color?> verseColors = List.filled(verses.length, null);
-                if (isSukhmaniSahib) {
-                  bool inSalokBody = false;
-                  for (int i = 0; i < verses.length; i++) {
-                    final bv = verses[i];
-                    if (bv.header > 0) {
-                      if (bv.verse.gurmukhi.contains('ਸਲੋਕੁ')) {
-                        inSalokBody = true;
-                      } else if (bv.verse.gurmukhi.contains('ਅਸਟਪਦੀ')) {
-                        inSalokBody = false;
-                      }
-                    }
-                    if (inSalokBody) {
-                      verseColors[i] = const Color(0xFF0D47A1); // Dark Blue
+              final verses = isSukhmaniSahib ? _sections[_currentSectionIndex] : activeVerses;
+              final firstVerse = activeVerses.first.verse;
+              final bool isJaapSahibParagraph = widget.baniId == 4 && settings.showJaapSahibParagraphView;
+
+              // Pre-calculate Salok Body colors for Sukhmani Sahib
+              final List<Color?> verseColors = List.filled(verses.length, null);
+              if (isSukhmaniSahib) {
+                bool inSalokBody = false;
+                for (int i = 0; i < verses.length; i++) {
+                  final bv = verses[i];
+                  if (bv.header > 0) {
+                    if (bv.verse.gurmukhi.contains('ਸਲੋਕੁ')) {
+                      inSalokBody = true;
+                    } else if (bv.verse.gurmukhi.contains('ਅਸਟਪਦੀ')) {
+                      inSalokBody = false;
                     }
                   }
+                  if (inSalokBody) {
+                    verseColors[i] = isDark ? Colors.lightBlueAccent.shade100 : const Color(0xFF0D47A1);
+                  }
                 }
+              }
 
                 return Stack(
                   children: [
@@ -167,7 +172,7 @@ class _BaniScreenState extends ConsumerState<BaniScreen> {
                           SliverToBoxAdapter(
                             child: GurbaniHeader(firstVerse: firstVerse),
                           ),
-                        if (isJaapSahib)
+                        if (isJaapSahibParagraph)
                           SliverPadding(
                             padding: const EdgeInsets.all(24),
                             sliver: SliverList(
@@ -262,14 +267,16 @@ class _BaniScreenState extends ConsumerState<BaniScreen> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   void _showSettingsDialog(BuildContext context, DisplaySettings settings) {
     showDialog(
       context: context,
-      builder: (context) => BaniSettingsDialog(initialSettings: settings),
+      builder: (context) => BaniSettingsDialog(
+        initialSettings: settings,
+        baniId: widget.baniId,
+      ),
     );
   }
 }

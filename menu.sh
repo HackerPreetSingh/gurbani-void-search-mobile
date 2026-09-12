@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 show_menu() {
     clear
     echo -e "${CYAN}==========================================${NC}"
-    echo -e "${YELLOW}   Gurbani Search - Build & Deploy Menu   ${NC}"
+    echo -e "${YELLOW}    Gurbani Sagar - Build & Deploy Menu   ${NC}"
     echo -e "${CYAN}==========================================${NC}"
     echo -e "${GREEN}1. Clean & Fetch Dependencies (flutter clean & pub get)${NC}"
     echo -e "${GREEN}2. Build Shareable Android APK (.apk)${NC}"
@@ -18,6 +18,23 @@ show_menu() {
     echo -e "${GREEN}4. Build Play Store App Bundle (.aab)${NC}"
     echo -e "${RED}5. Exit${NC}"
     echo -e "${CYAN}==========================================${NC}"
+}
+
+auto_increment_version() {
+    version_line=$(grep "^version:" pubspec.yaml)
+    if [[ $version_line =~ version:[[:space:]]*([0-9]+\.[0-9]+\.[0-9]+)\+([0-9]+) ]]; then
+        version_name="${BASH_REMATCH[1]}"
+        version_code="${BASH_REMATCH[2]}"
+        new_version_code=$((version_code + 1))
+
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/^version:.*/version: ${version_name}+${new_version_code}/" pubspec.yaml
+        else
+            sed -i "s/^version:.*/version: ${version_name}+${new_version_code}/" pubspec.yaml
+        fi
+
+        echo -e "\n${YELLOW}Auto-incremented build number: ${version_name}+${version_code} -> ${version_name}+${new_version_code}${NC}"
+    fi
 }
 
 run_clean_and_pub_get() {
@@ -54,6 +71,7 @@ while true; do
             pause_console
             ;;
         2)
+            auto_increment_version
             if run_clean_and_pub_get; then
                 echo -e "\n${CYAN}Building Shareable Android Release APK (.apk)...${NC}"
                 flutter build apk --release
@@ -85,6 +103,7 @@ while true; do
             pause_console
             ;;
         4)
+            auto_increment_version
             if run_clean_and_pub_get; then
                 echo -e "\n${CYAN}Building Play Store Android App Bundle (.aab)...${NC}"
                 flutter build appbundle --release

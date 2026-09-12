@@ -46,7 +46,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final dbStatus = ref.watch(databaseStatusProvider);
     final searchState = ref.watch(searchViewModelProvider);
     
-    String appBarTitle = 'Gurbani Search';
+    String appBarTitle = 'Gurbani Sagar';
     final searchData = searchState.value;
     if (searchData != null && searchData.results.isNotEmpty && searchData.source != null) {
       appBarTitle += ' (${searchData.source})';
@@ -187,7 +187,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           controller: _searchController,
                           keyboardType: TextInputType.none,
                           showCursor: true,
-                          style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                          style: TextStyle(fontSize: 18, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
                           decoration: const InputDecoration(
                             hintText: 'Search...',
                             border: InputBorder.none,
@@ -271,11 +271,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       },
       title: Text(
         result.gurmukhi, 
-        style: TextStyle(fontSize: 20, fontWeight: isBold ? FontWeight.bold : FontWeight.w500),
+        style: TextStyle(fontSize: 22, fontWeight: isBold ? FontWeight.bold : FontWeight.w500),
       ),
       subtitle: Text(
         subtitleParts.join(' • '), 
-        style: TextStyle(fontSize: 14, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: Colors.teal),
+        style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: Colors.teal),
       ),
     );
   }

@@ -130,7 +130,7 @@ class _DatabaseReadyView extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Semantics(
-      label: 'Gurbani Search foundation ready',
+      label: 'Gurbani Sagar foundation ready',
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(28),
@@ -139,7 +139,7 @@ class _DatabaseReadyView extends StatelessWidget {
             children: [
               Icon(Icons.auto_stories, color: colorScheme.primary, size: 40),
               const SizedBox(height: 24),
-              Text('Gurbani Search', style: textTheme.headlineMedium),
+              Text('Gurbani Sagar', style: textTheme.headlineMedium),
               const SizedBox(height: 12),
               Text(
                 'An offline-first foundation for fast, respectful Gurbani discovery.',

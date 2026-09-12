@@ -13,6 +13,7 @@ abstract final class AppConstants {
   
   /// Select the hosting provider for the database file: 'vercel' or 'github'
   static const String downloadProvider = 'vercel';
+  // static const String downloadProvider = 'github';
 
   static const String _vercelShabadUrl = 'https://9adxmnfutozpuzyq.public.blob.vercel-storage.com/shabads_offline.sqlite';
   static const String _vercelNitnemUrl = 'https://9adxmnfutozpuzyq.public.blob.vercel-storage.com/nitnem_offline.sqlite';

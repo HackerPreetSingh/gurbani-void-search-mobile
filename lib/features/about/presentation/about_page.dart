@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/database/database_download_notifier.dart';
 import '../../settings/presentation/display_settings_notifier.dart';
 
@@ -110,12 +112,15 @@ class _AboutPageState extends ConsumerState<AboutPage> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
+    final themeMode = ref.watch(themeModeSettingsProvider).value ?? ThemeMode.light;
+    final isDark = themeMode == ThemeMode.dark;
+
     final walkthroughData = _isPunjabiLanguage ? _walkthroughPunjabi : _walkthroughEnglish;
     final featureKeys = ["search", "reading", "prakaran", "nitnem", "sggs", "tracker"];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About'),
+        title: const Text('About Gurbani Sagar'),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -123,42 +128,64 @@ class _AboutPageState extends ConsumerState<AboutPage> {
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [
-              // --- 1. TOP ACTION CONTROLS ---
+              // --- 1. TOP ACTION CONTROLS (Bold & Night Mode) ---
               Card(
-                color: Colors.teal.shade50.withValues(alpha: 0.5),
+                color: isDark ? const Color(0xFF222C32) : Colors.teal.shade50.withValues(alpha: 0.5),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.teal.shade200),
+                  side: BorderSide(color: isDark ? Colors.teal.shade700 : Colors.teal.shade200),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: SwitchListTile(
-                    secondary: const Icon(Icons.format_bold, size: 28, color: Colors.teal),
-                    title: Text(
-                      'Bold Text Mode (A-Z Bold)',
-                      style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold),
+                child: Column(
+                  children: [
+                    SwitchListTile(
+                      secondary: const Icon(Icons.format_bold, size: 28, color: Colors.teal),
+                      title: Text(
+                        'Bold Text Mode (A-Z Bold)',
+                        style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Make all text across the entire app bold for easier reading.',
+                        style: TextStyle(fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                      ),
+                      value: isBold,
+                      activeThumbColor: Colors.teal,
+                      onChanged: (_) {
+                        ref.read(boldTextSettingsProvider.notifier).toggleBoldText();
+                      },
                     ),
-                    subtitle: Text(
-                      'Make all text across the entire app bold for easier reading.',
-                      style: TextStyle(fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                    const Divider(height: 1),
+                    SwitchListTile(
+                      secondary: Icon(
+                        isDark ? Icons.nights_stay : Icons.wb_sunny_outlined,
+                        size: 28,
+                        color: isDark ? Colors.orangeAccent : Colors.teal,
+                      ),
+                      title: Text(
+                        'Night Mode (Dark Theme)',
+                        style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        'Switch to dark colors for comfortable reading in low light / night.',
+                        style: TextStyle(fontSize: 13, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                      ),
+                      value: isDark,
+                      activeThumbColor: Colors.teal,
+                      onChanged: (_) {
+                        ref.read(themeModeSettingsProvider.notifier).toggleThemeMode();
+                      },
                     ),
-                    value: isBold,
-                    activeThumbColor: Colors.teal,
-                    onChanged: (_) {
-                      ref.read(boldTextSettingsProvider.notifier).toggleBoldText();
-                    },
-                  ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
 
               Card(
-                color: Colors.teal.shade50.withValues(alpha: 0.3),
+                color: isDark ? const Color(0xFF222C32) : Colors.teal.shade50.withValues(alpha: 0.3),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.teal.shade100),
+                  side: BorderSide(color: isDark ? Colors.teal.shade800 : Colors.teal.shade100),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -172,11 +199,11 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                           children: [
                             Text(
                               'Offline Gurbani Database',
-                              style: TextStyle(fontSize: 15, fontWeight: isBold ? FontWeight.bold : FontWeight.w600),
+                              style: TextStyle(fontSize: 16, fontWeight: isBold ? FontWeight.bold : FontWeight.w600),
                             ),
                             Text(
                               'Download or update the full offline database',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                              style: TextStyle(fontSize: 13, color: isDark ? Colors.grey.shade400 : Colors.grey.shade700, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
                             ),
                           ],
                         ),
@@ -208,7 +235,8 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                     child: Text(
                       _isPunjabiLanguage ? 'ਐਪ ਦੇ ਫੀਚਰਾਂ ਦੀ ਪੂਰੀ ਜਾਣਕਾਰੀ' : 'Interactive Feature Guide',
                       style: textTheme.titleLarge?.copyWith(
-                        color: Colors.teal,
+                        color: isDark ? Colors.tealAccent : Colors.teal,
+                        fontSize: 20,
                         fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
                       ),
                     ),
@@ -216,7 +244,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                   // Language Toggle Switch
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: isDark ? const Color(0xFF2C3840) : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     padding: const EdgeInsets.all(2),
@@ -245,7 +273,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                 _isPunjabiLanguage 
                     ? 'ਕਿਸੇ ਵੀ ਫੀਚਰ \'ਤੇ ਦਬਾਓ ਅਤੇ ਉਸ ਬਾਰੇ ਪੂਰੀ ਜਾਣਕਾਰੀ ਪੜ੍ਹੋ:'
                     : 'Tap on any feature below to expand and learn how to use it:',
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                style: TextStyle(fontSize: 14, color: isDark ? Colors.grey.shade400 : Colors.grey.shade700, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
               ),
               const SizedBox(height: 16),
 
@@ -260,10 +288,11 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                   return Card(
                     margin: const EdgeInsets.only(bottom: 12),
                     elevation: isExpanded ? 2 : 0,
+                    color: isDark ? const Color(0xFF222C32) : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                       side: BorderSide(
-                        color: isExpanded ? Colors.teal : Colors.grey.shade300,
+                        color: isExpanded ? Colors.teal : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
                         width: isExpanded ? 1.5 : 1,
                       ),
                     ),
@@ -284,19 +313,19 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: isExpanded ? Colors.teal : Colors.teal.withValues(alpha: 0.1),
+                                    color: isExpanded ? Colors.teal : Colors.teal.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Icon(icon, color: isExpanded ? Colors.white : Colors.teal, size: 22),
+                                  child: Icon(icon, color: isExpanded ? Colors.white : (isDark ? Colors.tealAccent : Colors.teal), size: 24),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
                                     item['title']!,
                                     style: TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 18,
                                       fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
-                                      color: isExpanded ? Colors.teal.shade900 : Colors.black87,
+                                      color: isExpanded ? (isDark ? Colors.tealAccent : Colors.teal.shade900) : (isDark ? Colors.white : Colors.black87),
                                     ),
                                   ),
                                 ),
@@ -313,10 +342,10 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                               Text(
                                 item['description']!,
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 15.5,
                                   height: 1.6,
                                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                                  color: Colors.black87,
+                                  color: isDark ? Colors.grey.shade200 : Colors.black87,
                                 ),
                               ),
                             ],
@@ -328,25 +357,209 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                 }),
               ),
 
+              const SizedBox(height: 28),
+              const Divider(),
+              const SizedBox(height: 24),
+
+              // --- 3. WEB APP & APPLE IPHONE (iOS) GUIDE ---
+              Card(
+                color: isDark ? const Color(0xFF222C32) : Colors.teal.shade50.withValues(alpha: 0.4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: isDark ? Colors.teal.shade700 : Colors.teal.shade200),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.language, color: Colors.teal, size: 28),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Web App & Apple iPhone (iOS) Access',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
+                                color: isDark ? Colors.tealAccent : Colors.teal.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Gurbani Sagar is fully accessible on any web browser, tablet, or Apple iPhone flawlessly!',
+                        style: TextStyle(fontSize: 14.5, height: 1.5, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                      ),
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () async {
+                          final uri = Uri.parse('https://gurbani-voice-searcher.web.app');
+                          try {
+                            final launched = await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                            if (!launched) {
+                              await Clipboard.setData(const ClipboardData(text: 'https://gurbani-voice-searcher.web.app'));
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Link copied to clipboard: https://gurbani-voice-searcher.web.app')),
+                                );
+                              }
+                            }
+                          } catch (_) {
+                            await Clipboard.setData(const ClipboardData(text: 'https://gurbani-voice-searcher.web.app'));
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Link copied to clipboard: https://gurbani-voice-searcher.web.app')),
+                              );
+                            }
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isDark ? const Color(0xFF12181B) : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.teal.shade300),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.open_in_new, size: 18, color: Colors.teal),
+                              SizedBox(width: 8),
+                              Text(
+                                'gurbani-sagar.web.app',
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.teal),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Apple iPhone (iOS) Installation Guide:',
+                        style: TextStyle(fontSize: 15, fontWeight: isBold ? FontWeight.w900 : FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      const BulletPoint(text: '1. Open Safari on your iPhone and go to the web link above.'),
+                      const BulletPoint(text: '2. Tap the Share button at the bottom of Safari (square icon with arrow 📤).'),
+                      const BulletPoint(text: '3. Scroll down and tap "Add to Home Screen" (➕), then tap Add.'),
+                      const SizedBox(height: 8),
+                      Text(
+                        '🎉 Done! Gurbani Sagar will appear as an app icon on your iPhone home screen and work offline just like a native app!',
+                        style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: isDark ? Colors.tealAccent : Colors.teal.shade900, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // --- 4. FEEDBACK & CONTACT CARD ---
+              Card(
+                color: isDark ? const Color(0xFF222C32) : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.email_outlined, color: Colors.teal, size: 28),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Feedback & Suggestions',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Have a suggestion, feedback, or found an issue? Reach out directly to help us improve Gurbani Sagar for the entire Sangat.',
+                        style: TextStyle(fontSize: 14.5, height: 1.5, fontWeight: isBold ? FontWeight.bold : FontWeight.normal),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              final Uri emailUri = Uri(
+                                scheme: 'mailto',
+                                path: 'hempreetsingh001@gmail.com',
+                                queryParameters: {'subject': 'Gurbani Sagar Feedback'},
+                              );
+                              if (await canLaunchUrl(emailUri)) {
+                                await launchUrl(emailUri);
+                              } else {
+                                await Clipboard.setData(const ClipboardData(text: 'hempreetsingh001@gmail.com'));
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Email copied to clipboard: hempreetsingh001@gmail.com')),
+                                  );
+                                }
+                              }
+                            },
+                            icon: const Icon(Icons.send),
+                            label: const Text('Send Email'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.teal,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: () async {
+                              await Clipboard.setData(const ClipboardData(text: 'hempreetsingh001@gmail.com'));
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Email copied: hempreetsingh001@gmail.com')),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.copy),
+                            label: const Text('Copy Email'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 32),
               const Divider(),
               const SizedBox(height: 24),
 
-              // --- 3. MISSION, CREDITS & FOOTER AT BOTTOM ---
+              // --- 5. MISSION, CREDITS & FOOTER AT BOTTOM ---
               Text(
-                'About This App',
+                'About Gurbani Sagar',
                 style: textTheme.titleLarge?.copyWith(
+                  fontSize: 20,
                   fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
-                'Gurbani Search is a labor of love, built to help the global Sangat connect with Gurbani through a high-performance, offline-first experience. Our mission is to provide reliable and respectful access to spiritual wisdom, regardless of internet connectivity.',
+                'Gurbani Sagar is a labor of love, built to help the global Sangat connect with Gurbani through a high-performance, offline-first experience. Our mission is to provide reliable and respectful access to spiritual wisdom, regardless of internet connectivity.',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 15,
                   height: 1.5,
                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                  color: Colors.black87,
+                  color: isDark ? Colors.grey.shade200 : Colors.black87,
                 ),
               ),
 
@@ -354,6 +567,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
               Text(
                 'Special Thanks & Credits:',
                 style: textTheme.titleMedium?.copyWith(
+                  fontSize: 18,
                   fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
                 ),
               ),
@@ -361,8 +575,8 @@ class _AboutPageState extends ConsumerState<AboutPage> {
               Text(
                 'This application would not be possible without the foundational research, data API, and open-source contributions provided by:',
                 style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey.shade700,
+                  fontSize: 14,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
@@ -377,6 +591,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
                   'May this small tool be a companion on your spiritual journey.',
                   textAlign: TextAlign.center,
                   style: textTheme.bodySmall?.copyWith(
+                    fontSize: 14,
                     fontStyle: FontStyle.italic,
                     fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
                   ),
@@ -412,7 +627,7 @@ class _AboutPageState extends ConsumerState<AboutPage> {
           constraints: const BoxConstraints(maxWidth: 500),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(20),
             ),
             padding: const EdgeInsets.all(16),
@@ -468,8 +683,8 @@ class _LangChip extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 12,
-            color: isSelected ? Colors.white : Colors.teal.shade900,
+            fontSize: 13,
+            color: isSelected ? Colors.white : Colors.teal.shade400,
             fontWeight: isBold || isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
@@ -553,7 +768,7 @@ class BulletPoint extends StatelessWidget {
             child: Text(
               text,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 14.5,
                 fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
               ),
             ),

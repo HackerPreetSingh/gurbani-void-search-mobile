@@ -66,7 +66,7 @@ class NitnemScreen extends ConsumerWidget {
               ),
               title: Text(
                 bani.namePa,
-                style: TextStyle(fontSize: 24, fontWeight: isBold ? FontWeight.bold : FontWeight.w500),
+                style: TextStyle(fontSize: 26, fontWeight: isBold ? FontWeight.bold : FontWeight.w500),
               ),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
               onTap: () async {

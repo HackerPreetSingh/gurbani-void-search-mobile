@@ -11,19 +11,19 @@ class AppShell extends StatelessWidget {
 
   static const _destinations = <_AppDestination>[
     _AppDestination(
-      label: 'Gurbani Search',
+      label: 'Search',
       location: AppRoute.search,
       icon: Icons.manage_search_outlined,
       selectedIcon: Icons.manage_search,
     ),
     _AppDestination(
-      label: 'Nitnem & Banis',
+      label: 'Banis',
       location: AppRoute.nitnem,
       icon: Icons.menu_book_outlined,
       selectedIcon: Icons.menu_book,
     ),
     _AppDestination(
-      label: 'Nitnem Tracker',
+      label: 'Tracker',
       location: AppRoute.tracker,
       icon: Icons.track_changes_outlined,
       selectedIcon: Icons.track_changes,
@@ -121,7 +121,7 @@ class _BrandMark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       header: true,
-      label: 'Gurbani Search',
+      label: 'Gurbani Sagar',
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -129,7 +129,7 @@ class _BrandMark extends StatelessWidget {
           if (MediaQuery.sizeOf(context).width >= 1100) ...[
             const SizedBox(width: 10),
             Text(
-              'Gurbani Search',
+              'Gurbani Sagar',
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ],

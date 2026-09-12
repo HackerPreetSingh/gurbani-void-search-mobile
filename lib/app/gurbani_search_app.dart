@@ -11,13 +11,14 @@ class GurbaniSearchApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
+    final themeMode = ref.watch(themeModeSettingsProvider).value ?? ThemeMode.light;
 
     return MaterialApp.router(
-      title: 'Gurbani Search',
+      title: 'Gurbani Sagar',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(isBold: isBold),
-      darkTheme: AppTheme.light(isBold: isBold),
-      themeMode: ThemeMode.light,
+      darkTheme: AppTheme.dark(isBold: isBold),
+      themeMode: themeMode,
       routerConfig: ref.watch(appRouterProvider),
     );
   }

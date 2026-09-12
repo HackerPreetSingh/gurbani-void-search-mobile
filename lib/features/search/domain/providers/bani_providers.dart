@@ -135,8 +135,10 @@ final baniDetailsProvider = FutureProvider.family<List<BaniVerse>, int>((ref, ba
         sequenceOrder: i,
         header: int.tryParse(v['header']?.toString() ?? '0') ?? 0,
         mangalPosition: int.tryParse(v['mangalPosition']?.toString() ?? ''),
-        existsSGPC: (int.tryParse(v['existsSGPC']?.toString() ?? '0') ?? 0) == 1,
-        existsTaksal: (int.tryParse(v['existsTaksal']?.toString() ?? '0') ?? 0) == 1,
+        existsSGPC: (int.tryParse(v['existsSGPC']?.toString() ?? '1') ?? 1) == 1,
+        existsTaksal: (int.tryParse(v['existsTaksal']?.toString() ?? '1') ?? 1) == 1,
+        existsBudhaDal: (int.tryParse(v['existsBuddhaDal']?.toString() ?? '1') ?? 1) == 1,
+        existsMedium: (int.tryParse(v['existsMedium']?.toString() ?? '1') ?? 1) == 1,
         paragraph: int.tryParse(v['paragraph']?.toString() ?? ''),
         verse: mapper.mapApi(verseData, shabadInfo: baniInfo),
       );
@@ -159,7 +161,7 @@ final baniDetailsProvider = FutureProvider.family<List<BaniVerse>, int>((ref, ba
   final results = rows.map((r) {
     // [AI_GUARD:PERMANENT_LOG] Use robust conversion to prevent type cast errors (String vs int)
     int? toInt(dynamic v) => v is int ? v : int.tryParse(v?.toString() ?? '');
-    bool toBool(dynamic v) => (int.tryParse(v?.toString() ?? '0') ?? 0) == 1;
+    bool toBool(dynamic v) => v == null || (int.tryParse(v.toString()) ?? 1) == 1;
 
     return BaniVerse(
       sequenceOrder: toInt(r['sequence_order']) ?? 0,
@@ -167,6 +169,8 @@ final baniDetailsProvider = FutureProvider.family<List<BaniVerse>, int>((ref, ba
       mangalPosition: toInt(r['mangal_position']),
       existsSGPC: toBool(r['exists_sgpc']),
       existsTaksal: toBool(r['exists_taksal']),
+      existsBudhaDal: toBool(r['exists_buddha_dal']),
+      existsMedium: toBool(r['exists_medium']),
       paragraph: toInt(r['paragraph']),
       verse: mapper.mapRow(r),
     );

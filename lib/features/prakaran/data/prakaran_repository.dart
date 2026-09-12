@@ -23,6 +23,12 @@ class PrakaranRepository {
     });
   }
 
+  Future<void> renamePrakaran(String id, String newName) async {
+    await _database.transaction((executor) async {
+      await executor.runCustom('UPDATE prakarans SET name = ? WHERE id = ?', [newName, id]);
+    });
+  }
+
   Future<void> deletePrakaran(String id) async {
     await _database.transaction((executor) async {
       await executor.runCustom('DELETE FROM prakarans WHERE id = ?', [id]);

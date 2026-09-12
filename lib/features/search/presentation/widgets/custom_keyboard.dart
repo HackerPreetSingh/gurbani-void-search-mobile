@@ -10,11 +10,12 @@ class CustomKeyboard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final keyboardType = ref.watch(keyboardTypeProvider);
     final isVisible = ref.watch(customKeyboardVisibleProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (!isVisible) return const SizedBox.shrink();
 
     return Container(
-      color: Colors.grey.shade200,
+      color: isDark ? const Color(0xFF182024) : Colors.grey.shade200,
       padding: const EdgeInsets.only(top: 4, bottom: 4, left: 2, right: 2),
       child: SafeArea(
         top: false,
@@ -125,28 +126,32 @@ class _KeyboardKey extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final defaultKeyColor = isDark ? const Color(0xFF2C3840) : Colors.white;
+    final defaultTextColor = isDark ? Colors.white : Colors.black87;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 1),
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: color ?? Colors.white,
+            color: color ?? defaultKeyColor,
             borderRadius: BorderRadius.circular(4),
             boxShadow: [
-              BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 1, offset: const Offset(0, 1)),
+              BoxShadow(color: Colors.black.withAlpha(isDark ? 30 : 10), blurRadius: 1, offset: const Offset(0, 1)),
             ],
           ),
           alignment: Alignment.center,
           child: icon != null 
-            ? Icon(icon, size: 20, color: Colors.black87)
+            ? Icon(icon, size: 22, color: defaultTextColor)
             : Text(
                 label!,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
+                  color: defaultTextColor,
                 ),
               ),
         ),

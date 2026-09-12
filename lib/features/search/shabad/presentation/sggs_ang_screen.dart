@@ -46,64 +46,60 @@ class _SggsAngScreenState extends ConsumerState<SggsAngScreen> {
     final settingsAsync = ref.watch(shabadSettingsProvider);
     final settings = settingsAsync.value ?? DisplaySettings.defaults();
 
-    return Theme(
-      data: ThemeData.light(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: Text('Sri Guru Granth Sahib Ji - Ang $_currentAng'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () => _showSettingsDialog(context, settings),
-            ),
-          ],
-        ),
-        body: PinchToZoomWrapper(
-          currentSize: settings.fontSizeGurmukhi,
-          onSizeChanged: (newSize) => ref.read(shabadSettingsProvider.notifier).updateFontSizeGurmukhi(newSize),
-          child: versesAsync.when(
-            data: (verses) {
-              if (verses.isEmpty) {
-                return const Center(child: Text('Content not found for this Ang.'));
-              }
-
-              return Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      key: ValueKey('ang_$_currentAng'),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      itemCount: verses.length,
-                      itemBuilder: (context, index) {
-                        return GurbaniVerseView(
-                          verse: verses[index],
-                          settings: settings,
-                        );
-                      },
-                    ),
-                  ),
-                  _buildBottomNavigator(),
-                ],
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error: $err')),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Sri Guru Granth Sahib Ji - Ang $_currentAng'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => _showSettingsDialog(context, settings),
           ),
+        ],
+      ),
+      body: PinchToZoomWrapper(
+        currentSize: settings.fontSizeGurmukhi,
+        onSizeChanged: (newSize) => ref.read(shabadSettingsProvider.notifier).updateFontSizeGurmukhi(newSize),
+        child: versesAsync.when(
+          data: (verses) {
+            if (verses.isEmpty) {
+              return const Center(child: Text('Content not found for this Ang.'));
+            }
+
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    key: ValueKey('ang_$_currentAng'),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    itemCount: verses.length,
+                    itemBuilder: (context, index) {
+                      return GurbaniVerseView(
+                        verse: verses[index],
+                        settings: settings,
+                      );
+                    },
+                  ),
+                ),
+                _buildBottomNavigator(),
+              ],
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
         ),
       ),
     );
   }
 
   Widget _buildBottomNavigator() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF1A2226) : Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 4, offset: const Offset(0, -2)),
+          BoxShadow(color: Colors.black.withAlpha(isDark ? 50 : 20), blurRadius: 4, offset: const Offset(0, -2)),
         ],
       ),
       child: SafeArea(
@@ -121,12 +117,16 @@ class _SggsAngScreenState extends ConsumerState<SggsAngScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.teal.shade50,
+                  color: isDark ? const Color(0xFF222C32) : Colors.teal.shade50,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   'Ang $_currentAng / 1430',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.teal),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: isDark ? Colors.tealAccent : Colors.teal,
+                  ),
                 ),
               ),
             ),

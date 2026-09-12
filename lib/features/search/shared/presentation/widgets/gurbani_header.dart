@@ -11,6 +11,7 @@ class GurbaniHeader extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bool hasRaag = firstVerse.raagName != null &&
         firstVerse.raagName!.trim().isNotEmpty &&
         !firstVerse.raagName!.toLowerCase().contains('unknown') &&
@@ -26,7 +27,7 @@ class GurbaniHeader extends ConsumerWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-      color: Colors.teal.withAlpha(15),
+      color: Colors.teal.withAlpha(isDark ? 30 : 15),
       child: Column(
         children: [
           if (hasRaag)
@@ -36,7 +37,7 @@ class GurbaniHeader extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
-                color: Colors.black,
+                color: isDark ? Colors.white : Colors.black,
               ),
             ),
           if (hasWriter)
@@ -46,7 +47,7 @@ class GurbaniHeader extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                color: Colors.blueGrey,
+                color: isDark ? Colors.blueGrey.shade200 : Colors.blueGrey,
               ),
             ),
           if (hasSource) ...[
@@ -57,7 +58,7 @@ class GurbaniHeader extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                color: Colors.grey,
+                color: isDark ? Colors.grey.shade400 : Colors.grey,
               ),
             ),
           ],

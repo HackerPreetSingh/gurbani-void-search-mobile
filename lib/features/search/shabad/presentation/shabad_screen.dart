@@ -68,132 +68,126 @@ class _ShabadScreenState extends ConsumerState<ShabadScreen> {
     final settingsAsync = ref.watch(shabadSettingsProvider);
     final settings = settingsAsync.value ?? DisplaySettings.defaults();
 
-    return Theme(
-      data: ThemeData.light(useMaterial3: true).copyWith(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-      ),
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: PinchToZoomWrapper(
-          currentSize: settings.fontSizeGurmukhi,
-          onSizeChanged: (newSize) => ref.read(shabadSettingsProvider.notifier).updateFontSizeGurmukhi(newSize),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 400),
-            child: shabadAsync.when(
-              data: (verses) {
-                if (verses.isEmpty) {
-                  return Scaffold(
-                    key: const ValueKey('empty'),
-                    appBar: AppBar(title: const Text('Shabad View')),
-                    body: const Center(child: Text('Shabad not found.')),
-                  );
-                }
+    return Scaffold(
+      body: PinchToZoomWrapper(
+        currentSize: settings.fontSizeGurmukhi,
+        onSizeChanged: (newSize) => ref.read(shabadSettingsProvider.notifier).updateFontSizeGurmukhi(newSize),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 400),
+          child: shabadAsync.when(
+            data: (verses) {
+              if (verses.isEmpty) {
+                return Scaffold(
+                  key: const ValueKey('empty'),
+                  appBar: AppBar(title: const Text('Shabad View')),
+                  body: const Center(child: Text('Shabad not found.')),
+                );
+              }
 
-                return Stack(
-                  children: [
-                    CustomScrollView(
-                      key: ValueKey('data_${widget.shabadId}'),
-                      // ignore: deprecated_member_use
-                      cacheExtent: 5000.0, 
-                      slivers: [
-                        SliverAppBar(
-                          title: const Text('Shabad View'),
-                          floating: true, 
-                          snap: true,
-                          pinned: false,
-                          actions: [
-                            IconButton(
-                              icon: const Icon(Icons.create_new_folder_outlined),
-                              onPressed: () {
-                                String displayTitle = verses.first.gurmukhi;
-                                String? targetVerseId = widget.highlightVerseId;
-                                
-                                if (targetVerseId != null) {
-                                  try {
-                                    final highlightedVerse = verses.firstWhere((v) => v.stableId == targetVerseId);
-                                    displayTitle = highlightedVerse.gurmukhi;
-                                  } catch (_) {}
-                                }
-                                _showAddToPrakaranDialog(context, displayTitle, targetVerseId);
-                              },
-                              tooltip: 'Add to Prakaran',
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.settings_outlined),
-                              onPressed: () => _showSettingsDialog(context, settings),
-                            ),
-                          ],
-                        ),
-                        SliverToBoxAdapter(
-                          child: GurbaniHeader(firstVerse: verses.first),
-                        ),
-                        SliverPadding(
-                          padding: EdgeInsets.zero,
-                          sliver: SliverList(
-                            delegate: SliverChildBuilderDelegate(
-                              (context, index) {
-                                final verse = verses[index];
-                                final isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
-                                final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
+              return Stack(
+                children: [
+                  CustomScrollView(
+                    key: ValueKey('data_${widget.shabadId}'),
+                    // ignore: deprecated_member_use
+                    cacheExtent: 5000.0, 
+                    slivers: [
+                      SliverAppBar(
+                        title: const Text('Shabad View'),
+                        floating: true, 
+                        snap: true,
+                        pinned: false,
+                        actions: [
+                          IconButton(
+                            icon: const Icon(Icons.create_new_folder_outlined),
+                            onPressed: () {
+                              String displayTitle = verses.first.gurmukhi;
+                              String? targetVerseId = widget.highlightVerseId;
+                              
+                              if (targetVerseId != null) {
+                                try {
+                                  final highlightedVerse = verses.firstWhere((v) => v.stableId == targetVerseId);
+                                  displayTitle = highlightedVerse.gurmukhi;
+                                } catch (_) {}
+                              }
+                              _showAddToPrakaranDialog(context, displayTitle, targetVerseId);
+                            },
+                            tooltip: 'Add to Prakaran',
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.settings_outlined),
+                            onPressed: () => _showSettingsDialog(context, settings),
+                          ),
+                        ],
+                      ),
+                      SliverToBoxAdapter(
+                        child: GurbaniHeader(firstVerse: verses.first),
+                      ),
+                      SliverPadding(
+                        padding: EdgeInsets.zero,
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final verse = verses[index];
+                              final isHighlighted = widget.highlightVerseId != null && verse.stableId == widget.highlightVerseId;
+                              final key = _verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
 
-                                return GurbaniVerseView(
-                                  key: key,
-                                  verse: verse,
-                                  settings: settings,
-                                  isHighlighted: isHighlighted,
-                                );
-                              },
-                              childCount: verses.length,
-                            ),
+                              return GurbaniVerseView(
+                                key: key,
+                                verse: verse,
+                                settings: settings,
+                                isHighlighted: isHighlighted,
+                              );
+                            },
+                            childCount: verses.length,
                           ),
                         ),
-                        const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                      ],
-                    ),
-                    navigationAsync.when(
-                      data: (nav) => Positioned(
-                        bottom: 20,
-                        left: 20,
-                        right: 20,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            if (nav.hasPrevious)
-                              FloatingActionButton.small(
-                                heroTag: 'prev_shabad',
-                                onPressed: () => context.pushReplacement('/shabad/${nav.previousId}'),
-                                backgroundColor: Colors.teal.withAlpha(200),
-                                foregroundColor: Colors.white,
-                                child: const Icon(Icons.arrow_back_ios_new),
-                              )
-                            else
-                              const SizedBox.shrink(),
-                            if (nav.hasNext)
-                              FloatingActionButton.small(
-                                heroTag: 'next_shabad',
-                                onPressed: () => context.pushReplacement('/shabad/${nav.nextId}'),
-                                backgroundColor: Colors.teal.withAlpha(200),
-                                foregroundColor: Colors.white,
-                                child: const Icon(Icons.arrow_forward_ios),
-                              ),
-                          ],
-                        ),
                       ),
-                      loading: () => const SizedBox.shrink(),
-                      error: (e, _) => const SizedBox.shrink(),
+                      const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                    ],
+                  ),
+                  navigationAsync.when(
+                    data: (nav) => Positioned(
+                      bottom: 20,
+                      left: 20,
+                      right: 20,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (nav.hasPrevious)
+                            FloatingActionButton.small(
+                              heroTag: 'prev_shabad',
+                              onPressed: () => context.pushReplacement('/shabad/${nav.previousId}'),
+                              backgroundColor: Colors.teal.withAlpha(200),
+                              foregroundColor: Colors.white,
+                              child: const Icon(Icons.arrow_back_ios_new),
+                            )
+                          else
+                            const SizedBox.shrink(),
+                          if (nav.hasNext)
+                            FloatingActionButton.small(
+                              heroTag: 'next_shabad',
+                              onPressed: () => context.pushReplacement('/shabad/${nav.nextId}'),
+                              backgroundColor: Colors.teal.withAlpha(200),
+                              foregroundColor: Colors.white,
+                              child: const Icon(Icons.arrow_forward_ios),
+                            ),
+                        ],
+                      ),
                     ),
-                  ],
-                );
-              },
-              loading: () => const Center(
-                key: ValueKey('loading'),
-                child: Hero(
-                  tag: 'shabad_loader',
-                  child: CircularProgressIndicator(),
-                ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (e, _) => const SizedBox.shrink(),
+                  ),
+                ],
+              );
+            },
+            loading: () => const Center(
+              key: ValueKey('loading'),
+              child: Hero(
+                tag: 'shabad_loader',
+                child: CircularProgressIndicator(),
               ),
-              error: (err, stack) => Center(key: const ValueKey('error'), child: Text('Error: $err')),
             ),
+            error: (err, stack) => Center(key: const ValueKey('error'), child: Text('Error: $err')),
           ),
         ),
       ),

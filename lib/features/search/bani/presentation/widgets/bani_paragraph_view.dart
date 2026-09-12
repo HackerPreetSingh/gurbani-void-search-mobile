@@ -20,51 +20,49 @@ class BaniParagraphView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        runSpacing: 4,
-        children: verses.map((bv) {
-          final verse = bv.verse;
-          final bool isHighlighted = highlightVerseId != null && verse.stableId == highlightVerseId;
-          final key = verseKeys.putIfAbsent(verse.stableId, () => GlobalKey());
-          
-          return Container(
-            key: key,
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-            decoration: BoxDecoration(
-              color: isHighlighted ? Colors.teal.withAlpha(25) : null,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: _buildGurmukhiText(ref, verse.gurmukhi, verse.visraams, settings),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildGurmukhiText(WidgetRef ref, String gurmukhi, String? visraamsJson, DisplaySettings settings) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseStyle = TextStyle(
       fontSize: settings.fontSizeGurmukhi,
       fontWeight: FontWeight.w500,
-      height: 1.4,
-      color: Colors.black,
+      height: 1.5,
+      color: isDark ? Colors.white : Colors.black,
     );
 
     final vishramService = ref.read(vishramServiceProvider);
-    final span = vishramService.buildGurmukhiText(
-      gurmukhi, 
-      visraamsJson, 
-      baseStyle, 
-      settings.showVishrams,
-      settings.showLarivaar,
-    );
+    final List<InlineSpan> paragraphSpans = [];
 
-    return Text.rich(
-      span as TextSpan,
-      textAlign: TextAlign.center,
+    for (int i = 0; i < verses.length; i++) {
+      final bv = verses[i];
+      final verse = bv.verse;
+      final bool isHighlighted = highlightVerseId != null && verse.stableId == highlightVerseId;
+
+      final verseSpan = vishramService.buildGurmukhiText(
+        verse.gurmukhi,
+        verse.visraams,
+        isHighlighted
+            ? baseStyle.copyWith(backgroundColor: Colors.teal.withAlpha(50))
+            : baseStyle,
+        settings.showVishrams,
+        settings.showLarivaar,
+      );
+
+      paragraphSpans.add(verseSpan);
+
+      // Add inter-verse spacing for continuous paragraph flow
+      if (i < verses.length - 1) {
+        paragraphSpans.add(TextSpan(
+          text: '   ',
+          style: baseStyle,
+        ));
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20.0, left: 16.0, right: 16.0),
+      child: Text.rich(
+        TextSpan(children: paragraphSpans),
+        textAlign: TextAlign.center,
+      ),
     );
   }
 }

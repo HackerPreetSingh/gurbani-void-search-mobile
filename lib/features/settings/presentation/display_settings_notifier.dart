@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/sources/settings_data_source.dart';
 import '../domain/models/display_settings.dart';
@@ -51,6 +52,12 @@ abstract class DisplaySettingsBaseNotifier extends AsyncNotifier<DisplaySettings
     await updateSettings(updated);
   }
 
+  Future<void> toggleJaapSahibParagraphView() async {
+    final current = state.value ?? DisplaySettings.defaults();
+    final updated = current.copyWith(showJaapSahibParagraphView: !current.showJaapSahibParagraphView);
+    await updateSettings(updated);
+  }
+
   Future<void> updateFontSizeGurmukhi(double size) async {
     final current = state.value ?? DisplaySettings.defaults();
     final updated = current.copyWith(fontSizeGurmukhi: size);
@@ -78,6 +85,12 @@ abstract class DisplaySettingsBaseNotifier extends AsyncNotifier<DisplaySettings
   Future<void> updateFontSizePunjabiMeaning(double size) async {
     final current = state.value ?? DisplaySettings.defaults();
     final updated = current.copyWith(fontSizePunjabiMeaning: size);
+    await updateSettings(updated);
+  }
+
+  Future<void> updateMaryada(BaniMaryada maryada) async {
+    final current = state.value ?? DisplaySettings.defaults();
+    final updated = current.copyWith(maryada: maryada);
     await updateSettings(updated);
   }
 }
@@ -121,4 +134,27 @@ class BoldTextSettingsNotifier extends AsyncNotifier<bool> {
 
 final boldTextSettingsProvider = AsyncNotifierProvider<BoldTextSettingsNotifier, bool>(() {
   return BoldTextSettingsNotifier();
+});
+
+class ThemeModeNotifier extends AsyncNotifier<ThemeMode> {
+  @override
+  Future<ThemeMode> build() async {
+    return ref.watch(settingsDataSourceProvider).getThemeMode();
+  }
+
+  Future<void> toggleThemeMode() async {
+    final current = state.value ?? ThemeMode.light;
+    final updated = current == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    state = AsyncData(updated);
+    await ref.read(settingsDataSourceProvider).saveThemeMode(updated);
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    state = AsyncData(mode);
+    await ref.read(settingsDataSourceProvider).saveThemeMode(mode);
+  }
+}
+
+final themeModeSettingsProvider = AsyncNotifierProvider<ThemeModeNotifier, ThemeMode>(() {
+  return ThemeModeNotifier();
 });

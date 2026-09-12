@@ -23,19 +23,25 @@ class GurbaniVerseView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isBold = ref.watch(boldTextSettingsProvider).value ?? false;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bool hasHindi = verse.transliterationHi != null && verse.transliterationHi!.trim().isNotEmpty && !verse.transliterationHi!.toLowerCase().contains('null');
     final bool hasTranslit = verse.transliteration != null && verse.transliteration!.trim().isNotEmpty && !verse.transliteration!.toLowerCase().contains('null');
     final bool hasEnglishMeaning = verse.translation != null && verse.translation!.trim().isNotEmpty && !verse.translation!.toLowerCase().contains('null');
     final bool hasPunjabiMeaning = verse.translationPa != null && verse.translationPa!.trim().isNotEmpty && !verse.translationPa!.toLowerCase().contains('null');
 
+    final defaultHindiColor = gurmukhiColor ?? (isDark ? Colors.red.shade200 : Colors.red.shade900);
+    final defaultTranslitColor = gurmukhiColor?.withAlpha(180) ?? (isDark ? Colors.blueGrey.shade200 : Colors.blueGrey);
+    final defaultEnglishMeaningColor = isDark ? Colors.white70 : Colors.black87;
+    final defaultPunjabiMeaningColor = gurmukhiColor ?? (isDark ? Colors.tealAccent.shade100 : Colors.teal.shade900);
+
     return Container(
       width: double.infinity,
-      color: isHighlighted ? Colors.teal.withAlpha(25) : null,
+      color: isHighlighted ? (isDark ? Colors.teal.withAlpha(50) : Colors.teal.withAlpha(25)) : null,
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _buildGurmukhiText(ref, verse.gurmukhi, verse.visraams, settings, isBold),
+          _buildGurmukhiText(context, ref, verse.gurmukhi, verse.visraams, settings, isBold),
           if (settings.showHindi && hasHindi) ...[
             const SizedBox(height: 4),
             Text(verse.transliterationHi!,
@@ -43,7 +49,7 @@ class GurbaniVerseView extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: settings.fontSizeHindi,
                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                  color: gurmukhiColor ?? Colors.red.shade900,
+                  color: defaultHindiColor,
                 )),
           ],
           if (settings.showTransliteration && hasTranslit) ...[
@@ -53,7 +59,7 @@ class GurbaniVerseView extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: settings.fontSizeEnglish,
                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                  color: gurmukhiColor?.withAlpha(180) ?? Colors.blueGrey,
+                  color: defaultTranslitColor,
                 )),
           ],
           if (settings.showEnglishMeaning && hasEnglishMeaning) ...[
@@ -64,7 +70,7 @@ class GurbaniVerseView extends ConsumerWidget {
                   fontSize: settings.fontSizeMeaning,
                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
                   fontStyle: FontStyle.italic,
-                  color: Colors.black87,
+                  color: defaultEnglishMeaningColor,
                 )),
           ],
           if (settings.showPunjabiMeaning && hasPunjabiMeaning) ...[
@@ -74,7 +80,7 @@ class GurbaniVerseView extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: settings.fontSizePunjabiMeaning,
                   fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-                  color: gurmukhiColor ?? Colors.teal.shade900,
+                  color: defaultPunjabiMeaningColor,
                 )),
           ],
         ],
@@ -82,12 +88,13 @@ class GurbaniVerseView extends ConsumerWidget {
     );
   }
 
-  Widget _buildGurmukhiText(WidgetRef ref, String gurmukhi, String? visraamsJson, DisplaySettings settings, bool isBold) {
+  Widget _buildGurmukhiText(BuildContext context, WidgetRef ref, String gurmukhi, String? visraamsJson, DisplaySettings settings, bool isBold) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseStyle = TextStyle(
       fontSize: settings.fontSizeGurmukhi,
       fontWeight: isBold ? FontWeight.w900 : FontWeight.w500,
       height: 1.4,
-      color: gurmukhiColor ?? Colors.black,
+      color: gurmukhiColor ?? (isDark ? Colors.white : Colors.black),
     );
 
     final vishramService = ref.read(vishramServiceProvider);
