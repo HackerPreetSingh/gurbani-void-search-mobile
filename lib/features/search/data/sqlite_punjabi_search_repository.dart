@@ -84,6 +84,17 @@ class SqlitePunjabiSearchRepository implements PunjabiSearchRepository {
         );
       }
 
+      if (rows.isEmpty && !_isRoman(raw)) {
+        final paQuery = GurmukhiProcessor.extractPunjabiInitials(query.raw);
+        if (paQuery.isNotEmpty) {
+          rows = await _localDataSource.search(
+            condition: 'initials_pa LIKE ?',
+            parameters: ['%$paQuery%'],
+            limit: limit,
+          );
+        }
+      }
+
       if (rows.isEmpty && _isRoman(raw)) {
          final variations = GurmukhiProcessor.generatePhoneticVariations(raw);
          for (final v in variations) {

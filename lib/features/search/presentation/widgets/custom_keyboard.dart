@@ -78,6 +78,22 @@ class CustomKeyboard extends ConsumerWidget {
       child: Row(
         children: [
           Expanded(
+            flex: 2,
+            child: _KeyboardKey(
+              icon: Icons.keyboard_hide_outlined,
+              onTap: () => ref.read(customKeyboardVisibleProvider.notifier).setVisible(false),
+              color: Colors.teal.withAlpha(40),
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: _KeyboardKey(
+              icon: Icons.space_bar,
+              onTap: () => ref.read(searchQueryProvider.notifier).append(' '),
+              color: Colors.white,
+            ),
+          ),
+          Expanded(
             flex: 1,
             child: _KeyboardKey(
               icon: Icons.delete_forever_outlined,
@@ -91,22 +107,6 @@ class CustomKeyboard extends ConsumerWidget {
               icon: Icons.backspace_outlined,
               onTap: () => ref.read(searchQueryProvider.notifier).delete(),
               color: Colors.redAccent.withAlpha(40),
-            ),
-          ),
-          Expanded(
-            flex: 4,
-            child: _KeyboardKey(
-              icon: Icons.space_bar,
-              onTap: () => ref.read(searchQueryProvider.notifier).append(' '),
-              color: Colors.white,
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: _KeyboardKey(
-              icon: Icons.keyboard_hide_outlined,
-              onTap: () => ref.read(customKeyboardVisibleProvider.notifier).setVisible(false),
-              color: Colors.teal.withAlpha(40),
             ),
           ),
         ],
@@ -135,7 +135,7 @@ class _KeyboardKey extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: color ?? defaultKeyColor,
             borderRadius: BorderRadius.circular(4),
@@ -145,11 +145,11 @@ class _KeyboardKey extends ConsumerWidget {
           ),
           alignment: Alignment.center,
           child: icon != null 
-            ? Icon(icon, size: 22, color: defaultTextColor)
+            ? Icon(icon, size: 26, color: defaultTextColor)
             : Text(
                 label!,
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 25,
                   fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
                   color: defaultTextColor,
                 ),

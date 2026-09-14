@@ -41,6 +41,41 @@ abstract final class GurmukhiProcessor {
     'z': 'z', 'Z': 'z',
   };
 
+  static int cleanGurmukhiRune(int rune) {
+    switch (rune) {
+      // ੲ (Iri) Family: ਇ (0x0A07), ਈ (0x0A08), ਏ (0x0A0F) -> ੲ (0x0A72)
+      case 0x0A07:
+      case 0x0A08:
+      case 0x0A0F:
+      case 0x0A72:
+        return 0x0A72;
+
+      // ੳ (Oura) Family: ਉ (0x0A09), ਊ (0x0A0A), ਓ (0x0A13) -> ੳ (0x0A73)
+      case 0x0A09:
+      case 0x0A0A:
+      case 0x0A13:
+      case 0x0A73:
+        return 0x0A73;
+
+      // ਅ (Aira) Family: ਅ (0x0A05), ਆ (0x0A06), ਐ (0x0A10), ਔ (0x0A14) -> ਅ (0x0A05)
+      case 0x0A05:
+      case 0x0A06:
+      case 0x0A10:
+      case 0x0A14:
+        return 0x0A05;
+
+      // Pairin Bindi (Nukta) Consonants -> Base 35 Akhar
+      case 0x0A33: return 0x0A32; // ਲ਼ -> ਲ
+      case 0x0A59: return 0x0A16; // ਖ਼ -> ਖ
+      case 0x0A5A: return 0x0A17; // ਗ਼ -> ਗ
+      case 0x0A5B: return 0x0A1C; // ਜ਼ -> ਜ
+      case 0x0A5E: return 0x0A2B; // ਫ਼ -> ਫ
+
+      default:
+        return rune;
+    }
+  }
+
   static String extractEnglishInitials(String unicode) {
     if (unicode.isEmpty) return '';
     final res = StringBuffer();
@@ -56,11 +91,31 @@ abstract final class GurmukhiProcessor {
   static String extractPunjabiInitials(String unicode) {
     if (unicode.isEmpty) return '';
     final res = StringBuffer();
-    for (final word in unicode.trim().split(RegExp(r'\s+'))) {
-      if (word.isEmpty) continue;
-      final char = word.characters.first;
-      final rune = char.runes.first;
-      if (_unicodeToAscii.containsKey(rune)) res.writeCharCode(rune);
+    final words = unicode.trim().split(RegExp(r'\s+'));
+
+    // Multi-word scripture sentence -> take first letter of each word
+    if (words.length > 1) {
+      for (final word in words) {
+        if (word.isEmpty) continue;
+        final cleanWord = word.replaceAll(RegExp(r'[^\u0A01-\u0A75]'), '');
+        if (cleanWord.isEmpty) continue;
+
+        final rune = cleanWord.runes.first;
+        final baseRune = cleanGurmukhiRune(rune);
+        res.writeCharCode(baseRune);
+      }
+      return res.toString();
+    }
+
+    // Single word / typed initial query -> process every character in query
+    final cleanQuery = unicode.replaceAll(RegExp(r'[^\u0A01-\u0A75]'), '');
+    for (final rune in cleanQuery.runes) {
+      // Ignore combining matras typed as standalone initials
+      if ((rune >= 0x0A3E && rune <= 0x0A4C) || rune == 0x0A70 || rune == 0x0A71 || rune == 0x0A02 || rune == 0x0A3C) {
+        continue;
+      }
+      final baseRune = cleanGurmukhiRune(rune);
+      res.writeCharCode(baseRune);
     }
     return res.toString();
   }

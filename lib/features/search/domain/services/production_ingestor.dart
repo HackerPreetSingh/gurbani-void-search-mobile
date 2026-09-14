@@ -169,12 +169,6 @@ class ProductionIngestor {
   }
 
   String _genInitPa(String unicode) {
-    if (unicode.isEmpty) return '';
-    final res = StringBuffer();
-    for (final word in unicode.trim().split(RegExp(r'\s+'))) {
-      if (word.isEmpty) continue;
-      res.write(word.characters.first);
-    }
-    return res.toString();
+    return GurmukhiProcessor.extractPunjabiInitials(unicode);
   }
 }
